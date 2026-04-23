@@ -2,79 +2,75 @@
 
 Bitácora de progreso por sprint. Actualizar al cierre de cada sesión de trabajo.
 
-## Sprint 1 — Foundations
+## Sprint 1 — Foundations ✅
 
 ### Plan 1a — Core Infrastructure ✅
-
-**Fecha**: 2026-04-23
-**Branch**: mergeada a master
-**Estado**: Código completo. Pendiente aplicar migraciones contra DB real.
-
-**Hecho**:
-- Scaffolding Next 14 + TypeScript strict + Tailwind con paleta brand/gold
-- Dependencias: Supabase SSR, zod, react-hook-form, date-fns, lucide, sonner, Radix UI
-- Supabase CLI + 6 migraciones SQL (schema + indexes + RLS + trigger + storage)
-- Supabase clients (server/client/middleware/admin) tipados con Database
-- Middleware stub
-- 5 validators + 4 utils con TDD (73 tests verdes)
-- `src/types/database.ts` crafteado manualmente
+**Branch mergeada a master**. Scaffolding + dependencies + 6 migraciones SQL + Supabase clients + validators/utils con TDD (73 tests).
 
 ### Plan 1b+1c — UI completa ✅
+**Branch mergeada a master**. Design system (18 componentes shadcn-fork), auth, middleware completo, onboarding wizard 4 pasos, panel con sidebar, CRUD 4 entidades, invitaciones, AFIP stub.
 
-**Fecha**: 2026-04-23
-**Branch**: `feat/sprint-1bc-ui-auth-crud`
-**Estado**: Código completo. Pendiente DB + Vercel para habilitar runtime.
+### Plan 1d — Logo upload + config edit ✅
+**En branch actual feat/sprint-2-agenda**. Upload de logo al bucket organization-logos + edición de datos fiscales desde /configuracion.
+
+## Sprint 2 — Agenda ⏳
+
+**Branch**: `feat/sprint-2-agenda`
+**Estado**: Core funcional listo. Calendar week/month + drag-and-drop quedan para iteraciones siguientes.
 
 **Hecho**:
-- **Design system** (18 componentes, fork de shadcn/ui adaptado a brand/gold):
-  - Primitives: Button, Input, Label, Textarea, Form (RHF+zod wrapper), Toaster (sonner)
-  - Overlays: Dialog, Sheet, Select, Checkbox, RadioGroup, Switch, DropdownMenu
-  - Contenido: Table, Badge, Avatar, Separator
-- **Auth**:
-  - `/auth/login`, `/auth/signup`, `/auth/callback` con Server Actions
-  - Google OAuth + errores traducidos al español
-- **Middleware completo**: redirects por onboarding/owner/active_org + cookie de org activa
-- **Onboarding wizard** (4 pasos con Server Actions):
-  - Paso 1 fiscal (CUIT, condición IVA, display_name)
-  - Paso 2 horarios (7 días con defaults)
-  - Paso 3 primer servicio
-  - Paso 4 presencia (slug público con validación)
-- **Panel layout**:
-  - Sidebar responsive con nav + active state
-  - Header con OrgSwitcher (multi-org) + UserMenu (dropdown con logout)
-  - Dashboard placeholder con stats + trial days banner
-- **CRUD completo** (4 entidades):
-  - Servicios: list + sheet drawer + archive + filtros
-  - Recursos: list + sheet drawer + archive con tipos predefinidos
-  - Clientas: list + search server-side (ilike) + sheet drawer + validators AR
-  - Empleadas: list + invitar via `supabase.auth.admin.inviteUserByEmail` +
-    revocar invitaciones + toggle active
-- **Configuración**: página readonly con datos de org + estado de integraciones
-- **AFIP**: interface `IAfipProvider` + `ManualAfipProvider` stub con `NotImplementedError`
-- **Seed**: función SQL `seed_demo_data(org_id)` con 6 servicios, 4 recursos, 5 clientas demo
+- Migration `20260423100001_appointments.sql`:
+  - Enums `appointment_status` (pending/confirmed/in_progress/completed/cancelled/no_show)
+  - Enum `appointment_source` (panel/public/waitlist)
+  - Tabla `appointments` con FK a clients/services/resources/professional
+  - Tabla `schedule_blocks` para vacaciones/mantenimiento
+  - Índices compuestos para queries por rango + org
+  - RLS multi-tenant con staff pueden manage appointments
+  - Trigger auto-update de `clients.last_visit_at` al completar
+- `actions/appointments.ts`:
+  - `createAppointment` con cálculo auto de `ends_at` y detección de conflictos
+    (profesional superpuesto, recurso ocupado, schedule blocks)
+  - `updateAppointmentStatus` con timestamps correctos por transición
+  - `createScheduleBlock` para bloqueos
+- UI agenda:
+  - `DayView` hora a hora con slots cada 30min, respeta business_hours
+  - Badges de estado con colores por status
+  - Row actions inline (confirm/checkin/complete/cancel/no-show)
+  - `CreateAppointmentSheet` con selects nativos + datetime picker
+  - Navegación prev/hoy/next
+- Página pública `/c/[slug]`:
+  - Catálogo de servicios con categoría + duración + precio
+  - Card de horarios de atención
+  - Form de reserva con validación teléfono AR
+  - Crea clienta automática si no existe (match por phone_e164)
+  - `/c/[slug]/confirmacion` como success page
+- Middleware ya expone `/c/*` como público
 
-**Pendiente para habilitar runtime**:
-1. Instalar Docker Desktop **o** crear proyecto cloud en supabase.com
-2. Aplicar migraciones (`npm run db:reset` local o `supabase link + db push` cloud)
-3. Regenerar `src/types/database.ts` con `npm run db:types` (sobreescribe el manual)
-4. Completar `.env.local` con las keys reales de Supabase
-5. Test manual end-to-end:
-   - Signup → trigger crea org + owner membership
+**Pendiente Sprint 2** (iteraciones futuras):
+- Calendar week view + month view
+- Drag-and-drop para reagendar
+- Real slot availability calculation (filtrar slots ya tomados)
+- Lista de espera
+- Recordatorios automáticos (requiere Sprint 3 WhatsApp)
+
+## Para habilitar runtime
+
+1. Supabase:
+   - Docker: `npm run db:start` + `npm run db:types`
+   - Cloud: `supabase link` + `supabase db push` + regenerar types
+2. Vercel: cargar env vars (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_APP_URL`)
+3. Test manual end-to-end:
+   - Signup → trigger crea org + owner
    - Completar wizard onboarding
-   - Crear servicio/recurso/clienta/invitar empleada
-6. Deploy a Vercel staging (próximo paso)
+   - Subir logo en Configuración
+   - Crear servicio/recurso/clienta
+   - Crear turno en Agenda con conflict detection
+   - Ir a `/c/<slug>` y hacer una reserva pública
+   - Ver la reserva pending en Agenda, confirmarla
 
-**Pendiente de Sprint 1 (funcionalidades a postergar)**:
-- Upload de logo en onboarding paso 4 (estructura lista, falta hookear a Supabase Storage)
-- Edición de configuración desde panel (por ahora solo readonly)
-- Integration tests (signup flow + tenant isolation) — requiere DB corriendo
+## Sprints siguientes (planeados)
 
-## Sprint 2 — Agenda (planeado)
-
-- Calendario día/semana/mes con drag-and-drop
-- Vista por profesional / cabina / general
-- Creación de turnos + estados + check-in
-- Página pública de reservas `/c/[slug]`
-- Componentes Calendar + DatePicker + TimePicker
-
-## Sprint 3+ — Ver [docs/superpowers/specs/](./superpowers/specs/)
+- **Sprint 3** — WhatsApp Business + Mercado Pago + recordatorios automáticos + webhooks
+- **Sprint 4** — AFIP (TusFacturas) + ficha clínica + consentimientos digitales + paquetes
+- **Sprint 5** — Feature IA #1 (diagnóstico de piel con Claude Vision) + Feature IA #2 (generador de protocolos)
+- **Sprint 6** — Dashboard con KPIs + fidelización + campañas automáticas + widget embebible + tiers de suscripción
