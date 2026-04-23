@@ -1,0 +1,3 @@
+-- Seed data para desarrollo local
+-- Se aplica después de las migraciones con `supabase db reset`
+-- Se completa con data de prueba cuando avancemos a Plan 1c (CRUD completo)
