@@ -182,6 +182,74 @@ export type Database = {
         Update: Partial<Database['public']['Tables']['business_hours']['Insert']>;
         Relationships: [];
       };
+      appointments: {
+        Row: {
+          id: string;
+          organization_id: string;
+          client_id: string;
+          professional_id: string | null;
+          resource_id: string | null;
+          service_id: string;
+          starts_at: string;
+          ends_at: string;
+          status: 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'no_show';
+          source: 'panel' | 'public' | 'waitlist';
+          notes: string | null;
+          reminder_sent_at: string | null;
+          checked_in_at: string | null;
+          completed_at: string | null;
+          cancelled_at: string | null;
+          cancellation_reason: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          client_id: string;
+          professional_id?: string | null;
+          resource_id?: string | null;
+          service_id: string;
+          starts_at: string;
+          ends_at: string;
+          status?: 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'no_show';
+          source?: 'panel' | 'public' | 'waitlist';
+          notes?: string | null;
+          reminder_sent_at?: string | null;
+          checked_in_at?: string | null;
+          completed_at?: string | null;
+          cancelled_at?: string | null;
+          cancellation_reason?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['appointments']['Insert']>;
+        Relationships: [];
+      };
+      schedule_blocks: {
+        Row: {
+          id: string;
+          organization_id: string;
+          professional_id: string | null;
+          resource_id: string | null;
+          starts_at: string;
+          ends_at: string;
+          reason: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          professional_id?: string | null;
+          resource_id?: string | null;
+          starts_at: string;
+          ends_at: string;
+          reason: string;
+          created_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['schedule_blocks']['Insert']>;
+        Relationships: [];
+      };
       invitations: {
         Row: {
           id: string;
