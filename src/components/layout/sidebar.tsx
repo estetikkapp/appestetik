@@ -13,9 +13,16 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 
-const NAV = [
+interface NavItem {
+  href: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  disabled?: boolean;
+}
+
+const NAV: NavItem[] = [
   { href: '/', label: 'Inicio', icon: LayoutDashboard },
-  { href: '/agenda', label: 'Agenda', icon: Calendar, disabled: true },
+  { href: '/agenda', label: 'Agenda', icon: Calendar },
   { href: '/clientas', label: 'Clientas', icon: Users },
   { href: '/servicios', label: 'Servicios', icon: Scissors },
   { href: '/recursos', label: 'Recursos', icon: Package },

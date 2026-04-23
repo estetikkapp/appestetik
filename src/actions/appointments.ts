@@ -1,0 +1,203 @@
+'use server';
+
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { revalidatePath } from 'next/cache';
+import { createClient } from '@/lib/supabase/server';
+import type { AppointmentStatus } from '@/types/app';
+import type { TablesUpdate } from '@/types/database';
+
+async function getActiveOrgOrRedirect(): Promise<string> {
+  const orgId = cookies().get('active_org')?.value;
+  if (!orgId) redirect('/auth/login');
+  return orgId;
+}
+
+interface ConflictCheckParams {
+  orgId: string;
+  startsAt: string;
+  endsAt: string;
+  professionalId: string | null;
+  resourceId: string | null;
+  excludeAppointmentId?: string;
+}
+
+/**
+ * Detecta conflictos de agenda:
+ * - Mismo profesional con turno solapado (no cancelado)
+ * - Mismo recurso con turno solapado (no cancelado)
+ * - Bloqueo de schedule (vacaciones, mantenimiento) solapado para ese profesional/recurso
+ *
+ * Retorna mensaje de conflicto o null si está libre.
+ */
+async function detectConflict(params: ConflictCheckParams): Promise<string | null> {
+  const supabase = createClient();
+
+  const [apptResult, blockResult] = await Promise.all([
+    // Turnos solapados
+    (async () => {
+      let query = supabase
+        .from('appointments')
+        .select('id, starts_at, ends_at, professional_id, resource_id, status')
+        .eq('organization_id', params.orgId)
+        .in('status', ['pending', 'confirmed', 'in_progress'])
+        .lt('starts_at', params.endsAt)
+        .gt('ends_at', params.startsAt);
+
+      if (params.excludeAppointmentId) query = query.neq('id', params.excludeAppointmentId);
+
+      const { data } = await query;
+      return data ?? [];
+    })(),
+
+    // Bloqueos de schedule solapados
+    supabase
+      .from('schedule_blocks')
+      .select('id, reason, professional_id, resource_id')
+      .eq('organization_id', params.orgId)
+      .lt('starts_at', params.endsAt)
+      .gt('ends_at', params.startsAt),
+  ]);
+
+  // Conflicto: turno con mismo profesional
+  if (params.professionalId) {
+    const clash = apptResult.find((a) => a.professional_id === params.professionalId);
+    if (clash) return `El/la profesional ya tiene un turno superpuesto`;
+  }
+
+  // Conflicto: turno con mismo recurso
+  if (params.resourceId) {
+    const clash = apptResult.find((a) => a.resource_id === params.resourceId);
+    if (clash) return `El recurso ya está ocupado en ese horario`;
+  }
+
+  // Conflicto: bloqueo
+  const blocks = blockResult.data ?? [];
+  const relevantBlock = blocks.find((b) => {
+    const appliesToProfessional =
+      b.professional_id && params.professionalId && b.professional_id === params.professionalId;
+    const appliesToResource =
+      b.resource_id && params.resourceId && b.resource_id === params.resourceId;
+    const appliesToOrg = !b.professional_id && !b.resource_id; // bloqueo global
+    return appliesToProfessional || appliesToResource || appliesToOrg;
+  });
+  if (relevantBlock) {
+    return `Hay un bloqueo en ese horario (${relevantBlock.reason})`;
+  }
+
+  return null;
+}
+
+export async function createAppointment(formData: FormData): Promise<void> {
+  const orgId = await getActiveOrgOrRedirect();
+  const clientId = String(formData.get('client_id') ?? '');
+  const serviceId = String(formData.get('service_id') ?? '');
+  const professionalId = String(formData.get('professional_id') ?? '') || null;
+  const resourceId = String(formData.get('resource_id') ?? '') || null;
+  const startsAt = String(formData.get('starts_at') ?? '');
+  const notes = String(formData.get('notes') ?? '').trim() || null;
+
+  if (!clientId) redirect('/agenda?error=Clienta+requerida');
+  if (!serviceId) redirect('/agenda?error=Servicio+requerido');
+  if (!startsAt) redirect('/agenda?error=Fecha+y+hora+requeridas');
+
+  const supabase = createClient();
+
+  // Obtener duración del servicio para calcular ends_at
+  const { data: service } = await supabase
+    .from('services')
+    .select('duration_minutes, buffer_minutes')
+    .eq('id', serviceId)
+    .eq('organization_id', orgId)
+    .single();
+
+  if (!service) redirect('/agenda?error=Servicio+no+encontrado');
+
+  const startDate = new Date(startsAt);
+  const totalMinutes = service.duration_minutes + (service.buffer_minutes ?? 0);
+  const endDate = new Date(startDate.getTime() + totalMinutes * 60 * 1000);
+
+  const conflict = await detectConflict({
+    orgId,
+    startsAt: startDate.toISOString(),
+    endsAt: endDate.toISOString(),
+    professionalId,
+    resourceId,
+  });
+
+  if (conflict) redirect(`/agenda?error=${encodeURIComponent(conflict)}`);
+
+  const { error } = await supabase.from('appointments').insert({
+    organization_id: orgId,
+    client_id: clientId,
+    service_id: serviceId,
+    professional_id: professionalId,
+    resource_id: resourceId,
+    starts_at: startDate.toISOString(),
+    ends_at: endDate.toISOString(),
+    notes,
+    source: 'panel',
+  });
+
+  if (error) redirect(`/agenda?error=${encodeURIComponent(error.message)}`);
+
+  revalidatePath('/agenda');
+  redirect('/agenda?ok=creado');
+}
+
+export async function updateAppointmentStatus(formData: FormData): Promise<void> {
+  const orgId = await getActiveOrgOrRedirect();
+  const id = String(formData.get('id') ?? '');
+  const status = String(formData.get('status') ?? '') as AppointmentStatus;
+  const reason = String(formData.get('reason') ?? '').trim() || null;
+
+  if (!id) redirect('/agenda?error=ID+invalido');
+
+  const updates: TablesUpdate<'appointments'> = { status };
+  if (status === 'in_progress') updates.checked_in_at = new Date().toISOString();
+  if (status === 'completed') updates.completed_at = new Date().toISOString();
+  if (status === 'cancelled') {
+    updates.cancelled_at = new Date().toISOString();
+    updates.cancellation_reason = reason;
+  }
+
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('appointments')
+    .update(updates)
+    .eq('id', id)
+    .eq('organization_id', orgId);
+
+  if (error) redirect(`/agenda?error=${encodeURIComponent(error.message)}`);
+
+  revalidatePath('/agenda');
+  redirect('/agenda');
+}
+
+export async function createScheduleBlock(formData: FormData): Promise<void> {
+  const orgId = await getActiveOrgOrRedirect();
+  const startsAt = String(formData.get('starts_at') ?? '');
+  const endsAt = String(formData.get('ends_at') ?? '');
+  const reason = String(formData.get('reason') ?? '').trim();
+  const professionalId = String(formData.get('professional_id') ?? '') || null;
+  const resourceId = String(formData.get('resource_id') ?? '') || null;
+
+  if (!startsAt || !endsAt || !reason) {
+    redirect('/agenda?error=Fechas+y+motivo+requeridos');
+  }
+
+  const supabase = createClient();
+  const { error } = await supabase.from('schedule_blocks').insert({
+    organization_id: orgId,
+    professional_id: professionalId,
+    resource_id: resourceId,
+    starts_at: new Date(startsAt).toISOString(),
+    ends_at: new Date(endsAt).toISOString(),
+    reason,
+  });
+
+  if (error) redirect(`/agenda?error=${encodeURIComponent(error.message)}`);
+
+  revalidatePath('/agenda');
+  redirect('/agenda?ok=bloqueo-creado');
+}
