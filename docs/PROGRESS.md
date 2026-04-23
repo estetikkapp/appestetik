@@ -4,48 +4,77 @@ Bitácora de progreso por sprint. Actualizar al cierre de cada sesión de trabaj
 
 ## Sprint 1 — Foundations
 
-### Plan 1a — Core Infrastructure
+### Plan 1a — Core Infrastructure ✅
 
 **Fecha**: 2026-04-23
-**Branch**: `feat/sprint-1a-core-infra`
-**Estado**: Completo en código. Pendiente aplicar migraciones contra DB real.
+**Branch**: mergeada a master
+**Estado**: Código completo. Pendiente aplicar migraciones contra DB real.
 
 **Hecho**:
-- Scaffolding Next 14 + TypeScript strict (con `noUncheckedIndexedAccess`) + Tailwind con paleta brand (rosa-nude) y gold
-- Dependencias runtime: `@supabase/ssr`, `@supabase/supabase-js`, `zod`, `react-hook-form`, `date-fns`, `date-fns-tz`, `clsx`, `tailwind-merge`, `lucide-react`, `sonner`, `class-variance-authority`
-- Deps de testing: `vitest`, `@testing-library/react`, `jsdom`
-- Supabase CLI instalado (`supabase@2.95`)
-- 6 migraciones SQL escritas:
-  1. `initial_schema.sql` — organizations + memberships + trigger updated_at
-  2. `core_tables.sql` — services, resources, clients, business_hours, invitations
-  3. `indexes.sql` — pg_trgm + compuestos para fuzzy search
-  4. `rls_policies.sql` — RLS multi-tenant + helpers `user_org_ids` / `user_is_org_admin`
-  5. `trigger_new_user.sql` — `on_auth_user_created` crea org+owner O resuelve invitación
-  6. `storage_buckets.sql` — bucket `organization-logos` con policies
-- Supabase clients: `server.ts`, `client.ts`, `middleware.ts`, `admin.ts`
-- Middleware Next stub (solo refresh de sesión)
-- Validators (con TDD): `cuit`, `phone-ar`, `dni`, `slug` + blocklist, `email`
-- Utils: `cn`, `formatArs`/`parseArs`, `formatPhoneDisplay`, `formatDateAr`/`formatDateTimeAr` + timezone AR fijo
-- Types `database.ts` crafteados manualmente (basados en schema SQL); regenerar con `npm run db:types` cuando haya DB conectada
-- **73 unit tests verdes**, `npm run build` verde
+- Scaffolding Next 14 + TypeScript strict + Tailwind con paleta brand/gold
+- Dependencias: Supabase SSR, zod, react-hook-form, date-fns, lucide, sonner, Radix UI
+- Supabase CLI + 6 migraciones SQL (schema + indexes + RLS + trigger + storage)
+- Supabase clients (server/client/middleware/admin) tipados con Database
+- Middleware stub
+- 5 validators + 4 utils con TDD (73 tests verdes)
+- `src/types/database.ts` crafteado manualmente
 
-**Pendiente para cerrar Sprint 1a** (requiere DB conectada):
-1. Configurar DB real: Docker + `npm run db:start` OR cuenta cloud + `supabase link + db push`
-2. Aplicar migraciones
-3. Regenerar types reales con `npm run db:types` (sobreescribe archivo manual)
-4. Test manual: crear user en Supabase Studio → verificar trigger crea org + membership owner
-5. Completar `.env.local` con keys reales
-6. `npm run build` + `npm test` finales
+### Plan 1b+1c — UI completa ✅
 
-**Pendiente en Plan 1b**:
-- Design system (shadcn fork): Button, Input, Form, Dialog, Sheet, Table, Toaster
-- Páginas auth: `/auth/login`, `/auth/signup`, `/auth/callback`
-- Middleware completo (auth + onboarding + active_org)
-- Wizard de onboarding 4 pasos
+**Fecha**: 2026-04-23
+**Branch**: `feat/sprint-1bc-ui-auth-crud`
+**Estado**: Código completo. Pendiente DB + Vercel para habilitar runtime.
 
-**Pendiente en Plan 1c**:
-- Layout panel (sidebar + header + OrgSwitcher)
-- CRUD servicios / recursos / clientas / empleadas
-- Invitación de empleadas con `inviteUserByEmail`
-- Integration tests (signup flow + tenant isolation)
-- Deploy a Vercel staging
+**Hecho**:
+- **Design system** (18 componentes, fork de shadcn/ui adaptado a brand/gold):
+  - Primitives: Button, Input, Label, Textarea, Form (RHF+zod wrapper), Toaster (sonner)
+  - Overlays: Dialog, Sheet, Select, Checkbox, RadioGroup, Switch, DropdownMenu
+  - Contenido: Table, Badge, Avatar, Separator
+- **Auth**:
+  - `/auth/login`, `/auth/signup`, `/auth/callback` con Server Actions
+  - Google OAuth + errores traducidos al español
+- **Middleware completo**: redirects por onboarding/owner/active_org + cookie de org activa
+- **Onboarding wizard** (4 pasos con Server Actions):
+  - Paso 1 fiscal (CUIT, condición IVA, display_name)
+  - Paso 2 horarios (7 días con defaults)
+  - Paso 3 primer servicio
+  - Paso 4 presencia (slug público con validación)
+- **Panel layout**:
+  - Sidebar responsive con nav + active state
+  - Header con OrgSwitcher (multi-org) + UserMenu (dropdown con logout)
+  - Dashboard placeholder con stats + trial days banner
+- **CRUD completo** (4 entidades):
+  - Servicios: list + sheet drawer + archive + filtros
+  - Recursos: list + sheet drawer + archive con tipos predefinidos
+  - Clientas: list + search server-side (ilike) + sheet drawer + validators AR
+  - Empleadas: list + invitar via `supabase.auth.admin.inviteUserByEmail` +
+    revocar invitaciones + toggle active
+- **Configuración**: página readonly con datos de org + estado de integraciones
+- **AFIP**: interface `IAfipProvider` + `ManualAfipProvider` stub con `NotImplementedError`
+- **Seed**: función SQL `seed_demo_data(org_id)` con 6 servicios, 4 recursos, 5 clientas demo
+
+**Pendiente para habilitar runtime**:
+1. Instalar Docker Desktop **o** crear proyecto cloud en supabase.com
+2. Aplicar migraciones (`npm run db:reset` local o `supabase link + db push` cloud)
+3. Regenerar `src/types/database.ts` con `npm run db:types` (sobreescribe el manual)
+4. Completar `.env.local` con las keys reales de Supabase
+5. Test manual end-to-end:
+   - Signup → trigger crea org + owner membership
+   - Completar wizard onboarding
+   - Crear servicio/recurso/clienta/invitar empleada
+6. Deploy a Vercel staging (próximo paso)
+
+**Pendiente de Sprint 1 (funcionalidades a postergar)**:
+- Upload de logo en onboarding paso 4 (estructura lista, falta hookear a Supabase Storage)
+- Edición de configuración desde panel (por ahora solo readonly)
+- Integration tests (signup flow + tenant isolation) — requiere DB corriendo
+
+## Sprint 2 — Agenda (planeado)
+
+- Calendario día/semana/mes con drag-and-drop
+- Vista por profesional / cabina / general
+- Creación de turnos + estados + check-in
+- Página pública de reservas `/c/[slug]`
+- Componentes Calendar + DatePicker + TimePicker
+
+## Sprint 3+ — Ver [docs/superpowers/specs/](./superpowers/specs/)
