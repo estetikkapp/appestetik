@@ -1,0 +1,46 @@
+/**
+ * Interfaces compartidas para proveedores de facturación AFIP.
+ * Implementaciones concretas:
+ *   - tusfacturas.ts  — impl real contra TusFacturas API (Sprint 4)
+ *   - direct.ts       — impl contra webservices AFIP directos (Sprint 6+, tier enterprise)
+ *   - manual.ts       — comprobante no-fiscal en PDF (fallback, Sprint 4)
+ */
+
+export type InvoiceType = 'C' | 'B' | 'A';
+
+export interface InvoiceItem {
+  description: string;
+  quantity: number;
+  unit_price_ars: number;
+}
+
+export interface InvoiceRequest {
+  organizationId: string;
+  type: InvoiceType;
+  clientId: string;
+  items: InvoiceItem[];
+  total_ars: number;
+}
+
+export interface InvoiceResult {
+  invoice_id: string;
+  cae: string | null; // null para provider 'manual' (comprobante no fiscal)
+  cae_due_date: Date | null;
+  pdf_url: string;
+  is_fiscal: boolean;
+  provider_response: Record<string, unknown>;
+}
+
+export interface IAfipProvider {
+  name: 'tusfacturas' | 'direct' | 'manual';
+  emit(request: InvoiceRequest): Promise<InvoiceResult>;
+  voidInvoice(invoiceId: string, reason: string): Promise<void>;
+  fetchInvoice(invoiceId: string): Promise<InvoiceResult>;
+}
+
+export class NotImplementedError extends Error {
+  constructor(feature: string) {
+    super(`Todavía no implementado: ${feature}. Ver roadmap Sprint 4.`);
+    this.name = 'NotImplementedError';
+  }
+}
