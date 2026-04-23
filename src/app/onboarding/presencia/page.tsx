@@ -51,11 +51,16 @@ export default function OnboardingStep4({ searchParams }: { searchParams: { erro
           </div>
 
           <div className="rounded-lg border border-brand-200 bg-brand-50 p-4 text-sm text-brand-800">
-            <p className="font-medium">Logo</p>
-            <p className="text-xs text-brand-700">
-              La carga de logo se habilita al completar onboarding. Podés subirlo desde
-              Configuración.
+            <p className="font-medium">Logo del centro</p>
+            <p className="mt-1 text-xs text-brand-700">
+              Podés subir el logo después desde Configuración. Máx 5MB (PNG, JPG, WEBP, SVG).
             </p>
+            <a
+              href="/configuracion"
+              className="mt-2 inline-block text-xs font-medium text-brand-600 underline"
+            >
+              Ir a Configuración → Logo (después de terminar onboarding)
+            </a>
           </div>
 
           <div className="flex items-center justify-between pt-4">
