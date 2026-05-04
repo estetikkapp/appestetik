@@ -276,6 +276,320 @@ export type Database = {
         Update: Partial<Database['public']['Tables']['invitations']['Insert']>;
         Relationships: [];
       };
+      client_medical_info: {
+        Row: {
+          id: string;
+          client_id: string;
+          organization_id: string;
+          allergies: string | null;
+          medications: string | null;
+          pregnancy_status: 'no' | 'si' | 'lactancia' | 'trying' | 'unknown' | null;
+          skin_type: 'I' | 'II' | 'III' | 'IV' | 'V' | 'VI' | null;
+          contraindications: string | null;
+          consent_signed_at: string | null;
+          consent_signature_url: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          client_id: string;
+          organization_id: string;
+          allergies?: string | null;
+          medications?: string | null;
+          pregnancy_status?: 'no' | 'si' | 'lactancia' | 'trying' | 'unknown' | null;
+          skin_type?: 'I' | 'II' | 'III' | 'IV' | 'V' | 'VI' | null;
+          contraindications?: string | null;
+          consent_signed_at?: string | null;
+          consent_signature_url?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['client_medical_info']['Insert']>;
+        Relationships: [];
+      };
+      treatment_sessions: {
+        Row: {
+          id: string;
+          organization_id: string;
+          appointment_id: string | null;
+          client_id: string;
+          professional_id: string | null;
+          service_id: string | null;
+          performed_at: string;
+          parameters: Json;
+          photos_before_urls: string[];
+          photos_after_urls: string[];
+          products_used: string | null;
+          notes: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          appointment_id?: string | null;
+          client_id: string;
+          professional_id?: string | null;
+          service_id?: string | null;
+          performed_at: string;
+          parameters?: Json;
+          photos_before_urls?: string[];
+          photos_after_urls?: string[];
+          products_used?: string | null;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['treatment_sessions']['Insert']>;
+        Relationships: [];
+      };
+      packages: {
+        Row: {
+          id: string;
+          organization_id: string;
+          name: string;
+          description: string | null;
+          service_id: string | null;
+          sessions_total: number;
+          validity_days: number;
+          price_ars: number;
+          discount_percentage: number | null;
+          active: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          name: string;
+          description?: string | null;
+          service_id?: string | null;
+          sessions_total: number;
+          validity_days?: number;
+          price_ars: number;
+          discount_percentage?: number | null;
+          active?: boolean;
+          created_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['packages']['Insert']>;
+        Relationships: [];
+      };
+      client_packages: {
+        Row: {
+          id: string;
+          organization_id: string;
+          client_id: string;
+          package_id: string;
+          sessions_remaining: number;
+          expires_at: string;
+          purchase_price_ars: number;
+          status: 'active' | 'completed' | 'expired' | 'refunded';
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          client_id: string;
+          package_id: string;
+          sessions_remaining: number;
+          expires_at: string;
+          purchase_price_ars: number;
+          status?: 'active' | 'completed' | 'expired' | 'refunded';
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['client_packages']['Insert']>;
+        Relationships: [];
+      };
+      waitlist_entries: {
+        Row: {
+          id: string;
+          organization_id: string;
+          client_id: string;
+          service_id: string;
+          preferred_date: string | null;
+          notes: string | null;
+          notified_at: string | null;
+          status: 'waiting' | 'notified' | 'booked' | 'cancelled';
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          client_id: string;
+          service_id: string;
+          preferred_date?: string | null;
+          notes?: string | null;
+          notified_at?: string | null;
+          status?: 'waiting' | 'notified' | 'booked' | 'cancelled';
+          created_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['waitlist_entries']['Insert']>;
+        Relationships: [];
+      };
+      payments: {
+        Row: {
+          id: string;
+          organization_id: string;
+          client_id: string;
+          appointment_id: string | null;
+          client_package_id: string | null;
+          amount_ars: number;
+          method: 'cash' | 'mp_card' | 'mp_link' | 'transfer' | 'package_credit';
+          status: 'pending' | 'approved' | 'rejected' | 'refunded' | 'cancelled';
+          mp_payment_id: string | null;
+          mp_preference_id: string | null;
+          mp_payment_link: string | null;
+          paid_at: string | null;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          client_id: string;
+          appointment_id?: string | null;
+          client_package_id?: string | null;
+          amount_ars: number;
+          method: 'cash' | 'mp_card' | 'mp_link' | 'transfer' | 'package_credit';
+          status?: 'pending' | 'approved' | 'rejected' | 'refunded' | 'cancelled';
+          mp_payment_id?: string | null;
+          mp_preference_id?: string | null;
+          mp_payment_link?: string | null;
+          paid_at?: string | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['payments']['Insert']>;
+        Relationships: [];
+      };
+      invoices: {
+        Row: {
+          id: string;
+          organization_id: string;
+          payment_id: string | null;
+          client_id: string | null;
+          invoice_type: 'A' | 'B' | 'C' | 'M' | 'internal';
+          invoice_number: string | null;
+          cae: string | null;
+          cae_due_date: string | null;
+          issued_at: string;
+          total_ars: number;
+          pdf_url: string | null;
+          is_fiscal: boolean;
+          provider: 'tusfacturas' | 'direct' | 'manual' | null;
+          provider_response: Json | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          payment_id?: string | null;
+          client_id?: string | null;
+          invoice_type: 'A' | 'B' | 'C' | 'M' | 'internal';
+          invoice_number?: string | null;
+          cae?: string | null;
+          cae_due_date?: string | null;
+          issued_at?: string;
+          total_ars: number;
+          pdf_url?: string | null;
+          is_fiscal?: boolean;
+          provider?: 'tusfacturas' | 'direct' | 'manual' | null;
+          provider_response?: Json | null;
+          created_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['invoices']['Insert']>;
+        Relationships: [];
+      };
+      skin_analyses: {
+        Row: {
+          id: string;
+          organization_id: string;
+          client_id: string;
+          photo_url: string;
+          client_age: number | null;
+          client_objective: string | null;
+          technical_analysis: Json | null;
+          ai_report: Json | null;
+          scores: Json | null;
+          recommended_service_ids: string[];
+          pdf_url: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          client_id: string;
+          photo_url: string;
+          client_age?: number | null;
+          client_objective?: string | null;
+          technical_analysis?: Json | null;
+          ai_report?: Json | null;
+          scores?: Json | null;
+          recommended_service_ids?: string[];
+          pdf_url?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['skin_analyses']['Insert']>;
+        Relationships: [];
+      };
+      treatment_protocols: {
+        Row: {
+          id: string;
+          organization_id: string;
+          client_id: string;
+          skin_analysis_id: string | null;
+          objective: string;
+          client_input: Json | null;
+          ai_protocol: Json | null;
+          total_sessions: number | null;
+          total_price_ars: number | null;
+          status: 'draft' | 'presented' | 'accepted' | 'rejected' | 'expired';
+          accepted_at: string | null;
+          pdf_url: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          client_id: string;
+          skin_analysis_id?: string | null;
+          objective: string;
+          client_input?: Json | null;
+          ai_protocol?: Json | null;
+          total_sessions?: number | null;
+          total_price_ars?: number | null;
+          status?: 'draft' | 'presented' | 'accepted' | 'rejected' | 'expired';
+          accepted_at?: string | null;
+          pdf_url?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['treatment_protocols']['Insert']>;
+        Relationships: [];
+      };
+      loyalty_points: {
+        Row: {
+          client_id: string;
+          organization_id: string;
+          points_balance: number;
+          lifetime_earned: number;
+          updated_at: string;
+        };
+        Insert: {
+          client_id: string;
+          organization_id: string;
+          points_balance?: number;
+          lifetime_earned?: number;
+          updated_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['loyalty_points']['Insert']>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {

@@ -10,6 +10,9 @@ import {
   UserCog,
   Settings,
   LayoutDashboard,
+  Gift,
+  Sparkles,
+  CreditCard,
 } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 
@@ -25,8 +28,11 @@ const NAV: NavItem[] = [
   { href: '/agenda', label: 'Agenda', icon: Calendar },
   { href: '/clientas', label: 'Clientas', icon: Users },
   { href: '/servicios', label: 'Servicios', icon: Scissors },
+  { href: '/paquetes', label: 'Paquetes', icon: Gift },
+  { href: '/cobros', label: 'Cobros', icon: CreditCard },
   { href: '/recursos', label: 'Recursos', icon: Package },
   { href: '/empleadas', label: 'Empleadas', icon: UserCog },
+  { href: '/ia', label: 'IA', icon: Sparkles },
   { href: '/configuracion', label: 'Configuración', icon: Settings },
 ];
 
