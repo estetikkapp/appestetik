@@ -1,9 +1,9 @@
-// Vercel Cron Job — correr cada hora.
-// Busca turnos que empiezan entre 23h y 25h desde ahora,
-// sin reminder enviado, y manda WhatsApp si la org está conectada.
+// Vercel Cron Job — correr 1 vez al día (Vercel Hobby no permite cron horario).
+// Busca turnos entre 12h y 36h desde ahora, sin reminder enviado,
+// y manda WhatsApp si la org está conectada.
 //
-// Configurar en vercel.json:
-// { "crons": [{ "path": "/api/cron/reminders", "schedule": "0 * * * *" }] }
+// Configurar en vercel.json: { "schedule": "0 9 * * *" } = 6am Argentina
+// La ventana 12h-36h asegura que cada turno reciba 1 solo reminder.
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { sendTextMessage } from '@/lib/integrations/whatsapp/evolution';
@@ -19,8 +19,8 @@ export async function GET(req: NextRequest) {
 
   const admin = createAdminClient();
   const now = new Date();
-  const windowStart = new Date(now.getTime() + 23 * 60 * 60 * 1000);
-  const windowEnd = new Date(now.getTime() + 25 * 60 * 60 * 1000);
+  const windowStart = new Date(now.getTime() + 12 * 60 * 60 * 1000);
+  const windowEnd = new Date(now.getTime() + 36 * 60 * 60 * 1000);
 
   // Traer turnos dentro de la ventana, sin reminder enviado, estados activos
   const { data: appointments, error } = await admin
