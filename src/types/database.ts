@@ -29,6 +29,9 @@ export type Database = {
           onboarded_at: string | null;
           afip_provider: 'tusfacturas' | 'direct' | 'manual' | null;
           afip_config: Json | null;
+          whatsapp_status: 'disconnected' | 'connecting' | 'connected';
+          whatsapp_phone: string | null;
+          whatsapp_connected_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -46,10 +49,35 @@ export type Database = {
           onboarded_at?: string | null;
           afip_provider?: 'tusfacturas' | 'direct' | 'manual' | null;
           afip_config?: Json | null;
+          whatsapp_status?: 'disconnected' | 'connecting' | 'connected';
+          whatsapp_phone?: string | null;
+          whatsapp_connected_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
         Update: Partial<Database['public']['Tables']['organizations']['Insert']>;
+        Relationships: [];
+      };
+      whatsapp_reminder_log: {
+        Row: {
+          id: string;
+          organization_id: string;
+          appointment_id: string;
+          phone_e164: string;
+          message: string;
+          sent_at: string;
+          error: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          appointment_id: string;
+          phone_e164: string;
+          message: string;
+          sent_at?: string;
+          error?: string | null;
+        };
+        Update: Partial<Database['public']['Tables']['whatsapp_reminder_log']['Insert']>;
         Relationships: [];
       };
       memberships: {
