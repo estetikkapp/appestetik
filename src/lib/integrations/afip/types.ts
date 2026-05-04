@@ -8,6 +8,23 @@
 
 export type InvoiceType = 'C' | 'B' | 'A';
 
+/**
+ * Configuración AFIP por organización (guardada en organizations.afip_config jsonb).
+ * Cada centro carga sus propias credenciales — esto NO se setea como env var global.
+ *
+ * El usuario corrige bien: cada centro tiene su propia cuenta AFIP / TusFacturas
+ * y emite con sus propios datos fiscales. Las credenciales viven en la fila
+ * de la organización, no como env var del proyecto.
+ */
+export interface AfipOrgConfig {
+  // TusFacturas (provider más común para MVP)
+  api_key?: string;
+  api_token?: string;
+  user_token?: string;
+  // Punto de venta y razón social pueden estar acá o en organizations
+  point_of_sale?: number;
+}
+
 export interface InvoiceItem {
   description: string;
   quantity: number;
