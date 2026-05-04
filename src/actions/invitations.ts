@@ -7,6 +7,7 @@ import { randomBytes } from 'node:crypto';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { isValidEmail, normalizeEmail } from '@/lib/validators/email';
+import { translateDbError } from '@/lib/utils/db-errors';
 import type { InviteRole } from '@/types/app';
 
 async function requireOwnerOrAdmin(): Promise<
@@ -147,4 +148,38 @@ export async function toggleMembershipActive(formData: FormData): Promise<void> 
 
   revalidatePath('/empleadas');
   redirect('/empleadas');
+}
+
+export async function deleteMembership(formData: FormData): Promise<void> {
+  const check = await requireOwnerOrAdmin();
+  if (!check.ok) redirect(`/empleadas?error=${encodeURIComponent(check.error)}`);
+
+  const id = String(formData.get('id') ?? '');
+  if (!id) redirect('/empleadas?error=ID+invalido');
+
+  const supabase = createClient();
+  // Verificar que no sea el owner (no se puede borrar el owner)
+  const { data: m } = await supabase
+    .from('memberships')
+    .select('role')
+    .eq('id', id)
+    .eq('organization_id', check.orgId)
+    .single();
+
+  if (!m) redirect('/empleadas?error=Empleada+no+encontrada');
+  if (m.role === 'owner') {
+    redirect('/empleadas?error=No+se+puede+eliminar+al+owner');
+  }
+
+  const { error } = await supabase
+    .from('memberships')
+    .delete()
+    .eq('id', id)
+    .eq('organization_id', check.orgId)
+    .neq('role', 'owner');
+
+  if (error) redirect(`/empleadas?error=${encodeURIComponent(translateDbError(error))}`);
+
+  revalidatePath('/empleadas');
+  redirect('/empleadas?ok=eliminada');
 }

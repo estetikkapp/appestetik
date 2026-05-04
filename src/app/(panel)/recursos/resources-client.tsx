@@ -13,7 +13,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { createResource, updateResource, toggleResourceActive } from '@/actions/resources';
+import { createResource, updateResource, toggleResourceActive, deleteResource } from '@/actions/resources';
+import { DeleteConfirmButton } from '@/components/ui/delete-confirm-button';
 import type { Tables } from '@/types/database';
 
 const TYPES = [
@@ -108,6 +109,11 @@ export function ResourcesClient({ mode, resource }: Props) {
           {resource.active ? <Archive className="h-4 w-4" /> : <ArchiveRestore className="h-4 w-4" />}
         </SubmitButton>
       </form>
+      <DeleteConfirmButton
+        action={deleteResource}
+        id={resource.id}
+        itemLabel={`el recurso "${resource.name}"`}
+      />
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent className="w-full sm:max-w-md">
           <SheetHeader>

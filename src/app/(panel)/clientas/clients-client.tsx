@@ -11,7 +11,8 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { ClientForm } from '@/components/forms/client-form';
-import { createClientRecord, updateClientRecord } from '@/actions/clients';
+import { createClientRecord, updateClientRecord, deleteClient } from '@/actions/clients';
+import { DeleteConfirmButton } from '@/components/ui/delete-confirm-button';
 import type { Tables } from '@/types/database';
 
 interface Props {
@@ -47,10 +48,16 @@ export function ClientsPageClient({ mode, client }: Props) {
   if (!client) return null;
 
   return (
-    <>
+    <div className="flex items-center justify-end gap-1">
       <Button variant="ghost" size="sm" onClick={() => setOpen(true)}>
         <Pencil className="h-4 w-4" />
       </Button>
+      <DeleteConfirmButton
+        action={deleteClient}
+        id={client.id}
+        itemLabel={`la clienta "${client.full_name}"`}
+        description="Si esta clienta tiene turnos asociados, no se podrá borrar."
+      />
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent className="w-full sm:max-w-md">
           <SheetHeader>
@@ -62,6 +69,6 @@ export function ClientsPageClient({ mode, client }: Props) {
           </div>
         </SheetContent>
       </Sheet>
-    </>
+    </div>
   );
 }

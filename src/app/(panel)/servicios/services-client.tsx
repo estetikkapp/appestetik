@@ -12,7 +12,8 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { ServiceForm } from '@/components/forms/service-form';
-import { createService, updateService, toggleServiceActive } from '@/actions/services';
+import { createService, updateService, toggleServiceActive, deleteService } from '@/actions/services';
+import { DeleteConfirmButton } from '@/components/ui/delete-confirm-button';
 import type { Tables } from '@/types/database';
 
 interface Props {
@@ -59,6 +60,12 @@ export function ServicesPageClient({ mode, service }: Props) {
           {service.active ? <Archive className="h-4 w-4" /> : <ArchiveRestore className="h-4 w-4" />}
         </SubmitButton>
       </form>
+      <DeleteConfirmButton
+        action={deleteService}
+        id={service.id}
+        itemLabel={`el servicio "${service.name}"`}
+        description="Si este servicio tiene turnos asociados, no se podrá borrar — usá Archivar en su lugar."
+      />
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent className="w-full sm:max-w-md">
           <SheetHeader>

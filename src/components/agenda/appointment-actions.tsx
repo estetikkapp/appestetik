@@ -2,7 +2,8 @@
 
 import { Check, Play, CheckCircle, X, UserX } from 'lucide-react';
 import { SubmitButton } from '@/components/ui/submit-button';
-import { updateAppointmentStatus } from '@/actions/appointments';
+import { DeleteConfirmButton } from '@/components/ui/delete-confirm-button';
+import { updateAppointmentStatus, deleteAppointment } from '@/actions/appointments';
 import type { AppointmentStatus } from '@/types/app';
 
 interface Props {
@@ -38,6 +39,12 @@ export function AppointmentRowActions({ id, status }: Props) {
           <UserX className="h-4 w-4" />
         </StatusButton>
       )}
+      <DeleteConfirmButton
+        action={deleteAppointment}
+        id={id}
+        itemLabel="este turno"
+        description="Esta acción borra el turno permanentemente. Si querés mantener el historial, mejor cancelarlo."
+      />
     </div>
   );
 }

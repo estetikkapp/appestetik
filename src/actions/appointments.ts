@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { translateDbError } from '@/lib/utils/db-errors';
 import type { AppointmentStatus } from '@/types/app';
 import type { TablesUpdate } from '@/types/database';
 
@@ -172,6 +173,42 @@ export async function updateAppointmentStatus(formData: FormData): Promise<void>
 
   revalidatePath('/agenda');
   redirect('/agenda');
+}
+
+export async function deleteAppointment(formData: FormData): Promise<void> {
+  const orgId = await getActiveOrgOrRedirect();
+  const id = String(formData.get('id') ?? '');
+  if (!id) redirect('/agenda?error=ID+invalido');
+
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('appointments')
+    .delete()
+    .eq('id', id)
+    .eq('organization_id', orgId);
+
+  if (error) redirect(`/agenda?error=${encodeURIComponent(translateDbError(error))}`);
+
+  revalidatePath('/agenda');
+  redirect('/agenda?ok=eliminado');
+}
+
+export async function deleteScheduleBlock(formData: FormData): Promise<void> {
+  const orgId = await getActiveOrgOrRedirect();
+  const id = String(formData.get('id') ?? '');
+  if (!id) redirect('/agenda?error=ID+invalido');
+
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('schedule_blocks')
+    .delete()
+    .eq('id', id)
+    .eq('organization_id', orgId);
+
+  if (error) redirect(`/agenda?error=${encodeURIComponent(translateDbError(error))}`);
+
+  revalidatePath('/agenda');
+  redirect('/agenda?ok=bloqueo-eliminado');
 }
 
 export async function createScheduleBlock(formData: FormData): Promise<void> {

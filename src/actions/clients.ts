@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/server';
 import { isValidDni, normalizeDni } from '@/lib/validators/dni';
 import { isValidPhoneAr, normalizePhoneAr } from '@/lib/validators/phone-ar';
 import { isValidEmail, normalizeEmail } from '@/lib/validators/email';
+import { translateDbError } from '@/lib/utils/db-errors';
 
 async function getActiveOrgOrRedirect(): Promise<string> {
   const orgId = cookies().get('active_org')?.value;
@@ -93,6 +94,24 @@ export async function updateClientRecord(formData: FormData): Promise<void> {
 
   revalidatePath('/clientas');
   redirect('/clientas?ok=actualizada');
+}
+
+export async function deleteClient(formData: FormData): Promise<void> {
+  const orgId = await getActiveOrgOrRedirect();
+  const id = String(formData.get('id') ?? '');
+  if (!id) redirect('/clientas?error=ID+invalido');
+
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('clients')
+    .delete()
+    .eq('id', id)
+    .eq('organization_id', orgId);
+
+  if (error) redirect(`/clientas?error=${encodeURIComponent(translateDbError(error))}`);
+
+  revalidatePath('/clientas');
+  redirect('/clientas?ok=eliminada');
 }
 
 export async function searchClients(query: string): Promise<Array<{ id: string; full_name: string; phone_e164: string | null; dni: string | null }>> {
