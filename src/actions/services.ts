@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { translateDbError } from '@/lib/utils/db-errors';
 
 async function getActiveOrgOrRedirect(): Promise<string> {
   const orgId = cookies().get('active_org')?.value;
@@ -85,4 +86,22 @@ export async function toggleServiceActive(formData: FormData): Promise<void> {
 
   revalidatePath('/servicios');
   redirect('/servicios');
+}
+
+export async function deleteService(formData: FormData): Promise<void> {
+  const orgId = await getActiveOrgOrRedirect();
+  const id = String(formData.get('id') ?? '');
+  if (!id) redirect('/servicios?error=ID+invalido');
+
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('services')
+    .delete()
+    .eq('id', id)
+    .eq('organization_id', orgId);
+
+  if (error) redirect(`/servicios?error=${encodeURIComponent(translateDbError(error))}`);
+
+  revalidatePath('/servicios');
+  redirect('/servicios?ok=eliminado');
 }

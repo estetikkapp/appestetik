@@ -75,6 +75,7 @@ export default async function EmpleadasPage({
         <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
           {searchParams.ok === 'invitada' && 'Invitación enviada.'}
           {searchParams.ok === 'revocada' && 'Invitación revocada.'}
+          {searchParams.ok === 'eliminada' && 'Empleada eliminada.'}
         </div>
       )}
 

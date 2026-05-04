@@ -17,7 +17,9 @@ import {
   inviteEmployee,
   revokeInvitation,
   toggleMembershipActive,
+  deleteMembership,
 } from '@/actions/invitations';
+import { DeleteConfirmButton } from '@/components/ui/delete-confirm-button';
 import type { Tables } from '@/types/database';
 
 type Membership = Pick<
@@ -87,17 +89,25 @@ export function EmpleadasClient({ mode, membership, invitation }: Props) {
 
   if (mode === 'toggle' && membership) {
     return (
-      <form action={toggleMembershipActive}>
-        <input type="hidden" name="id" value={membership.id} />
-        <input type="hidden" name="active" value={String(membership.active)} />
-        <SubmitButton variant="ghost" size="sm" hideSpinner>
-          {membership.active ? (
-            <Archive className="h-4 w-4" />
-          ) : (
-            <ArchiveRestore className="h-4 w-4" />
-          )}
-        </SubmitButton>
-      </form>
+      <div className="flex items-center justify-end gap-1">
+        <form action={toggleMembershipActive}>
+          <input type="hidden" name="id" value={membership.id} />
+          <input type="hidden" name="active" value={String(membership.active)} />
+          <SubmitButton variant="ghost" size="sm" hideSpinner>
+            {membership.active ? (
+              <Archive className="h-4 w-4" />
+            ) : (
+              <ArchiveRestore className="h-4 w-4" />
+            )}
+          </SubmitButton>
+        </form>
+        <DeleteConfirmButton
+          action={deleteMembership}
+          id={membership.id}
+          itemLabel={`a "${membership.display_name ?? 'esta empleada'}"`}
+          description="Se elimina la membresía pero la cuenta del usuario queda en Supabase Auth. No se puede eliminar si hay turnos asignados a este profesional."
+        />
+      </div>
     );
   }
 
