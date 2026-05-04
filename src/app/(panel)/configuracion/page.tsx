@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { SubmitButton } from '@/components/ui/submit-button';
 import { updateOrganizationSettings } from '@/actions/organization-settings';
 import { uploadOrganizationLogo } from '@/actions/storage';
+import { WhatsappConnectCard } from '@/components/whatsapp/whatsapp-connect-card';
 
 export const metadata = { title: 'Configuración — appestetika' };
 
@@ -20,7 +21,7 @@ async function loadOrg() {
 export default async function ConfiguracionPage({
   searchParams,
 }: {
-  searchParams: { error?: string; ok?: string };
+  searchParams: { error?: string; ok?: string; wapp?: string };
 }) {
   const org = await loadOrg();
 
@@ -40,6 +41,7 @@ export default async function ConfiguracionPage({
         <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
           {searchParams.ok === 'guardado' && 'Cambios guardados.'}
           {searchParams.ok === 'logo-subido' && 'Logo actualizado.'}
+          {searchParams.ok === 'whatsapp-desconectado' && 'WhatsApp desconectado.'}
         </div>
       )}
 
@@ -125,7 +127,20 @@ export default async function ConfiguracionPage({
       </section>
 
       <section className="rounded-xl border border-stone-200 bg-white p-6">
-        <h2 className="mb-4 text-lg font-semibold">Integraciones</h2>
+        <h2 className="mb-4 text-lg font-semibold">WhatsApp — Recordatorios automáticos</h2>
+        <p className="mb-4 text-sm text-stone-500">
+          Conectá el número de WhatsApp de tu centro para enviar recordatorios automáticos
+          24hs antes de cada turno.
+        </p>
+        <WhatsappConnectCard
+          initialStatus={(org?.whatsapp_status as 'disconnected' | 'connecting' | 'connected') ?? 'disconnected'}
+          initialPhone={org?.whatsapp_phone ?? null}
+          startPolling={searchParams.wapp === 'qr'}
+        />
+      </section>
+
+      <section className="rounded-xl border border-stone-200 bg-white p-6">
+        <h2 className="mb-4 text-lg font-semibold">Otras integraciones</h2>
         <div className="space-y-3">
           <IntegrationRow
             name="AFIP (Facturación electrónica)"
@@ -138,11 +153,6 @@ export default async function ConfiguracionPage({
           />
           <IntegrationRow
             name="Mercado Pago"
-            status="pending"
-            hint="Integración viene en Sprint 3."
-          />
-          <IntegrationRow
-            name="WhatsApp Business"
             status="pending"
             hint="Integración viene en Sprint 3."
           />

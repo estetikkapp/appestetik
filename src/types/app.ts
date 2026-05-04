@@ -14,6 +14,8 @@ export type AppointmentStatus =
   | 'no_show';
 export type AppointmentSource = 'panel' | 'public' | 'waitlist';
 
+export type WhatsappStatus = 'disconnected' | 'connecting' | 'connected';
+
 export const APPOINTMENT_STATUS_LABELS: Record<AppointmentStatus, string> = {
   pending: 'Pendiente',
   confirmed: 'Confirmado',
