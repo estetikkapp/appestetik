@@ -1,24 +1,42 @@
-import type { IAfipProvider } from './types';
+import type { IAfipProvider, AfipOrgConfig } from './types';
 import { ManualAfipProvider } from './manual';
 
 /**
  * Factory que retorna el provider AFIP según configuración de la organización.
- * En Sprint 1a todos los orgs tienen afip_provider='manual' (default del schema).
- * Sprint 4 agrega el case para 'tusfacturas'.
+ *
+ * IMPORTANTE: las credenciales son **per-org** (en organizations.afip_config jsonb).
+ * Cada centro carga sus propias credenciales de TusFacturas en /configuracion → AFIP.
+ * NO existen env vars globales — cada org factura con su cuenta TusFacturas.
+ *
+ * @param providerName valor de organizations.afip_provider
+ * @param config valor de organizations.afip_config (las credenciales de ese centro)
  */
-export function getAfipProvider(providerName: string | null | undefined): IAfipProvider {
+export function getAfipProvider(
+  providerName: string | null | undefined,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _config?: AfipOrgConfig | null
+): IAfipProvider {
   switch (providerName) {
     case 'tusfacturas':
-      // return new TusFacturasProvider() — impl en Sprint 4
-      throw new Error('TusFacturas provider pendiente de implementar (Sprint 4)');
+      // return new TusFacturasProvider(_config) — impl pendiente
+      throw new Error(
+        'TusFacturas provider pendiente. Cuando esté listo, leerá las credenciales de organizations.afip_config (per-org).'
+      );
     case 'direct':
-      // return new DirectAfipProvider() — impl en Sprint 6+ tier enterprise
-      throw new Error('Direct AFIP provider pendiente de implementar (Sprint 6+)');
+      // return new DirectAfipProvider(_config) — tier enterprise con certificado AFIP propio
+      throw new Error('Direct AFIP provider pendiente (tier enterprise)');
     case 'manual':
     default:
       return new ManualAfipProvider();
   }
 }
 
-export type { IAfipProvider, InvoiceRequest, InvoiceResult, InvoiceType, InvoiceItem } from './types';
+export type {
+  IAfipProvider,
+  InvoiceRequest,
+  InvoiceResult,
+  InvoiceType,
+  InvoiceItem,
+  AfipOrgConfig,
+} from './types';
 export { NotImplementedError } from './types';
