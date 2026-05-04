@@ -291,7 +291,20 @@ export type Database = {
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['client_medical_info']['Row'], 'id' | 'created_at' | 'updated_at'> & { id?: string; created_at?: string; updated_at?: string };
+        Insert: {
+          id?: string;
+          client_id: string;
+          organization_id: string;
+          allergies?: string | null;
+          medications?: string | null;
+          pregnancy_status?: 'no' | 'si' | 'lactancia' | 'trying' | 'unknown' | null;
+          skin_type?: 'I' | 'II' | 'III' | 'IV' | 'V' | 'VI' | null;
+          contraindications?: string | null;
+          consent_signed_at?: string | null;
+          consent_signature_url?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
         Update: Partial<Database['public']['Tables']['client_medical_info']['Insert']>;
         Relationships: [];
       };
@@ -311,12 +324,20 @@ export type Database = {
           notes: string | null;
           created_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['treatment_sessions']['Row'], 'id' | 'created_at' | 'parameters' | 'photos_before_urls' | 'photos_after_urls'> & {
+        Insert: {
           id?: string;
-          created_at?: string;
+          organization_id: string;
+          appointment_id?: string | null;
+          client_id: string;
+          professional_id?: string | null;
+          service_id?: string | null;
+          performed_at: string;
           parameters?: Json;
           photos_before_urls?: string[];
           photos_after_urls?: string[];
+          products_used?: string | null;
+          notes?: string | null;
+          created_at?: string;
         };
         Update: Partial<Database['public']['Tables']['treatment_sessions']['Insert']>;
         Relationships: [];
@@ -335,12 +356,18 @@ export type Database = {
           active: boolean;
           created_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['packages']['Row'], 'id' | 'created_at' | 'active' | 'validity_days' | 'discount_percentage'> & {
+        Insert: {
           id?: string;
-          created_at?: string;
-          active?: boolean;
+          organization_id: string;
+          name: string;
+          description?: string | null;
+          service_id?: string | null;
+          sessions_total: number;
           validity_days?: number;
+          price_ars: number;
           discount_percentage?: number | null;
+          active?: boolean;
+          created_at?: string;
         };
         Update: Partial<Database['public']['Tables']['packages']['Insert']>;
         Relationships: [];
@@ -359,11 +386,18 @@ export type Database = {
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['client_packages']['Row'], 'id' | 'created_at' | 'updated_at' | 'status'> & {
+        Insert: {
           id?: string;
+          organization_id: string;
+          client_id: string;
+          package_id: string;
+          sessions_remaining: number;
+          expires_at: string;
+          purchase_price_ars: number;
+          status?: 'active' | 'completed' | 'expired' | 'refunded';
+          notes?: string | null;
           created_at?: string;
           updated_at?: string;
-          status?: 'active' | 'completed' | 'expired' | 'refunded';
         };
         Update: Partial<Database['public']['Tables']['client_packages']['Insert']>;
         Relationships: [];
@@ -380,10 +414,16 @@ export type Database = {
           status: 'waiting' | 'notified' | 'booked' | 'cancelled';
           created_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['waitlist_entries']['Row'], 'id' | 'created_at' | 'status'> & {
+        Insert: {
           id?: string;
-          created_at?: string;
+          organization_id: string;
+          client_id: string;
+          service_id: string;
+          preferred_date?: string | null;
+          notes?: string | null;
+          notified_at?: string | null;
           status?: 'waiting' | 'notified' | 'booked' | 'cancelled';
+          created_at?: string;
         };
         Update: Partial<Database['public']['Tables']['waitlist_entries']['Insert']>;
         Relationships: [];
@@ -406,11 +446,22 @@ export type Database = {
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['payments']['Row'], 'id' | 'created_at' | 'updated_at' | 'status'> & {
+        Insert: {
           id?: string;
+          organization_id: string;
+          client_id: string;
+          appointment_id?: string | null;
+          client_package_id?: string | null;
+          amount_ars: number;
+          method: 'cash' | 'mp_card' | 'mp_link' | 'transfer' | 'package_credit';
+          status?: 'pending' | 'approved' | 'rejected' | 'refunded' | 'cancelled';
+          mp_payment_id?: string | null;
+          mp_preference_id?: string | null;
+          mp_payment_link?: string | null;
+          paid_at?: string | null;
+          notes?: string | null;
           created_at?: string;
           updated_at?: string;
-          status?: 'pending' | 'approved' | 'rejected' | 'refunded' | 'cancelled';
         };
         Update: Partial<Database['public']['Tables']['payments']['Insert']>;
         Relationships: [];
@@ -433,11 +484,22 @@ export type Database = {
           provider_response: Json | null;
           created_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['invoices']['Row'], 'id' | 'created_at' | 'issued_at' | 'is_fiscal'> & {
+        Insert: {
           id?: string;
-          created_at?: string;
+          organization_id: string;
+          payment_id?: string | null;
+          client_id?: string | null;
+          invoice_type: 'A' | 'B' | 'C' | 'M' | 'internal';
+          invoice_number?: string | null;
+          cae?: string | null;
+          cae_due_date?: string | null;
           issued_at?: string;
+          total_ars: number;
+          pdf_url?: string | null;
           is_fiscal?: boolean;
+          provider?: 'tusfacturas' | 'direct' | 'manual' | null;
+          provider_response?: Json | null;
+          created_at?: string;
         };
         Update: Partial<Database['public']['Tables']['invoices']['Insert']>;
         Relationships: [];
@@ -457,10 +519,19 @@ export type Database = {
           pdf_url: string | null;
           created_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['skin_analyses']['Row'], 'id' | 'created_at' | 'recommended_service_ids'> & {
+        Insert: {
           id?: string;
-          created_at?: string;
+          organization_id: string;
+          client_id: string;
+          photo_url: string;
+          client_age?: number | null;
+          client_objective?: string | null;
+          technical_analysis?: Json | null;
+          ai_report?: Json | null;
+          scores?: Json | null;
           recommended_service_ids?: string[];
+          pdf_url?: string | null;
+          created_at?: string;
         };
         Update: Partial<Database['public']['Tables']['skin_analyses']['Insert']>;
         Relationships: [];
@@ -482,11 +553,21 @@ export type Database = {
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['treatment_protocols']['Row'], 'id' | 'created_at' | 'updated_at' | 'status'> & {
+        Insert: {
           id?: string;
+          organization_id: string;
+          client_id: string;
+          skin_analysis_id?: string | null;
+          objective: string;
+          client_input?: Json | null;
+          ai_protocol?: Json | null;
+          total_sessions?: number | null;
+          total_price_ars?: number | null;
+          status?: 'draft' | 'presented' | 'accepted' | 'rejected' | 'expired';
+          accepted_at?: string | null;
+          pdf_url?: string | null;
           created_at?: string;
           updated_at?: string;
-          status?: 'draft' | 'presented' | 'accepted' | 'rejected' | 'expired';
         };
         Update: Partial<Database['public']['Tables']['treatment_protocols']['Insert']>;
         Relationships: [];
@@ -499,10 +580,12 @@ export type Database = {
           lifetime_earned: number;
           updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['loyalty_points']['Row'], 'updated_at' | 'points_balance' | 'lifetime_earned'> & {
-          updated_at?: string;
+        Insert: {
+          client_id: string;
+          organization_id: string;
           points_balance?: number;
           lifetime_earned?: number;
+          updated_at?: string;
         };
         Update: Partial<Database['public']['Tables']['loyalty_points']['Insert']>;
         Relationships: [];

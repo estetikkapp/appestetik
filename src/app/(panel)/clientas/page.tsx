@@ -112,7 +112,9 @@ export default async function ClientasPage({
             {clients.map((c) => (
               <TableRow key={c.id}>
                 <TableCell>
-                  <div className="font-medium">{c.full_name}</div>
+                  <a href={`/clientas/${c.id}`} className="font-medium text-stone-900 hover:text-brand-700 hover:underline">
+                    {c.full_name}
+                  </a>
                   {c.email && <div className="text-xs text-stone-500">{c.email}</div>}
                 </TableCell>
                 <TableCell className="text-sm text-stone-600">
