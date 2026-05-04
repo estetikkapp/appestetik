@@ -1,9 +1,9 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { SubmitButton } from '@/components/ui/submit-button';
 import { Tables } from '@/types/database';
 
 const CATEGORIES = ['depilacion', 'facial', 'corporal', 'unias', 'masajes', 'otro'];
@@ -115,7 +115,7 @@ export function ServiceForm({ action, service, submitLabel = 'Guardar' }: Servic
       </label>
 
       <div className="flex justify-end pt-2">
-        <Button type="submit">{submitLabel}</Button>
+        <SubmitButton pendingText="Guardando...">{submitLabel}</SubmitButton>
       </div>
     </form>
   );

@@ -1,8 +1,8 @@
 import { updateOrganizationFiscal } from '@/actions/organizations';
 import { OnboardingStepper } from '@/components/onboarding/stepper';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { SubmitButton } from '@/components/ui/submit-button';
 import { createClient } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';
 
@@ -128,7 +128,7 @@ export default async function OnboardingStep1({
           </fieldset>
 
           <div className="flex justify-end pt-4">
-            <Button type="submit">Siguiente: horarios →</Button>
+            <SubmitButton pendingText="Guardando...">Siguiente: horarios →</SubmitButton>
           </div>
         </form>
       </div>

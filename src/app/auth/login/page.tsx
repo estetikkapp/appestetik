@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { login, signInWithGoogle } from '@/actions/auth';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { SubmitButton } from '@/components/ui/submit-button';
 
 export const metadata = { title: 'Iniciar sesión — appestetika' };
 
@@ -39,9 +39,9 @@ export default function LoginPage({
             <Label htmlFor="password">Contraseña</Label>
             <Input id="password" name="password" type="password" required minLength={8} />
           </div>
-          <Button type="submit" className="w-full">
+          <SubmitButton className="w-full" pendingText="Iniciando sesión...">
             Iniciar sesión
-          </Button>
+          </SubmitButton>
         </form>
 
         <div className="relative my-6">
@@ -54,9 +54,9 @@ export default function LoginPage({
         </div>
 
         <form action={signInWithGoogle}>
-          <Button type="submit" variant="outline" className="w-full">
+          <SubmitButton variant="outline" className="w-full" pendingText="Conectando...">
             Continuar con Google
-          </Button>
+          </SubmitButton>
         </form>
 
         <p className="mt-6 text-center text-sm text-stone-500">

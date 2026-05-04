@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Plus, Archive, ArchiveRestore, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { SubmitButton } from '@/components/ui/submit-button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -75,7 +76,7 @@ export function EmpleadasClient({ mode, membership, invitation }: Props) {
                 </select>
               </div>
               <div className="flex justify-end pt-2">
-                <Button type="submit">Enviar invitación</Button>
+                <SubmitButton pendingText="Enviando...">Enviar invitación</SubmitButton>
               </div>
             </form>
           </SheetContent>
@@ -89,13 +90,13 @@ export function EmpleadasClient({ mode, membership, invitation }: Props) {
       <form action={toggleMembershipActive}>
         <input type="hidden" name="id" value={membership.id} />
         <input type="hidden" name="active" value={String(membership.active)} />
-        <Button variant="ghost" size="sm" type="submit">
+        <SubmitButton variant="ghost" size="sm" hideSpinner>
           {membership.active ? (
             <Archive className="h-4 w-4" />
           ) : (
             <ArchiveRestore className="h-4 w-4" />
           )}
-        </Button>
+        </SubmitButton>
       </form>
     );
   }
@@ -104,9 +105,9 @@ export function EmpleadasClient({ mode, membership, invitation }: Props) {
     return (
       <form action={revokeInvitation}>
         <input type="hidden" name="id" value={invitation.id} />
-        <Button variant="ghost" size="sm" type="submit" title="Revocar invitación">
+        <SubmitButton variant="ghost" size="sm" title="Revocar invitación" hideSpinner>
           <X className="h-4 w-4" />
-        </Button>
+        </SubmitButton>
       </form>
     );
   }

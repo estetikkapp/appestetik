@@ -1,5 +1,5 @@
 import { logout } from '@/actions/auth';
-import { Button } from '@/components/ui/button';
+import { SubmitButton } from '@/components/ui/submit-button';
 
 export default function OnboardingLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -8,9 +8,9 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
         <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-4">
           <h1 className="text-lg font-semibold text-brand-700">appestetika</h1>
           <form action={logout}>
-            <Button type="submit" variant="ghost" size="sm">
+            <SubmitButton variant="ghost" size="sm" pendingText="Saliendo...">
               Cerrar sesión
-            </Button>
+            </SubmitButton>
           </form>
         </div>
       </header>

@@ -1,7 +1,7 @@
 'use client';
 
 import { Check, Play, CheckCircle, X, UserX } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { SubmitButton } from '@/components/ui/submit-button';
 import { updateAppointmentStatus } from '@/actions/appointments';
 import type { AppointmentStatus } from '@/types/app';
 
@@ -47,7 +47,6 @@ function StatusButton({
   toStatus,
   title,
   children,
-  variant = 'ghost',
 }: {
   id: string;
   toStatus: AppointmentStatus;
@@ -59,9 +58,9 @@ function StatusButton({
     <form action={updateAppointmentStatus}>
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="status" value={toStatus} />
-      <Button variant={variant === 'destructive' ? 'ghost' : 'ghost'} size="sm" type="submit" title={title}>
+      <SubmitButton variant="ghost" size="sm" title={title} hideSpinner>
         {children}
-      </Button>
+      </SubmitButton>
     </form>
   );
 }

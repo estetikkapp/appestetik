@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { updateBusinessHours } from '@/actions/organizations';
 import { OnboardingStepper } from '@/components/onboarding/stepper';
 import { Button } from '@/components/ui/button';
+import { SubmitButton } from '@/components/ui/submit-button';
 import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 
@@ -118,7 +119,7 @@ export default async function OnboardingStep2({
             <Button variant="ghost" asChild>
               <Link href="/onboarding">← Atrás</Link>
             </Button>
-            <Button type="submit">Siguiente: primer servicio →</Button>
+            <SubmitButton pendingText="Guardando...">Siguiente: primer servicio →</SubmitButton>
           </div>
         </form>
       </div>

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Plus, Pencil, Archive, ArchiveRestore } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { SubmitButton } from '@/components/ui/submit-button';
 import {
   Sheet,
   SheetContent,
@@ -54,9 +55,9 @@ export function ServicesPageClient({ mode, service }: Props) {
       <form action={toggleServiceActive}>
         <input type="hidden" name="id" value={service.id} />
         <input type="hidden" name="active" value={String(service.active)} />
-        <Button variant="ghost" size="sm" type="submit">
+        <SubmitButton variant="ghost" size="sm" hideSpinner>
           {service.active ? <Archive className="h-4 w-4" /> : <ArchiveRestore className="h-4 w-4" />}
-        </Button>
+        </SubmitButton>
       </form>
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent className="w-full sm:max-w-md">

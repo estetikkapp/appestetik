@@ -1,5 +1,5 @@
 import { logout } from '@/actions/auth';
-import { Button } from '@/components/ui/button';
+import { SubmitButton } from '@/components/ui/submit-button';
 
 export const metadata = { title: 'Esperando configuración — appestetika' };
 
@@ -13,9 +13,9 @@ export default function WaitingSetupPage() {
           invitó para que termine de configurar el centro. Cuando esté listo, vas a poder ingresar.
         </p>
         <form action={logout} className="mt-6">
-          <Button type="submit" variant="outline" className="w-full">
+          <SubmitButton variant="outline" className="w-full" pendingText="Saliendo...">
             Cerrar sesión
-          </Button>
+          </SubmitButton>
         </form>
       </div>
     </main>

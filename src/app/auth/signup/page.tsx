@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { signup, signInWithGoogle } from '@/actions/auth';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { SubmitButton } from '@/components/ui/submit-button';
 
 export const metadata = { title: 'Crear cuenta — appestetika' };
 
@@ -44,9 +44,9 @@ export default function SignupPage({ searchParams }: { searchParams: { error?: s
             <Input id="password" name="password" type="password" required minLength={8} />
             <p className="text-xs text-stone-500">Mínimo 8 caracteres</p>
           </div>
-          <Button type="submit" className="w-full">
+          <SubmitButton className="w-full" pendingText="Creando cuenta...">
             Crear cuenta
-          </Button>
+          </SubmitButton>
         </form>
 
         <div className="relative my-6">
@@ -59,9 +59,9 @@ export default function SignupPage({ searchParams }: { searchParams: { error?: s
         </div>
 
         <form action={signInWithGoogle}>
-          <Button type="submit" variant="outline" className="w-full">
+          <SubmitButton variant="outline" className="w-full" pendingText="Conectando...">
             Continuar con Google
-          </Button>
+          </SubmitButton>
         </form>
 
         <p className="mt-6 text-center text-sm text-stone-500">

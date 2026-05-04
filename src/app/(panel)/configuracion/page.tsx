@@ -1,9 +1,9 @@
 import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { SubmitButton } from '@/components/ui/submit-button';
 import { updateOrganizationSettings } from '@/actions/organization-settings';
 import { uploadOrganizationLogo } from '@/actions/storage';
 
@@ -68,9 +68,9 @@ export default async function ConfiguracionPage({
                 required
                 className="flex h-10 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm file:mr-3 file:rounded file:border-0 file:bg-brand-100 file:px-2 file:py-1 file:text-xs file:font-medium file:text-brand-700"
               />
-              <Button type="submit" variant="outline">
+              <SubmitButton variant="outline" pendingText="Subiendo...">
                 Subir
-              </Button>
+              </SubmitButton>
             </div>
           </form>
         </div>
@@ -119,7 +119,7 @@ export default async function ConfiguracionPage({
             <Row label="Subscripción" value={org?.subscription_tier ?? '—'} />
           </div>
           <div className="flex justify-end">
-            <Button type="submit">Guardar cambios</Button>
+            <SubmitButton pendingText="Guardando...">Guardar cambios</SubmitButton>
           </div>
         </form>
       </section>
