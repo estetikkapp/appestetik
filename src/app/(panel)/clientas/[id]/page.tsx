@@ -15,6 +15,7 @@ import { upsertMedicalInfo } from '@/actions/medical-info';
 import { SignaturePad } from '@/components/clientas/signature-pad';
 import { TreatmentSessionForm } from '@/components/clientas/treatment-session-form';
 import { TreatmentSessionRow } from '@/components/clientas/treatment-session-row';
+import { AssignPackageForm } from '@/components/clientas/assign-package-form';
 
 export const metadata = { title: 'Ficha clínica — appestetika' };
 
@@ -30,6 +31,7 @@ async function loadClientData(id: string) {
     packagesResult,
     appointmentsResult,
     servicesResult,
+    availablePackagesResult,
   ] = await Promise.all([
     supabase.from('clients').select('*').eq('id', id).eq('organization_id', orgId).maybeSingle(),
     supabase.from('client_medical_info').select('*').eq('client_id', id).maybeSingle(),
@@ -57,6 +59,12 @@ async function loadClientData(id: string) {
       .eq('organization_id', orgId)
       .eq('active', true)
       .order('name'),
+    supabase
+      .from('packages')
+      .select('id, name, sessions_total, price_ars')
+      .eq('organization_id', orgId)
+      .eq('active', true)
+      .order('name'),
   ]);
 
   if (!clientResult.data) return null;
@@ -68,6 +76,7 @@ async function loadClientData(id: string) {
     packages: packagesResult.data ?? [],
     appointments: appointmentsResult.data ?? [],
     services: servicesResult.data ?? [],
+    availablePackages: availablePackagesResult.data ?? [],
   };
 }
 
@@ -80,7 +89,7 @@ export default async function ClientDetailPage({
 }) {
   const data = await loadClientData(params.id);
   if (!data) notFound();
-  const { client, medical, sessions, packages, appointments, services } = data;
+  const { client, medical, sessions, packages, appointments, services, availablePackages } = data;
 
   const tab = searchParams.tab ?? 'info';
   const okMessages: Record<string, string> = {
@@ -285,38 +294,47 @@ export default async function ClientDetailPage({
       )}
 
       {tab === 'packages' && (
-        <section className="rounded-xl border border-stone-200 bg-white p-6">
-          <h2 className="mb-4 text-lg font-semibold">Paquetes activos</h2>
-          {packages.length === 0 ? (
-            <p className="text-sm text-stone-500">
-              Esta clienta no tiene paquetes activos.{' '}
-              <Link href="/paquetes" className="text-brand-600 hover:underline">
-                Asignar uno
-              </Link>
-            </p>
-          ) : (
-            <ul className="space-y-3">
-              {packages.map((p) => {
-                const pkgRel = Array.isArray(p.package) ? p.package[0] : p.package;
-                return (
-                  <li
-                    key={p.id}
-                    className="flex items-center justify-between rounded-lg border border-stone-100 p-3"
-                  >
-                    <div>
-                      <div className="font-medium">{pkgRel?.name}</div>
-                      <p className="text-xs text-stone-500">
-                        {p.sessions_remaining} de {pkgRel?.sessions_total ?? '—'} sesiones · vence{' '}
-                        {formatDateAr(p.expires_at)}
-                      </p>
-                    </div>
-                    <Badge variant="success">{formatArs(Number(p.purchase_price_ars))}</Badge>
-                  </li>
-                );
-              })}
-            </ul>
+        <div className="space-y-4">
+          {availablePackages.length > 0 && (
+            <section className="rounded-xl border border-stone-200 bg-white p-6">
+              <h2 className="mb-4 text-lg font-semibold">Asignar nuevo paquete</h2>
+              <AssignPackageForm clientId={client.id} availablePackages={availablePackages} />
+            </section>
           )}
-        </section>
+          <section className="rounded-xl border border-stone-200 bg-white p-6">
+            <h2 className="mb-4 text-lg font-semibold">Paquetes activos</h2>
+            {packages.length === 0 ? (
+              <p className="text-sm text-stone-500">
+                Esta clienta no tiene paquetes activos.{' '}
+                <Link href="/paquetes" className="text-brand-600 hover:underline">
+                  Crear paquetes
+                </Link>{' '}
+                primero.
+              </p>
+            ) : (
+              <ul className="space-y-3">
+                {packages.map((p) => {
+                  const pkgRel = Array.isArray(p.package) ? p.package[0] : p.package;
+                  return (
+                    <li
+                      key={p.id}
+                      className="flex items-center justify-between rounded-lg border border-stone-100 p-3"
+                    >
+                      <div>
+                        <div className="font-medium">{pkgRel?.name}</div>
+                        <p className="text-xs text-stone-500">
+                          {p.sessions_remaining} de {pkgRel?.sessions_total ?? '—'} sesiones · vence{' '}
+                          {formatDateAr(p.expires_at)}
+                        </p>
+                      </div>
+                      <Badge variant="success">{formatArs(Number(p.purchase_price_ars))}</Badge>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
+        </div>
       )}
 
       {tab === 'appointments' && (
