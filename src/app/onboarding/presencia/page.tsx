@@ -4,6 +4,7 @@ import { OnboardingStepper } from '@/components/onboarding/stepper';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { SubmitButton } from '@/components/ui/submit-button';
 
 export const metadata = { title: 'Onboarding — presencia' };
 
@@ -67,9 +68,9 @@ export default function OnboardingStep4({ searchParams }: { searchParams: { erro
             <Button variant="ghost" asChild>
               <Link href="/onboarding/servicio">← Atrás</Link>
             </Button>
-            <Button type="submit" variant="premium">
+            <SubmitButton variant="premium" pendingText="Finalizando...">
               Terminar onboarding
-            </Button>
+            </SubmitButton>
           </div>
         </form>
       </div>

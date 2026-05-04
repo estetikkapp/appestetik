@@ -1,10 +1,10 @@
 import { notFound } from 'next/navigation';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createPublicReservation } from '@/actions/public-booking';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { SubmitButton } from '@/components/ui/submit-button';
 import { formatArs } from '@/lib/utils/format-ars';
 import { Clock, DollarSign } from 'lucide-react';
 
@@ -206,9 +206,9 @@ export default async function PublicReservationPage({ params, searchParams }: Pa
               </div>
 
               <div className="pt-2">
-                <Button type="submit" className="w-full" size="lg">
+                <SubmitButton className="w-full" size="lg" pendingText="Reservando...">
                   Confirmar reserva
-                </Button>
+                </SubmitButton>
                 <p className="mt-2 text-center text-xs text-stone-400">
                   Tu turno queda en estado <strong>Pendiente</strong>. El centro te confirma por
                   WhatsApp.

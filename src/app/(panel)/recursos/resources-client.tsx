@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Plus, Pencil, Archive, ArchiveRestore } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { SubmitButton } from '@/components/ui/submit-button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -66,9 +67,9 @@ export function ResourcesClient({ mode, resource }: Props) {
         </select>
       </div>
       <div className="flex justify-end pt-2">
-        <Button type="submit">
+        <SubmitButton pendingText="Guardando...">
           {mode === 'create' ? 'Crear recurso' : 'Guardar cambios'}
-        </Button>
+        </SubmitButton>
       </div>
     </form>
   );
@@ -103,9 +104,9 @@ export function ResourcesClient({ mode, resource }: Props) {
       <form action={toggleResourceActive}>
         <input type="hidden" name="id" value={resource.id} />
         <input type="hidden" name="active" value={String(resource.active)} />
-        <Button variant="ghost" size="sm" type="submit">
+        <SubmitButton variant="ghost" size="sm" hideSpinner>
           {resource.active ? <Archive className="h-4 w-4" /> : <ArchiveRestore className="h-4 w-4" />}
-        </Button>
+        </SubmitButton>
       </form>
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent className="w-full sm:max-w-md">
