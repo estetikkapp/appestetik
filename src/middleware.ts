@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { updateSession } from '@/lib/supabase/middleware';
 
 const AUTH_ROUTES = ['/auth/login', '/auth/signup'];
-const PUBLIC_PREFIXES = ['/auth', '/c/', '/api/public'];
+const PUBLIC_PREFIXES = ['/auth', '/c/', '/api/public', '/api/cron', '/api/whatsapp/webhook', '/api/webhooks'];
 const ACTIVE_ORG_COOKIE = 'active_org';
 
 function isPublicRoute(pathname: string): boolean {
