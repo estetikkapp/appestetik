@@ -34,12 +34,33 @@ export async function middleware(request: NextRequest) {
 
   // Con user en rutas de auth: resolver destino según onboarding
   // Pero primero necesitamos saber la org activa del user
-  const { data: memberships } = await supabase
-    .from('memberships')
-    .select('organization_id, role, organizations(id, onboarded_at, name)')
-    .eq('user_id', user.id)
-    .eq('active', true)
-    .order('created_at', { ascending: false });
+  type MembershipRow = {
+    organization_id: string;
+    role: string;
+    organizations:
+      | { id: string; onboarded_at: string | null; name: string }
+      | { id: string; onboarded_at: string | null; name: string }[]
+      | null;
+  };
+  let memberships: MembershipRow[] | null = null;
+  try {
+    const queryPromise = supabase
+      .from('memberships')
+      .select('organization_id, role, organizations(id, onboarded_at, name)')
+      .eq('user_id', user.id)
+      .eq('active', true)
+      .order('created_at', { ascending: false });
+    const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000));
+    const result = await Promise.race([queryPromise, timeoutPromise]);
+    if (result === null) {
+      console.error('[middleware] memberships query timeout');
+      return response;
+    }
+    memberships = result.data as MembershipRow[] | null;
+  } catch (err) {
+    console.error('[middleware] memberships query falló:', err);
+    return response;
+  }
 
   // Caso: user sin ningún membership → estado inválido, logout
   if (!memberships || memberships.length === 0) {
