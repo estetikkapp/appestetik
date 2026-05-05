@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { Badge } from '@/components/ui/badge';
@@ -51,10 +52,13 @@ export default async function ConfiguracionPage({
         <h2 className="mb-4 text-lg font-semibold">Logo del centro</h2>
         <div className="flex items-center gap-6">
           {org?.logo_url ? (
-            <img
+            <Image
               src={org.logo_url}
               alt="Logo"
+              width={96}
+              height={96}
               className="h-24 w-24 rounded-full border border-stone-200 object-cover"
+              unoptimized
             />
           ) : (
             <div className="flex h-24 w-24 items-center justify-center rounded-full border border-dashed border-stone-300 bg-stone-50 text-xs text-stone-400">

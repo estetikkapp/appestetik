@@ -12,8 +12,15 @@ import { formatInTimeZone } from 'date-fns-tz';
 export const runtime = 'nodejs';
 
 export async function GET(req: NextRequest) {
-  const secret = req.headers.get('x-cron-secret') ?? req.nextUrl.searchParams.get('secret');
-  if (secret !== process.env.CRON_SECRET) {
+  // Acepta solo via header (no query param para evitar logging del secret)
+  // Vercel Cron envía Authorization: Bearer <CRON_SECRET>; también soportamos x-cron-secret.
+  const authHeader = req.headers.get('authorization');
+  const xCronSecret = req.headers.get('x-cron-secret');
+  const expected = process.env.CRON_SECRET;
+  const authorized =
+    !!expected &&
+    (xCronSecret === expected || authHeader === `Bearer ${expected}`);
+  if (!authorized) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -40,7 +47,7 @@ export async function GET(req: NextRequest) {
 
   if (error) {
     console.error('[cron/reminders] query error', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'query failed' }, { status: 500 });
   }
 
   const results = { sent: 0, skipped: 0, failed: 0 };

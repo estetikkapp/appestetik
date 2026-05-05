@@ -79,17 +79,22 @@ export async function createPublicReservation(formData: FormData): Promise<void>
   const totalMinutes = service.duration_minutes + (service.buffer_minutes ?? 0);
   const endDate = new Date(startDate.getTime() + totalMinutes * 60 * 1000);
 
-  // Resolver auth user_id del profesional desde membership
+  // Resolver auth user_id del profesional desde membership.
+  // CRITICO: validar que pertenece a la org (impide enumerar membership_ids
+  // entre orgs vía URL). El .eq('organization_id', org.id) es la línea que protege.
   let professionalAuthUserId: string | null = null;
   if (professionalMembershipId) {
     const { data: m } = await supabase
       .from('memberships')
-      .select('user_id')
+      .select('user_id, schedule_template_id')
       .eq('id', professionalMembershipId)
       .eq('organization_id', org.id)
       .eq('active', true)
       .maybeSingle();
     if (!m) redirect(`${baseUrl}?error=Profesional+no+disponible`);
+    if (!m.schedule_template_id) {
+      redirect(`${baseUrl}?error=Esa+profesional+no+tiene+horarios+configurados`);
+    }
     professionalAuthUserId = m.user_id;
   }
 
