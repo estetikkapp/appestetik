@@ -13,6 +13,7 @@ import {
   Gift,
   Sparkles,
   CreditCard,
+  Clock,
 } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 
@@ -32,6 +33,7 @@ const NAV: NavItem[] = [
   { href: '/cobros', label: 'Cobros', icon: CreditCard },
   { href: '/recursos', label: 'Recursos', icon: Package },
   { href: '/empleadas', label: 'Empleadas', icon: UserCog },
+  { href: '/horarios', label: 'Horarios', icon: Clock },
   { href: '/ia', label: 'IA', icon: Sparkles },
   { href: '/configuracion', label: 'Configuración', icon: Settings },
 ];
