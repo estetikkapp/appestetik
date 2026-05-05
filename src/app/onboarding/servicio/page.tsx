@@ -75,7 +75,7 @@ export default function OnboardingStep3({ searchParams }: { searchParams: { erro
                 id="duration_minutes"
                 name="duration_minutes"
                 type="number"
-                min={1}
+                min={5}
                 step={5}
                 required
                 defaultValue={60}
