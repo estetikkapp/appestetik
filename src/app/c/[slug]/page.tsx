@@ -1,12 +1,8 @@
 import { notFound } from 'next/navigation';
-import { createAdminClient } from '@/lib/supabase/admin';
-import { createPublicReservation } from '@/actions/public-booking';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { SubmitButton } from '@/components/ui/submit-button';
-import { formatArs } from '@/lib/utils/format-ars';
 import { Clock, DollarSign } from 'lucide-react';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { formatArs } from '@/lib/utils/format-ars';
+import { BookingForm } from './booking-form';
 
 interface Params {
   params: { slug: string };
@@ -23,7 +19,7 @@ async function loadCenter(slug: string) {
     .maybeSingle();
   if (!org) return null;
 
-  const [servicesResult, hoursResult] = await Promise.all([
+  const [servicesResult, hoursResult, profsResult, proServicesResult] = await Promise.all([
     supabase
       .from('services')
       .select('id, name, category, description, duration_minutes, price_ars')
@@ -34,12 +30,25 @@ async function loadCenter(slug: string) {
       .from('business_hours')
       .select('day_of_week, opens_at, closes_at, active')
       .eq('organization_id', org.id),
+    supabase
+      .from('memberships')
+      .select('id, display_name, role, schedule_template_id')
+      .eq('organization_id', org.id)
+      .eq('active', true)
+      .in('role', ['owner', 'admin', 'professional'])
+      .not('schedule_template_id', 'is', null),
+    supabase
+      .from('professional_services')
+      .select('membership_id, service_id')
+      .eq('organization_id', org.id),
   ]);
 
   return {
     org,
     services: servicesResult.data ?? [],
     hours: hoursResult.data ?? [],
+    professionals: profsResult.data ?? [],
+    proServices: proServicesResult.data ?? [],
   };
 }
 
@@ -49,9 +58,22 @@ export default async function PublicReservationPage({ params, searchParams }: Pa
   const data = await loadCenter(params.slug);
   if (!data) notFound();
 
-  const { org, services, hours } = data;
+  const { org, services, hours, professionals, proServices } = data;
   const selectedServiceId = searchParams.service;
   const selectedService = services.find((s) => s.id === selectedServiceId);
+
+  // Profesionales que ofrecen este servicio
+  const profsWithExplicitServices = new Set(proServices.map((ps) => ps.membership_id));
+  const profsForService = selectedService
+    ? professionals.filter((p) => {
+        if (profsWithExplicitServices.has(p.id)) {
+          return proServices.some(
+            (ps) => ps.membership_id === p.id && ps.service_id === selectedService.id
+          );
+        }
+        return true; // sin servicios explícitos = ofrece todos
+      })
+    : [];
 
   const orderedHours = [1, 2, 3, 4, 5, 6, 0].map((d) => hours.find((h) => h.day_of_week === d));
 
@@ -60,6 +82,7 @@ export default async function PublicReservationPage({ params, searchParams }: Pa
       <header className="border-b border-brand-100 bg-white">
         <div className="mx-auto flex max-w-4xl items-center gap-4 px-4 py-6">
           {org.logo_url && (
+            // eslint-disable-next-line @next/next/no-img-element
             <img src={org.logo_url} alt={org.name} className="h-12 w-12 rounded-full object-cover" />
           )}
           <div>
@@ -91,11 +114,9 @@ export default async function PublicReservationPage({ params, searchParams }: Pa
                   href={`/c/${params.slug}?service=${s.id}`}
                   className="group rounded-2xl border border-stone-200 bg-white p-4 transition-colors hover:border-brand-300"
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-medium text-stone-900 group-hover:text-brand-700">
-                      {s.name}
-                    </h3>
-                  </div>
+                  <h3 className="font-medium text-stone-900 group-hover:text-brand-700">
+                    {s.name}
+                  </h3>
                   {s.category && (
                     <p className="mt-0.5 text-xs uppercase tracking-wide text-stone-400">
                       {s.category}
@@ -145,9 +166,7 @@ export default async function PublicReservationPage({ params, searchParams }: Pa
                   <span className="flex items-center gap-1">
                     <Clock className="h-4 w-4" /> {selectedService.duration_minutes} min
                   </span>
-                  <span className="font-medium">
-                    {formatArs(Number(selectedService.price_ars))}
-                  </span>
+                  <span className="font-medium">{formatArs(Number(selectedService.price_ars))}</span>
                 </div>
               </div>
               <a href={`/c/${params.slug}`} className="text-sm text-brand-600 hover:underline">
@@ -155,66 +174,23 @@ export default async function PublicReservationPage({ params, searchParams }: Pa
               </a>
             </div>
 
-            <form action={createPublicReservation} className="space-y-4">
-              <input type="hidden" name="slug" value={params.slug} />
-              <input type="hidden" name="service_id" value={selectedService.id} />
-
-              <div className="space-y-1.5">
-                <Label htmlFor="starts_at">Fecha y hora *</Label>
-                <Input
-                  id="starts_at"
-                  name="starts_at"
-                  type="datetime-local"
-                  required
-                  min={new Date(Date.now() + 60 * 60 * 1000).toISOString().slice(0, 16)}
-                />
-                <p className="text-xs text-stone-500">
-                  Elegí un horario dentro del horario de atención del centro.
-                </p>
+            {profsForService.length === 0 ? (
+              <div className="rounded-lg border border-stone-200 bg-stone-50 p-6 text-center text-sm text-stone-500">
+                Este servicio no está disponible para reserva online (no hay profesionales con
+                horarios configurados que lo ofrezcan).
               </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="full_name">Tu nombre *</Label>
-                <Input
-                  id="full_name"
-                  name="full_name"
-                  required
-                  placeholder="Nombre y apellido"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="phone">Teléfono *</Label>
-                  <Input
-                    id="phone"
-                    name="phone"
-                    type="tel"
-                    required
-                    placeholder="+549..."
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" name="email" type="email" placeholder="Opcional" />
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="notes">Motivo de consulta o comentarios</Label>
-                <Textarea id="notes" name="notes" rows={3} placeholder="Opcional" />
-              </div>
-
-              <div className="pt-2">
-                <SubmitButton className="w-full" size="lg" pendingText="Reservando...">
-                  Confirmar reserva
-                </SubmitButton>
-                <p className="mt-2 text-center text-xs text-stone-400">
-                  Tu turno queda en estado <strong>Pendiente</strong>. El centro te confirma por
-                  WhatsApp.
-                </p>
-              </div>
-            </form>
+            ) : (
+              <BookingForm
+                slug={params.slug}
+                serviceId={selectedService.id}
+                serviceName={selectedService.name}
+                durationMinutes={selectedService.duration_minutes}
+                professionals={profsForService.map((p) => ({
+                  id: p.id,
+                  display_name: p.display_name,
+                }))}
+              />
+            )}
           </section>
         )}
 
