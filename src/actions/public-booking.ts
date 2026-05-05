@@ -6,6 +6,8 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { isValidPhoneAr, normalizePhoneAr } from '@/lib/validators/phone-ar';
 import { isValidEmail, normalizeEmail } from '@/lib/validators/email';
 import { sendTextMessage } from '@/lib/integrations/whatsapp/evolution';
+import { notifyOrgAdmins } from '@/lib/notifications';
+import { audit } from '@/lib/audit';
 
 function generateSecurityCode(): string {
   // 6 dígitos numéricos
@@ -187,6 +189,25 @@ Por favor no compartas este código.`;
       // best-effort, sigue
     }
   }
+
+  // Audit + notif al panel
+  await Promise.all([
+    audit({
+      organizationId: org.id,
+      action: 'appointment.create.public',
+      entityType: 'appointment',
+      entityId: appt.id,
+      payload: { client_name: fullName, service: service.name },
+      actorLabel: 'clienta',
+    }),
+    notifyOrgAdmins(
+      org.id,
+      'appointment_created_public',
+      `Reserva nueva: ${fullName}`,
+      `${service.name} · ${startDate.toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}`,
+      `/agenda?date=${startDate.toISOString().slice(0, 10)}`
+    ),
+  ]);
 
   redirect(`${baseUrl}/confirmacion?turno=${appt.id}`);
 }

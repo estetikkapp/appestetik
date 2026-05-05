@@ -3,6 +3,8 @@
 import { redirect } from 'next/navigation';
 import bcrypt from 'bcryptjs';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { notifyOrgAdmins } from '@/lib/notifications';
+import { audit } from '@/lib/audit';
 
 const MAX_ATTEMPTS = 3;
 const COOLDOWN_MS = 5 * 60 * 1000; // 5 min después de 3 intentos fallidos
@@ -107,6 +109,25 @@ export async function cancelAppointmentPublic(formData: FormData): Promise<void>
   if (cancelErr) {
     redirect(`/turno/${id}/cancelar?error=${encodeURIComponent(cancelErr.message)}`);
   }
+
+  // Audit + notif a admins (best-effort)
+  await Promise.all([
+    audit({
+      organizationId: appt.organization_id,
+      action: 'appointment.cancel.public',
+      entityType: 'appointment',
+      entityId: id,
+      payload: { reason },
+      actorLabel: 'clienta',
+    }),
+    notifyOrgAdmins(
+      appt.organization_id,
+      'appointment_cancelled_by_client',
+      'Turno cancelado por la clienta',
+      `Motivo: ${reason}`,
+      `/agenda?date=${appt.starts_at.slice(0, 10)}`
+    ),
+  ]);
 
   redirect(`/turno/${id}/cancelar?ok=cancelado`);
 }

@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Sidebar } from '@/components/layout/sidebar';
 import { UserMenu } from '@/components/layout/user-menu';
 import { OrgSwitcher } from '@/components/layout/org-switcher';
+import { NotificationsBell } from '@/components/notifications/notifications-bell';
 
 export default async function PanelLayout({ children }: { children: React.ReactNode }) {
   const supabase = createClient();
@@ -34,10 +35,13 @@ export default async function PanelLayout({ children }: { children: React.ReactN
       <div className="flex flex-1 flex-col">
         <header className="flex items-center justify-between border-b border-stone-200 bg-white px-6 py-3">
           <OrgSwitcher orgs={orgs} activeOrgId={activeOrgId ?? ''} />
-          <UserMenu
-            email={user.email ?? ''}
-            displayName={activeMembership?.display_name ?? null}
-          />
+          <div className="flex items-center gap-2">
+            <NotificationsBell userId={user.id} />
+            <UserMenu
+              email={user.email ?? ''}
+              displayName={activeMembership?.display_name ?? null}
+            />
+          </div>
         </header>
         <main className="flex-1 p-6">{children}</main>
       </div>
