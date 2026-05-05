@@ -14,6 +14,8 @@ import {
   Sparkles,
   CreditCard,
   Clock,
+  CalendarOff,
+  History,
 } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 
@@ -34,7 +36,9 @@ const NAV: NavItem[] = [
   { href: '/recursos', label: 'Recursos', icon: Package },
   { href: '/empleadas', label: 'Empleadas', icon: UserCog },
   { href: '/horarios', label: 'Horarios', icon: Clock },
+  { href: '/cierres', label: 'Cierres', icon: CalendarOff },
   { href: '/ia', label: 'IA', icon: Sparkles },
+  { href: '/audit-log', label: 'Audit log', icon: History },
   { href: '/configuracion', label: 'Configuración', icon: Settings },
 ];
 

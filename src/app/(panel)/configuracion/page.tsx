@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { SubmitButton } from '@/components/ui/submit-button';
 import { updateOrganizationSettings } from '@/actions/organization-settings';
 import { uploadOrganizationLogo } from '@/actions/storage';
+import { saveAfipConfig } from '@/actions/afip-config';
 import { WhatsappConnectCard } from '@/components/whatsapp/whatsapp-connect-card';
 
 export const metadata = { title: 'Configuración — appestetika' };
@@ -41,6 +42,7 @@ export default async function ConfiguracionPage({
         <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
           {searchParams.ok === 'guardado' && 'Cambios guardados.'}
           {searchParams.ok === 'logo-subido' && 'Logo actualizado.'}
+          {searchParams.ok === 'afip-configurado' && 'Configuración AFIP guardada.'}
           {searchParams.ok === 'whatsapp-desconectado' && 'WhatsApp desconectado.'}
         </div>
       )}
@@ -139,27 +141,23 @@ export default async function ConfiguracionPage({
         />
       </section>
 
+      <AfipConfigSection
+        provider={org?.afip_provider ?? 'manual'}
+        config={(org?.afip_config as Record<string, unknown> | null) ?? null}
+      />
+
       <section className="rounded-xl border border-stone-200 bg-white p-6">
         <h2 className="mb-4 text-lg font-semibold">Otras integraciones</h2>
         <div className="space-y-3">
           <IntegrationRow
-            name="AFIP (Facturación electrónica)"
-            status={org?.afip_provider === 'tusfacturas' ? 'active' : 'pending'}
-            hint={
-              org?.afip_provider === 'tusfacturas'
-                ? 'Configurado con TusFacturas API'
-                : 'Se configura en Sprint 4. Mientras tanto emitimos comprobantes internos no fiscales.'
-            }
-          />
-          <IntegrationRow
             name="Mercado Pago"
             status="pending"
-            hint="Integración viene en Sprint 3."
+            hint="Cargá MP_ACCESS_TOKEN real en Vercel para activar links de pago."
           />
           <IntegrationRow
             name="Claude API (IA)"
-            status="pending"
-            hint="Análisis de piel + generador de protocolos en Sprint 5."
+            status="active"
+            hint="ANTHROPIC_API_KEY cargada. Usá /ia para análisis de piel y protocolos."
           />
         </div>
       </section>
@@ -173,6 +171,91 @@ function Row({ label, value }: { label: string; value: string | null | undefined
       <dt className="font-medium uppercase tracking-wide">{label}</dt>
       <dd className="mt-0.5 text-stone-800">{value ?? '—'}</dd>
     </div>
+  );
+}
+
+function AfipConfigSection({
+  provider,
+  config,
+}: {
+  provider: string;
+  config: Record<string, unknown> | null;
+}) {
+  const tfApiKey = (config?.api_key as string) ?? '';
+  const tfApiToken = (config?.api_token as string) ?? '';
+  const tfUserToken = (config?.user_token as string) ?? '';
+  const pos = (config?.point_of_sale as number) ?? 1;
+
+  return (
+    <section className="rounded-xl border border-stone-200 bg-white p-6">
+      <h2 className="mb-2 text-lg font-semibold">AFIP — Facturación electrónica</h2>
+      <p className="mb-4 text-sm text-stone-500">
+        Cada centro carga sus propias credenciales TusFacturas (no son globales).
+        Si no querés facturar electrónicamente todavía, dejá &quot;Manual&quot; — emitimos
+        comprobantes internos no fiscales.
+      </p>
+      <form action={saveAfipConfig} className="space-y-4">
+        <div className="space-y-1.5">
+          <Label htmlFor="provider">Proveedor</Label>
+          <select
+            id="provider"
+            name="provider"
+            defaultValue={provider}
+            className="flex h-10 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+          >
+            <option value="manual">Manual (comprobantes internos no fiscales)</option>
+            <option value="tusfacturas">TusFacturas API (facturación AFIP real)</option>
+          </select>
+        </div>
+
+        <details className="rounded-lg border border-stone-200 p-3" open={provider === 'tusfacturas'}>
+          <summary className="cursor-pointer text-sm font-medium">
+            Credenciales TusFacturas (solo si seleccionás &quot;TusFacturas&quot;)
+          </summary>
+          <div className="mt-3 space-y-3">
+            <p className="text-xs text-stone-500">
+              Las obtenés de tu cuenta en{' '}
+              <a
+                href="https://tusfacturas.app"
+                target="_blank"
+                rel="noreferrer"
+                className="text-brand-600 hover:underline"
+              >
+                tusfacturas.app
+              </a>{' '}
+              → Mi cuenta → API. Se guardan cifradas.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="api_key">API Key</Label>
+                <Input id="api_key" name="api_key" type="password" defaultValue={tfApiKey} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="api_token">API Token</Label>
+                <Input id="api_token" name="api_token" type="password" defaultValue={tfApiToken} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="user_token">User Token</Label>
+                <Input
+                  id="user_token"
+                  name="user_token"
+                  type="password"
+                  defaultValue={tfUserToken}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="point_of_sale">Punto de venta</Label>
+                <Input id="point_of_sale" name="point_of_sale" type="number" min={1} defaultValue={pos} />
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <div className="flex justify-end">
+          <SubmitButton pendingText="Guardando...">Guardar config AFIP</SubmitButton>
+        </div>
+      </form>
+    </section>
   );
 }
 

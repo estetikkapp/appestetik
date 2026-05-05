@@ -310,6 +310,58 @@ export type Database = {
         Update: Partial<Database['public']['Tables']['schedule_blocks']['Insert']>;
         Relationships: [];
       };
+      notifications: {
+        Row: {
+          id: string;
+          organization_id: string;
+          user_id: string;
+          type: string;
+          title: string;
+          body: string | null;
+          link: string | null;
+          read_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          user_id: string;
+          type: string;
+          title: string;
+          body?: string | null;
+          link?: string | null;
+          read_at?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['notifications']['Insert']>;
+        Relationships: [];
+      };
+      audit_log: {
+        Row: {
+          id: string;
+          organization_id: string;
+          actor_user_id: string | null;
+          actor_label: string | null;
+          action: string;
+          entity_type: string;
+          entity_id: string | null;
+          payload: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          actor_user_id?: string | null;
+          actor_label?: string | null;
+          action: string;
+          entity_type: string;
+          entity_id?: string | null;
+          payload?: Json;
+          created_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['audit_log']['Insert']>;
+        Relationships: [];
+      };
       whatsapp_reminder_log: {
         Row: {
           id: string;
