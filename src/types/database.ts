@@ -69,6 +69,7 @@ export type Database = {
           active: boolean;
           invited_by: string | null;
           invitation_accepted_at: string | null;
+          schedule_template_id: string | null;
           created_at: string;
         };
         Insert: {
@@ -81,9 +82,52 @@ export type Database = {
           active?: boolean;
           invited_by?: string | null;
           invitation_accepted_at?: string | null;
+          schedule_template_id?: string | null;
           created_at?: string;
         };
         Update: Partial<Database['public']['Tables']['memberships']['Insert']>;
+        Relationships: [];
+      };
+      schedule_templates: {
+        Row: {
+          id: string;
+          organization_id: string;
+          name: string;
+          attention_windows: Json;
+          slot_minutes: number;
+          is_default: boolean;
+          active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          name: string;
+          attention_windows?: Json;
+          slot_minutes?: number;
+          is_default?: boolean;
+          active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['schedule_templates']['Insert']>;
+        Relationships: [];
+      };
+      professional_services: {
+        Row: {
+          membership_id: string;
+          service_id: string;
+          organization_id: string;
+          created_at: string;
+        };
+        Insert: {
+          membership_id: string;
+          service_id: string;
+          organization_id: string;
+          created_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['professional_services']['Insert']>;
         Relationships: [];
       };
       services: {
@@ -206,6 +250,9 @@ export type Database = {
           completed_at: string | null;
           cancelled_at: string | null;
           cancellation_reason: string | null;
+          security_code_hash: string | null;
+          cancellation_attempts: number;
+          last_cancellation_attempt_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -226,6 +273,9 @@ export type Database = {
           completed_at?: string | null;
           cancelled_at?: string | null;
           cancellation_reason?: string | null;
+          security_code_hash?: string | null;
+          cancellation_attempts?: number;
+          last_cancellation_attempt_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -241,6 +291,8 @@ export type Database = {
           starts_at: string;
           ends_at: string;
           reason: string;
+          all_day: boolean;
+          notified_at: string | null;
           created_at: string;
         };
         Insert: {
@@ -251,6 +303,8 @@ export type Database = {
           starts_at: string;
           ends_at: string;
           reason: string;
+          all_day?: boolean;
+          notified_at?: string | null;
           created_at?: string;
         };
         Update: Partial<Database['public']['Tables']['schedule_blocks']['Insert']>;

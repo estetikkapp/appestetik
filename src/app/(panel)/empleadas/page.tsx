@@ -24,12 +24,18 @@ const ROLE_LABELS: Record<string, string> = {
 async function loadData() {
   const supabase = createClient();
   const orgId = cookies().get('active_org')?.value;
-  if (!orgId) return { memberships: [], invitations: [] };
+  if (!orgId) return { memberships: [], invitations: [], templates: [], services: [], proServices: [] };
 
-  const [membershipsResult, invitationsResult] = await Promise.all([
+  const [
+    membershipsResult,
+    invitationsResult,
+    templatesResult,
+    servicesResult,
+    proServicesResult,
+  ] = await Promise.all([
     supabase
       .from('memberships')
-      .select('id, role, display_name, active, created_at, user_id')
+      .select('id, role, display_name, active, created_at, user_id, schedule_template_id')
       .eq('organization_id', orgId)
       .order('created_at', { ascending: true }),
     supabase
@@ -39,11 +45,30 @@ async function loadData() {
       .is('accepted_at', null)
       .gte('expires_at', new Date().toISOString())
       .order('created_at', { ascending: false }),
+    supabase
+      .from('schedule_templates')
+      .select('id, name')
+      .eq('organization_id', orgId)
+      .eq('active', true)
+      .order('name'),
+    supabase
+      .from('services')
+      .select('id, name')
+      .eq('organization_id', orgId)
+      .eq('active', true)
+      .order('name'),
+    supabase
+      .from('professional_services')
+      .select('membership_id, service_id')
+      .eq('organization_id', orgId),
   ]);
 
   return {
     memberships: membershipsResult.data ?? [],
     invitations: invitationsResult.data ?? [],
+    templates: templatesResult.data ?? [],
+    services: servicesResult.data ?? [],
+    proServices: proServicesResult.data ?? [],
   };
 }
 
@@ -52,7 +77,14 @@ export default async function EmpleadasPage({
 }: {
   searchParams: { error?: string; ok?: string };
 }) {
-  const { memberships, invitations } = await loadData();
+  const { memberships, invitations, templates, services, proServices } = await loadData();
+  const proServicesByMembership = new Map<string, string[]>();
+  for (const ps of proServices) {
+    const arr = proServicesByMembership.get(ps.membership_id) ?? [];
+    arr.push(ps.service_id);
+    proServicesByMembership.set(ps.membership_id, arr);
+  }
+  const templateById = new Map(templates.map((t) => [t.id, t.name]));
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
@@ -76,6 +108,8 @@ export default async function EmpleadasPage({
           {searchParams.ok === 'invitada' && 'Invitación enviada.'}
           {searchParams.ok === 'revocada' && 'Invitación revocada.'}
           {searchParams.ok === 'eliminada' && 'Empleada eliminada.'}
+          {searchParams.ok === 'plantilla-asignada' && 'Plantilla de horarios asignada.'}
+          {searchParams.ok === 'servicios-asignados' && 'Servicios asignados.'}
         </div>
       )}
 
@@ -87,15 +121,16 @@ export default async function EmpleadasPage({
               <TableRow>
                 <TableHead>Nombre</TableHead>
                 <TableHead>Rol</TableHead>
-                <TableHead>Alta</TableHead>
+                <TableHead>Plantilla</TableHead>
+                <TableHead>Servicios</TableHead>
                 <TableHead>Estado</TableHead>
-                <TableHead className="w-28 text-right">Acciones</TableHead>
+                <TableHead className="w-44 text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {memberships.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-sm text-stone-400">
+                  <TableCell colSpan={6} className="text-center text-sm text-stone-400">
                     No hay empleadas cargadas.
                   </TableCell>
                 </TableRow>
@@ -111,7 +146,16 @@ export default async function EmpleadasPage({
                     </Badge>
                   </TableCell>
                   <TableCell className="text-sm text-stone-600">
-                    {formatDateAr(m.created_at)}
+                    {m.schedule_template_id
+                      ? templateById.get(m.schedule_template_id) ?? '—'
+                      : <span className="text-stone-400">Sin plantilla</span>}
+                  </TableCell>
+                  <TableCell className="text-sm text-stone-600">
+                    {(() => {
+                      const list = proServicesByMembership.get(m.id) ?? [];
+                      if (list.length === 0) return <span className="text-stone-400">Todos</span>;
+                      return `${list.length} asignados`;
+                    })()}
                   </TableCell>
                   <TableCell>
                     {m.active ? (
@@ -121,9 +165,18 @@ export default async function EmpleadasPage({
                     )}
                   </TableCell>
                   <TableCell className="text-right">
-                    {m.role !== 'owner' && (
-                      <EmpleadasClient mode="toggle" membership={m} />
-                    )}
+                    <div className="flex items-center justify-end gap-1">
+                      <EmpleadasClient
+                        mode="config"
+                        membership={m}
+                        templates={templates}
+                        services={services}
+                        assignedServiceIds={proServicesByMembership.get(m.id) ?? []}
+                      />
+                      {m.role !== 'owner' && (
+                        <EmpleadasClient mode="toggle" membership={m} />
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
