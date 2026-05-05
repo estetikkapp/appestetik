@@ -30,7 +30,7 @@ async function loadPackages(showArchived: boolean) {
     pkgQuery,
     supabase
       .from('services')
-      .select('id, name')
+      .select('id, name, price_ars')
       .eq('organization_id', orgId)
       .eq('active', true)
       .order('name'),

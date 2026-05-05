@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState, useTransition } from 'react';
+import { useEffect, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { SubmitButton } from '@/components/ui/submit-button';
 import { connectWhatsappAction, disconnectWhatsappAction } from '@/actions/whatsapp';
 
 type WappStatus = 'disconnected' | 'connecting' | 'connected';
@@ -19,7 +19,6 @@ export function WhatsappConnectCard({ initialStatus, initialPhone, startPolling 
   const [phone, setPhone] = useState<string | null>(initialPhone);
   const [qr, setQr] = useState<string | null>(null);
   const [polling, setPolling] = useState(startPolling ?? false);
-  const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     if (!polling) return;
@@ -55,18 +54,6 @@ export function WhatsappConnectCard({ initialStatus, initialPhone, startPolling 
     };
   }, [polling]);
 
-  function handleConnect() {
-    startTransition(async () => {
-      await connectWhatsappAction();
-    });
-  }
-
-  function handleDisconnect() {
-    startTransition(async () => {
-      await disconnectWhatsappAction();
-    });
-  }
-
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -78,18 +65,17 @@ export function WhatsappConnectCard({ initialStatus, initialPhone, startPolling 
         </div>
 
         {status === 'connected' ? (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleDisconnect}
-            disabled={isPending}
-          >
-            {isPending ? 'Desconectando...' : 'Desconectar'}
-          </Button>
+          <form action={disconnectWhatsappAction}>
+            <SubmitButton variant="outline" size="sm" pendingText="Desconectando...">
+              Desconectar
+            </SubmitButton>
+          </form>
         ) : status === 'disconnected' ? (
-          <Button size="sm" onClick={handleConnect} disabled={isPending}>
-            {isPending ? 'Iniciando...' : 'Conectar WhatsApp'}
-          </Button>
+          <form action={connectWhatsappAction}>
+            <SubmitButton size="sm" pendingText="Iniciando...">
+              Conectar WhatsApp
+            </SubmitButton>
+          </form>
         ) : null}
       </div>
 
