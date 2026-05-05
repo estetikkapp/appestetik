@@ -19,6 +19,9 @@ async function loadClients(search: string) {
   const orgId = cookies().get('active_org')?.value;
   if (!orgId) return [];
 
+  // Trae todos los campos porque la edición inline (sheet) necesita
+  // notes, birthdate, etc. Si crece la cantidad de columnas pesadas
+  // habría que separar lista vs detalle.
   let query = supabase
     .from('clients')
     .select('*')

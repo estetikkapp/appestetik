@@ -8,12 +8,15 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from('notifications')
-    .select('*')
+    .select('id, type, title, body, link, read_at, created_at')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
     .limit(20);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[notifications GET]', error);
+    return NextResponse.json({ error: 'Error al cargar' }, { status: 500 });
+  }
 
   const unreadCount = data?.filter((n) => !n.read_at).length ?? 0;
 
@@ -37,7 +40,10 @@ export async function PATCH(req: Request) {
       .update({ read_at: now })
       .eq('user_id', user.id)
       .is('read_at', null);
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      console.error('[notifications mark_all_read]', error);
+      return NextResponse.json({ error: 'Error al actualizar' }, { status: 500 });
+    }
     return NextResponse.json({ ok: true });
   }
 
@@ -47,7 +53,10 @@ export async function PATCH(req: Request) {
       .update({ read_at: now })
       .eq('id', id)
       .eq('user_id', user.id);
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      console.error('[notifications mark_read]', error);
+      return NextResponse.json({ error: 'Error al actualizar' }, { status: 500 });
+    }
     return NextResponse.json({ ok: true });
   }
 

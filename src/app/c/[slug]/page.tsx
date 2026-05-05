@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { Clock, DollarSign } from 'lucide-react';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -82,8 +83,15 @@ export default async function PublicReservationPage({ params, searchParams }: Pa
       <header className="border-b border-brand-100 bg-white">
         <div className="mx-auto flex max-w-4xl items-center gap-4 px-4 py-6">
           {org.logo_url && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={org.logo_url} alt={org.name} className="h-12 w-12 rounded-full object-cover" />
+            <Image
+              src={org.logo_url}
+              alt={org.name}
+              width={48}
+              height={48}
+              className="h-12 w-12 rounded-full object-cover"
+              unoptimized
+              priority
+            />
           )}
           <div>
             <h1 className="text-xl font-bold text-stone-900">{org.name}</h1>
