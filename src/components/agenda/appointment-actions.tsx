@@ -5,13 +5,19 @@ import { SubmitButton } from '@/components/ui/submit-button';
 import { DeleteConfirmButton } from '@/components/ui/delete-confirm-button';
 import { updateAppointmentStatus, deleteAppointment } from '@/actions/appointments';
 import type { AppointmentStatus } from '@/types/app';
+import { RescheduleButton } from './reschedule-button';
 
 interface Props {
   id: string;
   status: AppointmentStatus;
+  /** Para el reschedule modal — opcional para retrocompat */
+  startsAt?: string;
+  clientName?: string;
+  hasPhone?: boolean;
 }
 
-export function AppointmentRowActions({ id, status }: Props) {
+export function AppointmentRowActions({ id, status, startsAt, clientName, hasPhone }: Props) {
+  const canReschedule = ['pending', 'confirmed'].includes(status) && !!startsAt;
   return (
     <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
       {status === 'pending' && (
@@ -28,6 +34,14 @@ export function AppointmentRowActions({ id, status }: Props) {
         <StatusButton id={id} toStatus="completed" title="Completar">
           <CheckCircle className="h-4 w-4" />
         </StatusButton>
+      )}
+      {canReschedule && (
+        <RescheduleButton
+          id={id}
+          currentStartsAt={startsAt!}
+          clientName={clientName ?? 'la clienta'}
+          hasPhone={!!hasPhone}
+        />
       )}
       {['pending', 'confirmed', 'in_progress'].includes(status) && (
         <StatusButton id={id} toStatus="cancelled" title="Cancelar" variant="destructive">
