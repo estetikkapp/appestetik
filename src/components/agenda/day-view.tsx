@@ -6,6 +6,7 @@ import { formatArs } from '@/lib/utils/format-ars';
 import { APPOINTMENT_STATUS_LABELS } from '@/types/app';
 import type { AppointmentStatus } from '@/types/app';
 import { AppointmentRowActions } from './appointment-actions';
+import { PrintButton } from './print-button';
 
 export interface AppointmentWithRelations {
   id: string;
@@ -101,8 +102,8 @@ export function DayView({ date, appointments, businessHours }: DayViewProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-4 print:block">
+        <div className="flex items-center gap-2 print:hidden">
           <Button variant="outline" size="sm" asChild>
             <Link href={`/agenda?date=${fmtDate(prevDate)}`}>
               <ChevronLeft className="h-4 w-4" />
@@ -121,6 +122,10 @@ export function DayView({ date, appointments, businessHours }: DayViewProps) {
             <Link href={`/agenda?date=${fmtDate(new Date())}`}>Hoy</Link>
           </Button>
         </div>
+        <PrintButton />
+        <h2 className="hidden text-xl font-bold capitalize text-stone-900 print:block">
+          {humanDate}
+        </h2>
       </div>
 
       {closed && (
@@ -145,15 +150,16 @@ export function DayView({ date, appointments, businessHours }: DayViewProps) {
                     ) : (
                       items.map((appt) => (
                         <div
+                          id={`appt-${appt.id}`}
                           key={appt.id}
-                          className="group flex items-center justify-between rounded-lg border border-brand-100 bg-brand-50/50 p-3"
+                          className="group flex items-center justify-between rounded-lg border border-brand-100 bg-brand-50/50 p-3 print:break-inside-avoid"
                         >
                           <div className="flex flex-1 flex-col gap-1">
                             <div className="flex items-center gap-2">
                               <span className="font-medium text-stone-900">
                                 {appt.client?.full_name ?? 'Sin clienta'}
                               </span>
-                              <Badge variant={STATUS_VARIANT[appt.status]}>
+                              <Badge variant={STATUS_VARIANT[appt.status]} className="print:hidden">
                                 {APPOINTMENT_STATUS_LABELS[appt.status]}
                               </Badge>
                             </div>
@@ -188,7 +194,15 @@ export function DayView({ date, appointments, businessHours }: DayViewProps) {
                               <p className="text-xs text-stone-500">{appt.notes}</p>
                             )}
                           </div>
-                          <AppointmentRowActions id={appt.id} status={appt.status} />
+                          <div className="print:hidden">
+                            <AppointmentRowActions
+                              id={appt.id}
+                              status={appt.status}
+                              startsAt={appt.starts_at}
+                              clientName={appt.client?.full_name ?? undefined}
+                              hasPhone={!!appt.client?.phone_e164}
+                            />
+                          </div>
                         </div>
                       ))
                     )}
