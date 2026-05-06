@@ -38,12 +38,21 @@ export async function connectWhatsappAction(): Promise<void> {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
   const webhookUrl = `${appUrl}/api/whatsapp/webhook`;
 
+  // Idempotente: borrar instancia si existe (ignora errores). Esto fuerza
+  // un QR fresco cada vez que el user clickea Conectar y previene el bug
+  // de Evolution v2 donde una instancia "huérfana" en estado close devuelve
+  // count:0 indefinidamente desde /instance/connect.
+  try {
+    await deleteInstance(orgId);
+  } catch {
+    // ok si no existe
+  }
+
   try {
     await createInstance(orgId, webhookUrl);
   } catch (err) {
     let msg: string;
     if (err instanceof EvolutionError) {
-      // Mensaje friendly + código entre paréntesis para diagnóstico
       msg = `${err.message} [${err.code}]`;
       console.error('[whatsapp/connect]', err.code, err.message, err.detail);
     } else {
@@ -56,7 +65,11 @@ export async function connectWhatsappAction(): Promise<void> {
   const admin = createAdminClient();
   await admin
     .from('organizations')
-    .update({ whatsapp_status: 'connecting' })
+    .update({
+      whatsapp_status: 'connecting',
+      whatsapp_phone: null,
+      whatsapp_connected_at: null,
+    })
     .eq('id', orgId);
 
   revalidatePath('/configuracion');
