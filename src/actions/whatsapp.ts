@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { createInstance, deleteInstance } from '@/lib/integrations/whatsapp/evolution';
+import { createInstance, deleteInstance, EvolutionError } from '@/lib/integrations/whatsapp/evolution';
 
 async function requireOwnerOrAdmin(): Promise<string> {
   const supabase = createClient();
@@ -41,7 +41,15 @@ export async function connectWhatsappAction(): Promise<void> {
   try {
     await createInstance(orgId, webhookUrl);
   } catch (err) {
-    const msg = err instanceof Error ? err.message : 'Error al crear instancia';
+    let msg: string;
+    if (err instanceof EvolutionError) {
+      // Mensaje friendly + código entre paréntesis para diagnóstico
+      msg = `${err.message} [${err.code}]`;
+      console.error('[whatsapp/connect]', err.code, err.message, err.detail);
+    } else {
+      msg = err instanceof Error ? err.message : 'Error al crear instancia';
+      console.error('[whatsapp/connect] unknown', err);
+    }
     redirect(`/configuracion?error=${encodeURIComponent(msg)}`);
   }
 

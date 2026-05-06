@@ -3,12 +3,17 @@ import { updateSession } from '@/lib/supabase/middleware';
 
 const AUTH_ROUTES = ['/auth/login', '/auth/signup'];
 const PUBLIC_PREFIXES = ['/auth', '/c/', '/embed/', '/turno/', '/api/public', '/api/slots', '/api/cron', '/api/whatsapp/webhook', '/api/webhooks', '/api/debug'];
+// /api/whatsapp/test y /api/whatsapp/status van protegidos por auth interno (no public)
 const ACTIVE_ORG_COOKIE = 'active_org';
 
 function isPublicRoute(pathname: string): boolean {
   if (pathname === '/') return false; // home va al panel
   if (pathname.startsWith('/_next')) return true;
   if (pathname.startsWith('/favicon')) return true;
+  // PWA + assets en /public deben ser accesibles sin auth
+  if (pathname === '/manifest.webmanifest') return true;
+  if (pathname === '/icon.svg' || pathname === '/icon.png') return true;
+  if (pathname === '/robots.txt' || pathname === '/sitemap.xml') return true;
   return PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 }
 
