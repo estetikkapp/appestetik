@@ -6,6 +6,8 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { isValidPhoneAr, normalizePhoneAr } from '@/lib/validators/phone-ar';
 import { isValidEmail, normalizeEmail } from '@/lib/validators/email';
 import { sendTextMessage } from '@/lib/integrations/whatsapp/evolution';
+import { sendEmail } from '@/lib/integrations/email/resend';
+import { bookingConfirmationEmail } from '@/lib/integrations/email/templates';
 import { notifyOrgAdmins } from '@/lib/notifications';
 import { audit } from '@/lib/audit';
 
@@ -35,8 +37,9 @@ export async function createPublicReservation(formData: FormData): Promise<void>
   const rawPhone = String(formData.get('phone') ?? '').trim();
   const rawEmail = String(formData.get('email') ?? '').trim();
   const notes = String(formData.get('notes') ?? '').trim() || null;
+  const isEmbed = String(formData.get('embed') ?? '') === '1';
 
-  const baseUrl = `/c/${slug}`;
+  const baseUrl = isEmbed ? `/embed/${slug}` : `/c/${slug}`;
 
   if (!slug) redirect('/?error=URL+invalida');
   if (!serviceId || !startsAt || !fullName) {
@@ -166,16 +169,17 @@ export async function createPublicReservation(formData: FormData): Promise<void>
   }
 
   // Mandar code por WhatsApp si la org tiene conexión activa (best-effort, no bloquea)
+  const fechaTexto = startDate.toLocaleString('es-AR', {
+    timeZone: 'America/Argentina/Buenos_Aires',
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  const cancelUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://estetikkapp.com'}/turno/${appt.id}/cancelar`;
+
   if (org.whatsapp_status === 'connected') {
-    const fechaTexto = startDate.toLocaleString('es-AR', {
-      timeZone: 'America/Argentina/Buenos_Aires',
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-    const cancelUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://appestetika.vercel.app'}/turno/${appt.id}/cancelar`;
     const message = `Hola ${fullName} 👋
 
 Tu turno en *${org.name}* fue reservado para el ${fechaTexto} para *${service.name}*.
@@ -192,6 +196,32 @@ Por favor no compartas este código.`;
     } catch (err) {
       console.error('[public-booking] WhatsApp send error:', err);
       // best-effort, sigue
+    }
+  }
+
+  // Si dejó email, mandar confirmación por mail (best-effort)
+  if (email) {
+    const tpl = bookingConfirmationEmail({
+      clientName: fullName,
+      orgName: org.name,
+      serviceName: service.name,
+      startsAtFormatted: fechaTexto,
+      cancelUrl,
+      securityCode,
+    });
+    try {
+      await sendEmail({
+        to: email,
+        subject: tpl.subject,
+        html: tpl.html,
+        text: tpl.text,
+        tags: [
+          { name: 'type', value: 'booking_confirmation' },
+          { name: 'org_id', value: org.id },
+        ],
+      });
+    } catch (err) {
+      console.error('[public-booking] email send error:', err);
     }
   }
 
