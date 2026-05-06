@@ -7,6 +7,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { sendTextMessage } from '@/lib/integrations/whatsapp/evolution';
+import { sendEmail } from '@/lib/integrations/email/resend';
+import { appointmentReminderEmail } from '@/lib/integrations/email/templates';
 import { formatInTimeZone } from 'date-fns-tz';
 
 export const runtime = 'nodejs';
@@ -37,7 +39,7 @@ export async function GET(req: NextRequest) {
       starts_at,
       organization_id,
       organizations ( name, timezone, whatsapp_status ),
-      clients ( full_name, phone_e164 ),
+      clients ( full_name, phone_e164, email ),
       services ( name, duration_minutes )
     `)
     .gte('starts_at', windowStart.toISOString())
@@ -50,68 +52,107 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'query failed' }, { status: 500 });
   }
 
-  const results = { sent: 0, skipped: 0, failed: 0 };
+  const results = { sent: 0, sentEmail: 0, skipped: 0, failed: 0 };
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://estetikkapp.com';
 
   for (const appt of appointments ?? []) {
     const org = Array.isArray(appt.organizations) ? appt.organizations[0] : appt.organizations;
     const client = Array.isArray(appt.clients) ? appt.clients[0] : appt.clients;
     const service = Array.isArray(appt.services) ? appt.services[0] : appt.services;
 
-    // Saltar si la org no tiene WhatsApp conectado
-    if (org?.whatsapp_status !== 'connected') {
+    if (!client) {
       results.skipped++;
       continue;
     }
 
-    // Saltar si la clienta no tiene teléfono
-    if (!client?.phone_e164) {
-      results.skipped++;
-      continue;
-    }
-
-    const tz = org.timezone ?? 'America/Argentina/Buenos_Aires';
+    const tz = org?.timezone ?? 'America/Argentina/Buenos_Aires';
     const hora = formatInTimeZone(new Date(appt.starts_at), tz, 'HH:mm');
     const fecha = formatInTimeZone(new Date(appt.starts_at), tz, "EEEE d 'de' MMMM");
+    const fullDateAr = formatInTimeZone(new Date(appt.starts_at), tz, "EEEE d 'de' MMMM 'a las' HH:mm");
 
-    const message = buildReminderMessage({
-      clientName: client.full_name,
-      orgName: org.name,
-      serviceName: service?.name ?? 'tu servicio',
-      fecha,
-      hora,
-    });
+    const orgName = org?.name ?? 'tu centro';
+    const serviceName = service?.name ?? 'tu servicio';
 
-    try {
-      await sendTextMessage(appt.organization_id, client.phone_e164, message);
+    // Decidir canal: WhatsApp si la org está conectada y la clienta tiene tel,
+    // si no email si la clienta tiene email cargado.
+    const canWhatsapp = org?.whatsapp_status === 'connected' && !!client.phone_e164;
+    const canEmail = !!client.email;
 
-      // Marcar reminder como enviado + loguear
-      await Promise.all([
-        admin
-          .from('appointments')
-          .update({ reminder_sent_at: new Date().toISOString() })
-          .eq('id', appt.id),
-        admin.from('whatsapp_reminder_log').insert({
+    if (!canWhatsapp && !canEmail) {
+      results.skipped++;
+      continue;
+    }
+
+    let sentVia: 'whatsapp' | 'email' | null = null;
+    let lastError: string | null = null;
+
+    // Intentar primero WhatsApp si está disponible
+    if (canWhatsapp) {
+      const message = buildReminderMessage({
+        clientName: client.full_name,
+        orgName,
+        serviceName,
+        fecha,
+        hora,
+      });
+      try {
+        await sendTextMessage(appt.organization_id, client.phone_e164!, message);
+        await admin.from('whatsapp_reminder_log').insert({
           organization_id: appt.organization_id,
           appointment_id: appt.id,
-          phone_e164: client.phone_e164,
+          phone_e164: client.phone_e164!,
           message,
-        }),
-      ]);
+        });
+        sentVia = 'whatsapp';
+        results.sent++;
+      } catch (err) {
+        lastError = err instanceof Error ? err.message : String(err);
+        console.error(`[cron/reminders] WhatsApp fallo appt ${appt.id}:`, lastError);
+        // log error sin marcar como enviado todavía → fallback a email si tiene
+        await admin.from('whatsapp_reminder_log').insert({
+          organization_id: appt.organization_id,
+          appointment_id: appt.id,
+          phone_e164: client.phone_e164!,
+          message,
+          error: lastError,
+        });
+      }
+    }
 
-      results.sent++;
-    } catch (err) {
-      const errMsg = err instanceof Error ? err.message : String(err);
-      console.error(`[cron/reminders] fallo envío appt ${appt.id}:`, errMsg);
-
-      // Loguear el error sin marcar como enviado (reintentará en próxima hora)
-      await admin.from('whatsapp_reminder_log').insert({
-        organization_id: appt.organization_id,
-        appointment_id: appt.id,
-        phone_e164: client.phone_e164,
-        message,
-        error: errMsg,
+    // Si WhatsApp no funcionó (o no disponible) y tiene email, mandar email
+    if (sentVia === null && canEmail) {
+      const tpl = appointmentReminderEmail({
+        clientName: client.full_name,
+        orgName,
+        serviceName,
+        startsAtFormatted: fullDateAr,
+        cancelUrl: `${baseUrl}/turno/${appt.id}/cancelar`,
       });
+      const result = await sendEmail({
+        to: client.email!,
+        subject: tpl.subject,
+        html: tpl.html,
+        text: tpl.text,
+        tags: [
+          { name: 'type', value: 'reminder' },
+          { name: 'org_id', value: appt.organization_id },
+        ],
+      });
+      if (result.ok) {
+        sentVia = 'email';
+        results.sentEmail++;
+      } else {
+        lastError = result.error ?? 'email failed';
+        console.error(`[cron/reminders] email fallo appt ${appt.id}:`, lastError);
+      }
+    }
 
+    if (sentVia !== null) {
+      await admin
+        .from('appointments')
+        .update({ reminder_sent_at: new Date().toISOString() })
+        .eq('id', appt.id);
+    } else {
       results.failed++;
     }
   }
