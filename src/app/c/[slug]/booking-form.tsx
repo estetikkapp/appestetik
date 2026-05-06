@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect, useTransition } from 'react';
-import { Loader2, Clock as ClockIcon } from 'lucide-react';
+import { Loader2, Clock as ClockIcon, Bell } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { SubmitButton } from '@/components/ui/submit-button';
 import { createPublicReservation } from '@/actions/public-booking';
+import { addToWaitlistPublic } from '@/actions/public-waitlist';
 
 interface ProfessionalOption {
   id: string; // membership id
@@ -25,6 +26,8 @@ interface BookingFormProps {
   serviceName: string;
   durationMinutes: number;
   professionals: ProfessionalOption[];
+  /** Si true, redirige a /embed/[slug] en vez de /c/[slug] tras submit */
+  isEmbed?: boolean;
 }
 
 function formatTimeAr(iso: string): string {
@@ -50,6 +53,7 @@ export function BookingForm({
   serviceId,
   professionals,
   serviceName,
+  isEmbed,
 }: BookingFormProps) {
   const [date, setDate] = useState<string>(todayIsoAr());
   const [professionalId, setProfessionalId] = useState<string>('');
@@ -58,6 +62,7 @@ export function BookingForm({
   const [selectedSlot, setSelectedSlot] = useState<string>('');
   const [loading, startLoading] = useTransition();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [waitlistOpen, setWaitlistOpen] = useState(false);
 
   // Cargar slots cuando cambian fecha o profesional
   useEffect(() => {
@@ -114,11 +119,13 @@ export function BookingForm({
     : aggregateSlots ?? [];
 
   return (
+    <>
     <form action={createPublicReservation} className="space-y-4">
       <input type="hidden" name="slug" value={slug} />
       <input type="hidden" name="service_id" value={serviceId} />
       <input type="hidden" name="starts_at" value={selectedSlot} />
       <input type="hidden" name="professional_id" value={professionalId} />
+      {isEmbed && <input type="hidden" name="embed" value="1" />}
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
@@ -164,10 +171,28 @@ export function BookingForm({
         ) : errorMsg ? (
           <p className="text-sm text-red-600">{errorMsg}</p>
         ) : slotsForChosenProfessional.length === 0 ? (
-          <p className="text-sm text-stone-500">
-            No hay turnos disponibles para {serviceName} ese día. Probá con otra fecha o
-            profesional.
-          </p>
+          <div className="space-y-3">
+            <p className="text-sm text-stone-500">
+              No hay turnos disponibles para {serviceName} ese día. Probá con otra fecha o
+              profesional.
+            </p>
+            {!waitlistOpen ? (
+              <button
+                type="button"
+                onClick={() => setWaitlistOpen(true)}
+                className="inline-flex items-center gap-2 rounded-lg border border-brand-300 bg-brand-50 px-3 py-2 text-sm font-medium text-brand-700 hover:bg-brand-100"
+              >
+                <Bell className="h-4 w-4" />
+                Anotame en la lista de espera
+              </button>
+            ) : (
+              <div className="rounded-xl border border-brand-200 bg-white p-3 text-sm text-stone-500">
+                <p className="mb-2 text-xs">
+                  Te avisamos por WhatsApp cuando se libere un turno para este servicio.
+                </p>
+              </div>
+            )}
+          </div>
         ) : (
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 md:grid-cols-6">
             {slotsForChosenProfessional.map((iso) => (
@@ -235,5 +260,59 @@ export function BookingForm({
         </div>
       )}
     </form>
+
+    {waitlistOpen && (
+      <form action={addToWaitlistPublic} className="space-y-3 rounded-xl border border-brand-200 bg-white p-4">
+        <input type="hidden" name="slug" value={slug} />
+        <input type="hidden" name="service_id" value={serviceId} />
+        <input type="hidden" name="preferred_date" value={date} />
+        {isEmbed && <input type="hidden" name="embed" value="1" />}
+
+        <h3 className="text-sm font-semibold text-stone-900">Sumate a la lista de espera</h3>
+        <p className="text-xs text-stone-500">
+          Te avisamos por WhatsApp cuando se libere un turno para {serviceName}.
+        </p>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="wl_full_name">Tu nombre *</Label>
+          <Input id="wl_full_name" name="full_name" required placeholder="Nombre y apellido" />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="wl_phone">WhatsApp *</Label>
+            <Input id="wl_phone" name="phone" type="tel" required placeholder="+549..." />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="wl_email">Email</Label>
+            <Input id="wl_email" name="email" type="email" placeholder="Opcional" />
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="wl_notes">Comentarios</Label>
+          <Textarea
+            id="wl_notes"
+            name="notes"
+            rows={2}
+            placeholder="Ej. solo a la mañana, prefiero a María, etc."
+          />
+        </div>
+
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setWaitlistOpen(false)}
+            className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm text-stone-700 hover:bg-stone-50"
+          >
+            Cancelar
+          </button>
+          <SubmitButton className="flex-1" pendingText="Anotándote...">
+            Anotarme
+          </SubmitButton>
+        </div>
+      </form>
+    )}
+    </>
   );
 }
