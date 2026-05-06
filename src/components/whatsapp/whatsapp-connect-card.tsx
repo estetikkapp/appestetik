@@ -34,6 +34,35 @@ export function WhatsappConnectCard({ initialStatus, initialPhone, startPolling 
   const [polling, setPolling] = useState(startPolling ?? false);
   const [test, setTest] = useState<TestResult | null>(null);
   const [testing, setTesting] = useState(false);
+  const [urlError, setUrlError] = useState<string | null>(null);
+
+  // Leer ?error= de la URL al montar — útil cuando connectWhatsappAction
+  // redirige con error y el banner global queda fuera de viewport.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const err = params.get('error');
+    if (err) setUrlError(err);
+  }, []);
+
+  // Auto-run del test si arrancamos desconectados (sin haber clickeado nada)
+  // Da feedback inmediato del problema sin que el user tenga que apretar nada.
+  useEffect(() => {
+    if (initialStatus !== 'disconnected') return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/whatsapp/test');
+        const data = await res.json();
+        if (!cancelled) setTest(data);
+      } catch {
+        // silencioso — el botón Probar conexión queda como fallback
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [initialStatus]);
 
   useEffect(() => {
     if (!polling) return;
@@ -122,6 +151,31 @@ export function WhatsappConnectCard({ initialStatus, initialPhone, startPolling 
           ) : null}
         </div>
       </div>
+
+      {urlError && (
+        <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-600" />
+          <div className="flex-1">
+            <p className="font-medium">El último intento de conectar falló</p>
+            <p className="mt-0.5 text-xs">{urlError}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setUrlError(null);
+              if (typeof window !== 'undefined') {
+                const url = new URL(window.location.href);
+                url.searchParams.delete('error');
+                window.history.replaceState({}, '', url.toString());
+              }
+            }}
+            className="text-xs opacity-60 hover:opacity-100"
+            title="Cerrar"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {test && <TestPanel result={test} />}
 
