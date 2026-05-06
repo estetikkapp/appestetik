@@ -6,7 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { translateDbError } from '@/lib/utils/db-errors';
-import { sendTextMessage } from '@/lib/integrations/whatsapp/evolution';
+import { sendWhatsappMessage } from '@/lib/integrations/whatsapp';
 import { notifyOrgAdmins } from '@/lib/notifications';
 import { audit } from '@/lib/audit';
 
@@ -167,7 +167,7 @@ Lamentamos informarte que tu turno en *${org.name}* del ${fechaTexto} fue cancel
 
 Por favor contactanos para reagendar.`;
           try {
-            await sendTextMessage(orgId, cli.phone_e164, message);
+            await sendWhatsappMessage(orgId, cli.phone_e164, message);
           } catch (err) {
             console.error('[closure] whatsapp send fail', a.id, err);
           }
