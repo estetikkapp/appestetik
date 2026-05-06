@@ -9,6 +9,10 @@ function isPublicRoute(pathname: string): boolean {
   if (pathname === '/') return false; // home va al panel
   if (pathname.startsWith('/_next')) return true;
   if (pathname.startsWith('/favicon')) return true;
+  // PWA + assets en /public deben ser accesibles sin auth
+  if (pathname === '/manifest.webmanifest') return true;
+  if (pathname === '/icon.svg' || pathname === '/icon.png') return true;
+  if (pathname === '/robots.txt' || pathname === '/sitemap.xml') return true;
   return PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 }
 
