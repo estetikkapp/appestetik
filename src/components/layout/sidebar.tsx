@@ -16,6 +16,8 @@ import {
   Clock,
   CalendarOff,
   History,
+  ListChecks,
+  BarChart3,
 } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 
@@ -29,10 +31,12 @@ interface NavItem {
 const NAV: NavItem[] = [
   { href: '/', label: 'Inicio', icon: LayoutDashboard },
   { href: '/agenda', label: 'Agenda', icon: Calendar },
+  { href: '/espera', label: 'Lista de espera', icon: ListChecks },
   { href: '/clientas', label: 'Clientas', icon: Users },
   { href: '/servicios', label: 'Servicios', icon: Scissors },
   { href: '/paquetes', label: 'Paquetes', icon: Gift },
   { href: '/cobros', label: 'Cobros', icon: CreditCard },
+  { href: '/reportes', label: 'Reportes', icon: BarChart3 },
   { href: '/recursos', label: 'Recursos', icon: Package },
   { href: '/empleadas', label: 'Empleadas', icon: UserCog },
   { href: '/horarios', label: 'Horarios', icon: Clock },

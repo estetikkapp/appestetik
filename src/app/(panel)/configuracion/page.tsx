@@ -9,6 +9,7 @@ import { updateOrganizationSettings } from '@/actions/organization-settings';
 import { uploadOrganizationLogo } from '@/actions/storage';
 import { saveAfipConfig } from '@/actions/afip-config';
 import { WhatsappConnectCard } from '@/components/whatsapp/whatsapp-connect-card';
+import { EmbedSnippet } from './embed-snippet';
 
 export const metadata = { title: 'Configuración — appestetika' };
 
@@ -149,6 +150,16 @@ export default async function ConfiguracionPage({
         provider={org?.afip_provider ?? 'manual'}
         config={(org?.afip_config as Record<string, unknown> | null) ?? null}
       />
+
+      {org?.slug && (
+        <section className="rounded-xl border border-stone-200 bg-white p-6">
+          <h2 className="mb-2 text-lg font-semibold">Reservas online — link y embed</h2>
+          <p className="mb-4 text-sm text-stone-500">
+            Compartí el link de reserva o embebé el formulario directo en tu sitio web.
+          </p>
+          <EmbedSnippet slug={org.slug} />
+        </section>
+      )}
 
       <section className="rounded-xl border border-stone-200 bg-white p-6">
         <h2 className="mb-4 text-lg font-semibold">Otras integraciones</h2>

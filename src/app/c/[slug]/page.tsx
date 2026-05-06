@@ -7,7 +7,7 @@ import { BookingForm } from './booking-form';
 
 interface Params {
   params: { slug: string };
-  searchParams: { error?: string; service?: string };
+  searchParams: { error?: string; service?: string; waitlisted?: string };
 }
 
 async function loadCenter(slug: string) {
@@ -104,6 +104,11 @@ export default async function PublicReservationPage({ params, searchParams }: Pa
         {searchParams.error && (
           <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
             {searchParams.error}
+          </div>
+        )}
+        {searchParams.waitlisted === '1' && (
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
+            ¡Listo! Te sumamos a la lista de espera. Te avisamos por WhatsApp cuando se libere un turno.
           </div>
         )}
 
