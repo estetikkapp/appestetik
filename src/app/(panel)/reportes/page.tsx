@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { SubmitButton } from '@/components/ui/submit-button';
 import {
   Table,
   TableBody,
@@ -198,7 +199,7 @@ export default async function ReportesPage({
           <Label htmlFor="to">Hasta</Label>
           <Input id="to" name="to" type="date" defaultValue={to} required />
         </div>
-        <Button type="submit">Aplicar</Button>
+        <SubmitButton pendingText="Cargando...">Aplicar</SubmitButton>
         <div className="ml-auto flex flex-wrap gap-2">
           <Button asChild variant="outline" size="sm">
             <a href={exportUrl('appointments')}>

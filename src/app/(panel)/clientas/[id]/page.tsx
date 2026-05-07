@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, Phone, Mail, IdCard, Cake, Pencil } from 'lucide-react';
@@ -109,9 +110,9 @@ export default async function ClientDetailPage({
     <div className="mx-auto max-w-5xl space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" asChild>
+          <Button variant="ghost" size="sm" asChild aria-label="Volver al listado de clientas">
             <Link href="/clientas">
-              <ArrowLeft className="h-4 w-4" />
+              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             </Link>
           </Button>
           <div>
@@ -380,11 +381,13 @@ export default async function ClientDetailPage({
           {medical?.consent_signature_url && (
             <div className="mt-4 rounded-lg border border-stone-200 p-3">
               <p className="mb-2 text-xs font-medium text-stone-500">Última firma registrada:</p>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 src={medical.consent_signature_url}
-                alt="Firma anterior"
-                className="max-h-40 rounded border border-stone-200"
+                alt="Firma anterior del consentimiento"
+                width={400}
+                height={160}
+                unoptimized
+                className="h-auto max-h-40 w-auto rounded border border-stone-200"
               />
             </div>
           )}

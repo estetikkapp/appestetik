@@ -107,21 +107,26 @@ export async function POST(req: NextRequest) {
 
       if (!org) continue;
 
-      // Mensajes entrantes (futuro: detección de comandos, autorespuesta, etc.)
-      // Por ahora: solo log para debugging.
+      // Mensajes entrantes — futuro: detección de comandos / autorespuesta.
+      // Hoy: solo registramos cantidades para no filtrar contenido de
+      // clientas a logs de Vercel. Si se necesita debugging, activar log
+      // detallado vía env var WHATSAPP_DEBUG=1.
       if (value.messages && value.messages.length > 0) {
-        for (const msg of value.messages) {
-          console.log('[whatsapp/cloud-webhook] inbound msg', {
-            org_id: org.id,
-            from: msg.from,
-            type: msg.type,
-            preview: msg.text?.body?.slice(0, 100),
-          });
+        if (process.env.WHATSAPP_DEBUG === '1') {
+          for (const msg of value.messages) {
+            console.log('[whatsapp/cloud-webhook] inbound msg', {
+              org_id: org.id,
+              from: msg.from,
+              type: msg.type,
+              preview: msg.text?.body?.slice(0, 50),
+            });
+          }
         }
       }
 
-      // Statuses (delivered, read, failed) — útil para reportes
-      if (value.statuses && value.statuses.length > 0) {
+      // Statuses (delivered, read, failed) — útil para reportes.
+      // No incluyen contenido del mensaje, así que es seguro loguear.
+      if (value.statuses && value.statuses.length > 0 && process.env.WHATSAPP_DEBUG === '1') {
         for (const status of value.statuses) {
           console.log('[whatsapp/cloud-webhook] status', {
             org_id: org.id,

@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { Upload } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { Button } from '@/components/ui/button';
+import { SubmitButton } from '@/components/ui/submit-button';
 import {
   Table,
   TableBody,
@@ -116,16 +117,14 @@ export default async function ClientasPage({
           type="search"
           name="q"
           defaultValue={search}
+          aria-label="Buscar clienta"
           placeholder="Buscar por nombre, teléfono o DNI..."
           className="flex h-10 w-full max-w-md rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
         />
         {filter !== 'all' && <input type="hidden" name="filter" value={filter} />}
-        <button
-          type="submit"
-          className="rounded-lg bg-brand-500 px-4 text-sm text-white hover:bg-brand-600"
-        >
+        <SubmitButton size="default" pendingText="Buscando...">
           Buscar
-        </button>
+        </SubmitButton>
         {(search || filter !== 'all') && (
           <a href="/clientas" className="rounded-lg px-3 text-sm text-stone-500 hover:bg-stone-100">
             Limpiar
@@ -179,10 +178,33 @@ export default async function ClientasPage({
           <TableBody>
             {clients.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-sm text-stone-400">
-                  {search
-                    ? 'No hay clientas que coincidan con la búsqueda.'
-                    : 'No hay clientas cargadas todavía.'}
+                <TableCell colSpan={5} className="py-8 text-center text-sm text-stone-500">
+                  {search ? (
+                    <>
+                      No hay clientas que coincidan con la búsqueda.{' '}
+                      <a href="/clientas" className="text-brand-600 underline">
+                        Limpiar
+                      </a>
+                    </>
+                  ) : filter !== 'all' ? (
+                    <>
+                      No hay clientas en este filtro.{' '}
+                      <a href="/clientas" className="text-brand-600 underline">
+                        Ver todas
+                      </a>
+                    </>
+                  ) : (
+                    <div className="space-y-2">
+                      <p>No hay clientas cargadas todavía.</p>
+                      <p className="text-xs text-stone-400">
+                        Empezá creando una <strong>nueva clienta</strong> arriba, o{' '}
+                        <Link href="/clientas/importar" className="text-brand-600 underline">
+                          importá un CSV
+                        </Link>{' '}
+                        si ya tenés base.
+                      </p>
+                    </div>
+                  )}
                 </TableCell>
               </TableRow>
             )}
