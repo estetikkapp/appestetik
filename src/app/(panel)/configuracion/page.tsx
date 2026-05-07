@@ -203,14 +203,31 @@ export default async function ConfiguracionPage({
         <h2 className="mb-4 text-lg font-semibold">Otras integraciones</h2>
         <div className="space-y-3">
           <IntegrationRow
+            name="Email transaccional (Resend)"
+            status={process.env.RESEND_API_KEY ? 'active' : 'pending'}
+            hint={
+              process.env.RESEND_API_KEY
+                ? 'Configurado. Recordatorios por email funcionan como fallback de WhatsApp.'
+                : 'Sin RESEND_API_KEY. Crear cuenta gratis en resend.com (3000 emails/mes), pegar la key en Vercel y redeploy.'
+            }
+          />
+          <IntegrationRow
             name="Mercado Pago"
-            status="pending"
-            hint="Cargá MP_ACCESS_TOKEN real en Vercel para activar links de pago."
+            status={process.env.MP_ACCESS_TOKEN ? 'active' : 'pending'}
+            hint={
+              process.env.MP_ACCESS_TOKEN
+                ? 'Configurado. Links de pago activos en /cobros.'
+                : 'Cargá MP_ACCESS_TOKEN real en Vercel para activar links de pago.'
+            }
           />
           <IntegrationRow
             name="Claude API (IA)"
-            status="active"
-            hint="ANTHROPIC_API_KEY cargada. Usá /ia para análisis de piel y protocolos."
+            status={process.env.ANTHROPIC_API_KEY ? 'active' : 'pending'}
+            hint={
+              process.env.ANTHROPIC_API_KEY
+                ? 'ANTHROPIC_API_KEY cargada. Usá /ia para análisis de piel y protocolos.'
+                : 'Cargá ANTHROPIC_API_KEY en Vercel para activar /ia.'
+            }
           />
         </div>
       </section>

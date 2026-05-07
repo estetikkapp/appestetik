@@ -1,9 +1,13 @@
 'use client';
 
-import { Check, Play, CheckCircle, X, UserX } from 'lucide-react';
+import { Check, Play, CheckCircle, X, UserX, Bell } from 'lucide-react';
 import { SubmitButton } from '@/components/ui/submit-button';
 import { DeleteConfirmButton } from '@/components/ui/delete-confirm-button';
-import { updateAppointmentStatus, deleteAppointment } from '@/actions/appointments';
+import {
+  updateAppointmentStatus,
+  deleteAppointment,
+  sendReminderNow,
+} from '@/actions/appointments';
 import type { AppointmentStatus } from '@/types/app';
 import { RescheduleButton } from './reschedule-button';
 
@@ -14,10 +18,19 @@ interface Props {
   startsAt?: string;
   clientName?: string;
   hasPhone?: boolean;
+  reminderSentAt?: string | null;
 }
 
-export function AppointmentRowActions({ id, status, startsAt, clientName, hasPhone }: Props) {
+export function AppointmentRowActions({
+  id,
+  status,
+  startsAt,
+  clientName,
+  hasPhone,
+  reminderSentAt,
+}: Props) {
   const canReschedule = ['pending', 'confirmed'].includes(status) && !!startsAt;
+  const canRemind = ['pending', 'confirmed'].includes(status);
   return (
     <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
       {status === 'pending' && (
@@ -34,6 +47,23 @@ export function AppointmentRowActions({ id, status, startsAt, clientName, hasPho
         <StatusButton id={id} toStatus="completed" title="Completar">
           <CheckCircle className="h-4 w-4" />
         </StatusButton>
+      )}
+      {canRemind && (
+        <form action={sendReminderNow}>
+          <input type="hidden" name="id" value={id} />
+          {reminderSentAt && <input type="hidden" name="force" value="1" />}
+          <SubmitButton
+            variant="ghost"
+            size="sm"
+            title={reminderSentAt ? 'Reenviar recordatorio' : 'Enviar recordatorio ahora'}
+            aria-label="Recordatorio"
+            hideSpinner
+          >
+            <Bell
+              className={`h-4 w-4 ${reminderSentAt ? 'text-emerald-600' : ''}`}
+            />
+          </SubmitButton>
+        </form>
       )}
       {canReschedule && (
         <RescheduleButton

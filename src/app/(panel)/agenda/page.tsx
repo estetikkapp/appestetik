@@ -69,7 +69,7 @@ async function loadDayAgenda(date: string) {
     supabase
       .from('appointments')
       .select(
-        `id, starts_at, ends_at, status, notes, professional_id, resource_id,
+        `id, starts_at, ends_at, status, notes, reminder_sent_at, professional_id, resource_id,
          client:clients!client_id(id, full_name, phone_e164),
          service:services!service_id(id, name, duration_minutes, price_ars)`
       )
@@ -123,6 +123,7 @@ async function loadDayAgenda(date: string) {
       ends_at: a.ends_at,
       status: a.status,
       notes: a.notes,
+      reminder_sent_at: a.reminder_sent_at,
       client: clientRel
         ? { id: clientRel.id, full_name: clientRel.full_name, phone_e164: clientRel.phone_e164 }
         : null,
@@ -184,7 +185,7 @@ async function loadMonthAgenda(monthStart: string) {
       supabase
         .from('appointments')
         .select(
-          `id, starts_at, ends_at, status, notes, professional_id, resource_id,
+          `id, starts_at, ends_at, status, notes, reminder_sent_at, professional_id, resource_id,
            client:clients!client_id(id, full_name, phone_e164),
            service:services!service_id(id, name, duration_minutes, price_ars)`
         )
@@ -232,6 +233,7 @@ async function loadMonthAgenda(monthStart: string) {
       ends_at: a.ends_at,
       status: a.status,
       notes: a.notes,
+      reminder_sent_at: a.reminder_sent_at,
       client: clientRel
         ? { id: clientRel.id, full_name: clientRel.full_name, phone_e164: clientRel.phone_e164 }
         : null,
@@ -291,7 +293,7 @@ async function loadWeekAgenda(weekStart: string) {
       supabase
         .from('appointments')
         .select(
-          `id, starts_at, ends_at, status, notes, professional_id, resource_id,
+          `id, starts_at, ends_at, status, notes, reminder_sent_at, professional_id, resource_id,
            client:clients!client_id(id, full_name, phone_e164),
            service:services!service_id(id, name, duration_minutes, price_ars)`
         )
@@ -339,6 +341,7 @@ async function loadWeekAgenda(weekStart: string) {
       ends_at: a.ends_at,
       status: a.status,
       notes: a.notes,
+      reminder_sent_at: a.reminder_sent_at,
       client: clientRel
         ? { id: clientRel.id, full_name: clientRel.full_name, phone_e164: clientRel.phone_e164 }
         : null,
@@ -469,6 +472,10 @@ export default async function AgendaPage({
           {searchParams.ok === 'creado' && 'Turno creado.'}
           {searchParams.ok === 'bloqueo-creado' && 'Bloqueo agregado.'}
           {searchParams.ok === 'reagendado' && 'Turno reagendado.'}
+          {searchParams.ok === 'recordatorio-enviado-whatsapp' &&
+            'Recordatorio enviado por WhatsApp ✓'}
+          {searchParams.ok === 'recordatorio-enviado-email' &&
+            'Recordatorio enviado por email ✓'}
         </div>
       )}
 

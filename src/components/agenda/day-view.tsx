@@ -14,6 +14,7 @@ export interface AppointmentWithRelations {
   ends_at: string;
   status: AppointmentStatus;
   notes: string | null;
+  reminder_sent_at?: string | null;
   client: { id: string; full_name: string; phone_e164: string | null } | null;
   service: { id: string; name: string; duration_minutes: number; price_ars: number } | null;
   professional_name: string | null;
@@ -201,6 +202,7 @@ export function DayView({ date, appointments, businessHours }: DayViewProps) {
                               startsAt={appt.starts_at}
                               clientName={appt.client?.full_name ?? undefined}
                               hasPhone={!!appt.client?.phone_e164}
+                              reminderSentAt={appt.reminder_sent_at ?? null}
                             />
                           </div>
                         </div>

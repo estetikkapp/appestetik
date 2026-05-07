@@ -344,6 +344,42 @@ Si esto no te queda bien, respondé este mensaje y coordinamos.`;
   redirect(`/agenda?date=${newDateAr}&ok=reagendado`);
 }
 
+/**
+ * Disparo manual del recordatorio para un turno específico.
+ * Útil para testear el flow sin esperar el cron diario, o para reenviar
+ * a una clienta que no recibió el automático.
+ */
+export async function sendReminderNow(formData: FormData): Promise<void> {
+  const { orgId } = await requireMembership();
+  const id = String(formData.get('id') ?? '');
+  const force = formData.get('force') === '1';
+  if (!id) {
+    redirect('/agenda?error=Falta+id+del+turno');
+  }
+
+  // Validar que el turno pertenezca a la org del user (anti tampering)
+  const supabase = createClient();
+  const { data: appt } = await supabase
+    .from('appointments')
+    .select('id, organization_id')
+    .eq('id', id)
+    .maybeSingle();
+
+  if (!appt || appt.organization_id !== orgId) {
+    redirect('/agenda?error=Turno+no+encontrado');
+  }
+
+  const { sendAppointmentReminder } = await import('@/lib/reminders');
+  const outcome = await sendAppointmentReminder(id, { force });
+
+  revalidatePath('/agenda');
+  if (outcome.ok) {
+    redirect(`/agenda?ok=recordatorio-enviado-${outcome.sentVia}`);
+  } else {
+    redirect(`/agenda?error=${encodeURIComponent(outcome.reason ?? 'Error al enviar')}`);
+  }
+}
+
 export async function createScheduleBlock(formData: FormData): Promise<void> {
   const orgId = await getActiveOrgOrRedirect();
   const startsAt = String(formData.get('starts_at') ?? '');
