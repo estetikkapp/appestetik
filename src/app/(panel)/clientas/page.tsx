@@ -30,9 +30,14 @@ async function loadClients(search: string, filter: string) {
     .limit(200);
 
   if (search && search.length >= 2) {
-    query = query.or(
-      `full_name.ilike.%${search}%,phone_e164.ilike.%${search}%,dni.ilike.%${search}%`
-    );
+    // Escapar caracteres especiales de PostgREST or() — sin esto un nombre
+    // con coma o paréntesis rompe la query.
+    const safe = search.replace(/[,()"]/g, '');
+    if (safe.trim()) {
+      query = query.or(
+        `full_name.ilike.%${safe}%,phone_e164.ilike.%${safe}%,dni.ilike.%${safe}%`
+      );
+    }
   }
 
   if (filter === 'dormant') {

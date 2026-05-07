@@ -1,6 +1,5 @@
 'use server';
 
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
@@ -8,10 +7,10 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { translateDbError } from '@/lib/utils/db-errors';
 import { sendWhatsappMessage } from '@/lib/integrations/whatsapp';
 import { audit } from '@/lib/audit';
+import { requireMembership } from '@/lib/auth/require-membership';
 
 async function getActiveOrgOrRedirect(): Promise<string> {
-  const orgId = cookies().get('active_org')?.value;
-  if (!orgId) redirect('/auth/login');
+  const { orgId } = await requireMembership();
   return orgId;
 }
 

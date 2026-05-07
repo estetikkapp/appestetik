@@ -119,12 +119,18 @@ export async function searchClients(query: string): Promise<Array<{ id: string; 
   if (!orgId) return [];
   if (!query || query.length < 2) return [];
 
+  // Escapar caracteres especiales de PostgREST or(): coma, paréntesis,
+  // y comillas. Sin esto, un nombre con coma rompe la query (o peor,
+  // permite manipular el filtro).
+  const safe = query.replace(/[,()"]/g, '');
+  if (!safe.trim()) return [];
+
   const supabase = createClient();
   const { data } = await supabase
     .from('clients')
     .select('id, full_name, phone_e164, dni')
     .eq('organization_id', orgId)
-    .or(`full_name.ilike.%${query}%,phone_e164.ilike.%${query}%,dni.ilike.%${query}%`)
+    .or(`full_name.ilike.%${safe}%,phone_e164.ilike.%${safe}%,dni.ilike.%${safe}%`)
     .limit(50);
 
   return data ?? [];

@@ -72,7 +72,10 @@ export async function POST(request: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const externalRef = (mpPayment as any).external_reference as string | undefined;
     let existing: { id: string } | null = null;
-    if (externalRef) {
+    // Validar UUID antes de embedar en or() — previene PostgREST injection si
+    // MP devuelve un valor manipulado con coma/paréntesis.
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (externalRef && UUID_RE.test(externalRef)) {
       const { data } = await supabase
         .from('payments')
         .select('id')
@@ -115,7 +118,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true, updated: existing.id, status: localStatus });
   } catch (err) {
     console.error('[mp webhook]', err);
-    return NextResponse.json({ ok: false, error: 'webhook_error' }, { status: 200 });
+    // Devolver 503 (no 200) ante error transitorio: así MP reintenta y no
+    // perdemos el evento. Si fuera bug determinístico, también va a fallar
+    // en el retry y eventualmente MP lo abandonará — pero al menos
+    // intentamos rescatar errores transitorios (DB blip, timeout, etc.).
+    return NextResponse.json({ ok: false, error: 'webhook_error' }, { status: 503 });
   }
 }
 
