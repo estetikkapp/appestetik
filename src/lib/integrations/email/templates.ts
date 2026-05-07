@@ -170,38 +170,50 @@ export function invitationEmail(p: InvitationEmailProps): {
   html: string;
   text: string;
 } {
-  const subject = `Te invitaron a ${p.orgName} en appestetika`;
+  // Subject sin emojis (los filtros de spam castigan emojis en subject) y sin
+  // caracteres tipo "¡!" que disparan alertas. Concreto + nombre de la org
+  // hace que el destinatario lo reconozca rápido.
+  const subject = `${p.orgName} te invita a sumarte al equipo`;
   const roleLabel = ROLE_LABELS[p.role] ?? p.role;
+  const inviterPrefix = p.inviterName ? escapeHtml(p.inviterName) + ' te' : 'Te';
 
   const html = `
 <div style="${BASE_STYLE}">
-  <h1 style="font-size: 22px; margin-bottom: 4px;">Te invitaron a colaborar 💌</h1>
-  <p>${p.inviterName ? escapeHtml(p.inviterName) + ' te' : 'Te'} invitó a unirte a <strong>${escapeHtml(p.orgName)}</strong> en appestetika como <strong>${escapeHtml(roleLabel)}</strong>.</p>
+  <h1 style="font-size: 20px; margin-bottom: 12px; color: #292524;">Sumate al equipo</h1>
+  <p>Hola, ${inviterPrefix} invitó a unirte a <strong>${escapeHtml(p.orgName)}</strong> como <strong>${escapeHtml(roleLabel)}</strong>.</p>
 
   <div style="${CARD_STYLE}">
-    <p style="margin: 0;">Aceptá la invitación creando tu cuenta:</p>
+    <p style="margin: 0 0 8px 0; font-size: 14px;">Para aceptar la invitación, creá tu cuenta:</p>
+    <p style="margin: 0;"><a href="${p.acceptUrl}" style="${BUTTON_STYLE}">Aceptar invitación</a></p>
   </div>
 
-  <p style="text-align: center;">
-    <a href="${p.acceptUrl}" style="${BUTTON_STYLE}">Aceptar invitación</a>
+  <p style="font-size: 13px; color: #78716c;">
+    Si el botón no funciona, copiá este link en tu navegador:<br>
+    <span style="word-break: break-all; color: #44403c;">${p.acceptUrl}</span>
   </p>
 
   <p style="font-size: 13px; color: #78716c;">
-    Si no esperabas esta invitación, simplemente ignorá este mensaje.
+    La invitación expira en 7 días. Si no esperabas este mensaje, podés ignorarlo.
   </p>
 
   <div style="${FOOTER_STYLE}">
-    ${escapeHtml(p.orgName)} · appestetika
+    ${escapeHtml(p.orgName)} · appestetika · gestión para centros de estética
   </div>
 </div>`.trim();
 
-  const text = `${p.inviterName ? p.inviterName + ' te' : 'Te'} invitó a unirte a ${p.orgName} en appestetika como ${roleLabel}.
+  // Versión texto detallada (los clientes de email penalizan cuando solo hay
+  // HTML — un text/plain rico mejora la entrega).
+  const text = `Hola,
 
-Aceptar invitación: ${p.acceptUrl}
+${p.inviterName ? p.inviterName + ' te' : 'Te'} invitó a unirte a ${p.orgName} como ${roleLabel} en appestetika.
 
-Si no la esperabas, ignorá este mensaje.
+Para aceptar, creá tu cuenta usando este link:
+${p.acceptUrl}
 
-— ${p.orgName}`;
+La invitación expira en 7 días. Si no esperabas este mensaje, podés ignorarlo.
+
+— ${p.orgName}
+appestetika.com`;
 
   return { subject, html, text };
 }

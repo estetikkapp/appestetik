@@ -27,6 +27,7 @@ export async function signup(formData: FormData): Promise<void> {
   const password = String(formData.get('password') ?? '');
   const organizationName = String(formData.get('organization_name') ?? '').trim();
   const fullName = String(formData.get('full_name') ?? '').trim();
+  const invitationToken = String(formData.get('invitation_token') ?? '').trim();
 
   if (!email || !password) {
     redirect('/auth/signup?error=Email+y+contrase%C3%B1a+son+obligatorios');
@@ -35,21 +36,37 @@ export async function signup(formData: FormData): Promise<void> {
     redirect('/auth/signup?error=La+contrase%C3%B1a+debe+tener+al+menos+8+caracteres');
   }
 
+  // Si tenemos invitation_token, lo pasamos en metadata. El trigger DB
+  // handle_new_user() lo lee y crea membership en la org de la invitación
+  // (en vez de crear org nueva).
+  const userData: Record<string, string | null> = {
+    full_name: fullName || null,
+  };
+  if (invitationToken) {
+    userData.invitation_token = invitationToken;
+  } else {
+    userData.organization_name = organizationName || 'Mi centro';
+  }
+
   const supabase = createClient();
   const { error } = await supabase.auth.signUp({
     email,
     password,
     options: {
       emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
-      data: {
-        organization_name: organizationName || 'Mi centro',
-        full_name: fullName || null,
-      },
+      data: userData,
     },
   });
 
   if (error) {
-    redirect(`/auth/signup?error=${encodeURIComponent(traducirErrorAuth(error.message))}`);
+    const errParam = encodeURIComponent(traducirErrorAuth(error.message));
+    if (invitationToken) {
+      // Preservar el invite param para que signup recupere el contexto
+      redirect(
+        `/auth/signup?invite=${encodeURIComponent(invitationToken)}&email=${encodeURIComponent(email)}&error=${errParam}`
+      );
+    }
+    redirect(`/auth/signup?error=${errParam}`);
   }
 
   redirect('/auth/login?signup=ok');
