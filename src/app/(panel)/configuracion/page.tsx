@@ -431,7 +431,7 @@ function MpConfigSection({
                 validamos la firma de cada notificación. URL del webhook a poner en MP:
                 {' '}
                 <code className="rounded bg-stone-100 px-1 py-0.5 text-xs">
-                  {process.env.NEXT_PUBLIC_APP_URL ?? 'https://appestetika.vercel.app'}
+                  {process.env.NEXT_PUBLIC_APP_URL ?? 'https://estetikkapp.com'}
                   /api/webhooks/mp
                 </code>
               </p>

@@ -1,15 +1,17 @@
 'use server';
 
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { translateDbError } from '@/lib/utils/db-errors';
 import { createPaymentPreference } from '@/lib/integrations/mercadopago/client';
+import { requireMembership } from '@/lib/auth/require-membership';
 
 async function getActiveOrgOrRedirect(): Promise<string> {
-  const orgId = cookies().get('active_org')?.value;
-  if (!orgId) redirect('/auth/login');
+  // Verifica user logueado + membership activo. Crítico porque
+  // createPaymentPreference usa createAdminClient (bypass RLS) — sin esto,
+  // tampering de cookie active_org permitiría crear pagos en otra org.
+  const { orgId } = await requireMembership();
   return orgId;
 }
 
@@ -71,7 +73,7 @@ export async function createMpPaymentLink(formData: FormData): Promise<void> {
     .eq('organization_id', orgId)
     .maybeSingle();
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://appestetika.vercel.app';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://estetikkapp.com';
   let result;
   try {
     result = await createPaymentPreference({
