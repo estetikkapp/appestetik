@@ -16,11 +16,24 @@ import { sendEmail } from '@/lib/integrations/email/resend';
 import { appointmentReminderEmail } from '@/lib/integrations/email/templates';
 import { formatInTimeZone } from 'date-fns-tz';
 
+export type ReminderSkipReason =
+  | 'not_found'
+  | 'already_sent'
+  | 'wrong_status'
+  | 'no_client'
+  | 'no_channel_available'
+  | 'whatsapp_failed_email_unavailable'
+  | 'email_no_api_key'
+  | 'email_failed'
+  | 'whatsapp_failed_no_email';
+
 export interface ReminderOutcome {
   ok: boolean;
   sentVia: 'whatsapp' | 'email' | null;
   /** Razón del skip o error visible al usuario que intentó disparar manual */
   reason?: string;
+  /** Código estructurado para clasificar (cron lo usa para contar skipped vs failed) */
+  skipCode?: ReminderSkipReason;
 }
 
 interface AppointmentRow {
@@ -80,7 +93,12 @@ export async function sendAppointmentReminder(
     .maybeSingle();
 
   if (error || !appt) {
-    return { ok: false, sentVia: null, reason: 'Turno no encontrado' };
+    return {
+      ok: false,
+      sentVia: null,
+      reason: 'Turno no encontrado',
+      skipCode: 'not_found',
+    };
   }
 
   if (!options.force && appt.reminder_sent_at) {
@@ -88,6 +106,7 @@ export async function sendAppointmentReminder(
       ok: false,
       sentVia: null,
       reason: 'Ya se envió un recordatorio para este turno',
+      skipCode: 'already_sent',
     };
   }
 
@@ -96,6 +115,7 @@ export async function sendAppointmentReminder(
       ok: false,
       sentVia: null,
       reason: `No se puede recordar un turno en estado ${appt.status}`,
+      skipCode: 'wrong_status',
     };
   }
 
@@ -105,7 +125,12 @@ export async function sendAppointmentReminder(
   const service = Array.isArray(a.services) ? a.services[0] : a.services;
 
   if (!client) {
-    return { ok: false, sentVia: null, reason: 'El turno no tiene clienta asociada' };
+    return {
+      ok: false,
+      sentVia: null,
+      reason: 'El turno no tiene clienta asociada',
+      skipCode: 'no_client',
+    };
   }
 
   const tz = org?.timezone ?? 'America/Argentina/Buenos_Aires';
@@ -129,6 +154,7 @@ export async function sendAppointmentReminder(
       sentVia: null,
       reason:
         'La clienta no tiene teléfono ni email cargado, o WhatsApp del centro no está conectado',
+      skipCode: 'no_channel_available',
     };
   }
 
@@ -143,16 +169,31 @@ export async function sendAppointmentReminder(
     });
     try {
       await sendWhatsappMessage(a.organization_id, client.phone_e164!, message);
+      // CRÍTICO: actualizar reminder_sent_at PRIMERO, después loguear. Si el
+      // update falla, no marcamos la fila pero sí devolvemos error — el cron
+      // lo reintenta y no se duplica el envío. El log es best-effort.
+      const { error: updErr } = await admin
+        .from('appointments')
+        .update({ reminder_sent_at: new Date().toISOString() })
+        .eq('id', a.id);
+      if (updErr) {
+        console.error(`[reminders] update reminder_sent_at falló post-WA: ${updErr.message}`);
+        // El WhatsApp se mandó pero no podemos marcar — devolvemos error para
+        // que el cron NO lo cuente como exitoso. La clienta puede recibir un
+        // segundo recordatorio mañana — preferible a perder visibilidad.
+        return {
+          ok: false,
+          sentVia: null,
+          reason: 'WhatsApp enviado pero falló registrar el envío (posible reintento mañana)',
+          skipCode: 'email_failed',
+        };
+      }
       await admin.from('whatsapp_reminder_log').insert({
         organization_id: a.organization_id,
         appointment_id: a.id,
         phone_e164: client.phone_e164!,
         message,
       });
-      await admin
-        .from('appointments')
-        .update({ reminder_sent_at: new Date().toISOString() })
-        .eq('id', a.id);
       return { ok: true, sentVia: 'whatsapp' };
     } catch (err) {
       const errMsg = err instanceof Error ? err.message : String(err);
@@ -170,7 +211,7 @@ export async function sendAppointmentReminder(
 
   // Email como fallback
   if (canEmail) {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://appestetika.vercel.app';
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://estetikkapp.com';
     const tpl = appointmentReminderEmail({
       clientName: client.full_name,
       orgName,
@@ -202,6 +243,7 @@ export async function sendAppointmentReminder(
         result.error === 'no_api_key'
           ? 'Email no configurado (falta RESEND_API_KEY) y WhatsApp no funcionó'
           : `Email falló: ${result.error}`,
+      skipCode: result.error === 'no_api_key' ? 'email_no_api_key' : 'email_failed',
     };
   }
 
@@ -209,5 +251,6 @@ export async function sendAppointmentReminder(
     ok: false,
     sentVia: null,
     reason: 'WhatsApp falló y la clienta no tiene email cargado',
+    skipCode: 'whatsapp_failed_no_email',
   };
 }

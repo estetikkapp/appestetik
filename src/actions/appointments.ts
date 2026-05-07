@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { translateDbError } from '@/lib/utils/db-errors';
 import { sendWhatsappMessage } from '@/lib/integrations/whatsapp';
+import { sendAppointmentReminder } from '@/lib/reminders';
 import { audit } from '@/lib/audit';
 import { requireMembership } from '@/lib/auth/require-membership';
 import type { AppointmentStatus } from '@/types/app';
@@ -369,8 +370,21 @@ export async function sendReminderNow(formData: FormData): Promise<void> {
     redirect('/agenda?error=Turno+no+encontrado');
   }
 
-  const { sendAppointmentReminder } = await import('@/lib/reminders');
   const outcome = await sendAppointmentReminder(id, { force });
+
+  // Audit: dejar trazabilidad del envío manual (a quién, qué turno, vía qué canal)
+  await audit({
+    organizationId: orgId,
+    action: 'appointment.reminder.manual',
+    entityType: 'appointment',
+    entityId: id,
+    payload: {
+      force,
+      ok: outcome.ok,
+      via: outcome.sentVia,
+      skip_code: outcome.skipCode ?? null,
+    },
+  });
 
   revalidatePath('/agenda');
   if (outcome.ok) {

@@ -44,14 +44,22 @@ export async function GET(req: NextRequest) {
 
   const results = { sent_whatsapp: 0, sent_email: 0, skipped: 0, failed: 0 };
 
+  // Códigos que cuentan como "skipped" (no son errores de la app) vs "failed"
+  // (algo falló inesperadamente y conviene investigar).
+  const SKIP_CODES = new Set([
+    'already_sent',
+    'wrong_status',
+    'no_client',
+    'no_channel_available',
+  ]);
+
   for (const appt of appointments ?? []) {
     const outcome = await sendAppointmentReminder(appt.id);
-    if (outcome.ok && outcome.sentVia === 'whatsapp') results.sent_whatsapp++;
-    else if (outcome.ok && outcome.sentVia === 'email') results.sent_email++;
-    else if (
-      outcome.reason?.includes('no tiene teléfono ni email') ||
-      outcome.reason?.includes('Ya se envió')
-    ) {
+    if (outcome.ok && outcome.sentVia === 'whatsapp') {
+      results.sent_whatsapp++;
+    } else if (outcome.ok && outcome.sentVia === 'email') {
+      results.sent_email++;
+    } else if (outcome.skipCode && SKIP_CODES.has(outcome.skipCode)) {
       results.skipped++;
     } else {
       results.failed++;
