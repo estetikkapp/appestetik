@@ -110,20 +110,30 @@ export async function importClientsCsv(formData: FormData): Promise<void> {
 
   const parsed = rows.map((r) => validateAndNormalizeRow(r, colMap));
 
-  // Deduplicar contra base existente por phone
+  // Deduplicar contra base existente por phone + dedupe interno del CSV
   const supabase = createClient();
   const phones = parsed.map((p) => p.phone).filter((p): p is string => !!p);
+  const existingSet = new Set<string>();
   if (phones.length > 0) {
     const { data: existing } = await supabase
       .from('clients')
       .select('phone_e164')
       .eq('organization_id', orgId)
       .in('phone_e164', phones);
-    const existingSet = new Set((existing ?? []).map((e) => e.phone_e164));
-    for (const row of parsed) {
-      if (row.phone && existingSet.has(row.phone)) {
-        row.errors.push('Ya existe en la base con ese teléfono');
-      }
+    for (const e of existing ?? []) {
+      if (e.phone_e164) existingSet.add(e.phone_e164);
+    }
+  }
+  const seenInCsv = new Set<string>();
+  for (const row of parsed) {
+    if (!row.phone) continue;
+    if (existingSet.has(row.phone)) {
+      row.errors.push('Ya existe en la base con ese teléfono');
+    } else if (seenInCsv.has(row.phone)) {
+      // Duplicado dentro del propio CSV — solo el primero entra
+      row.errors.push('Repetido en el CSV (mismo teléfono)');
+    } else {
+      seenInCsv.add(row.phone);
     }
   }
 

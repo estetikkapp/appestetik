@@ -1,0 +1,89 @@
+/**
+ * Helper canónico de auth para server actions: verifica que el user logueado
+ * sea miembro activo de la org indicada en cookie `active_org`.
+ *
+ * Crítico para acciones que combinan cookie + `createAdminClient()` — sin
+ * este check, un user logueado podría setear `active_org` a cualquier UUID
+ * y el admin client (que bypassa RLS) ejecutaría la query sobre esa org.
+ *
+ * Uso:
+ *   const { orgId, userId, role } = await requireMembership();
+ *   const admin = createAdminClient();  // OK: ya validamos.
+ *
+ *   // Si requiere role específico:
+ *   const { orgId } = await requireMembership({ minRole: 'admin' });
+ *
+ * Lanza redirect si no hay sesión, si no hay org activa, si el user no es
+ * miembro, o si el rol es insuficiente.
+ */
+
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { createClient } from '@/lib/supabase/server';
+
+type Role = 'owner' | 'admin' | 'professional' | 'receptionist';
+
+const ROLE_RANK: Record<Role, number> = {
+  receptionist: 1,
+  professional: 2,
+  admin: 3,
+  owner: 4,
+};
+
+export interface MembershipCheck {
+  /** auth.users.id del logueado */
+  userId: string;
+  /** organizations.id de la cookie validada */
+  orgId: string;
+  /** rol activo del user en esa org */
+  role: Role;
+}
+
+export interface RequireMembershipOpts {
+  /** Si se pasa, exige que el user tenga al menos este rol (rank). */
+  minRole?: Role;
+  /** URL a la que redirigir si falla. Default: `/auth/login`. */
+  redirectOnFail?: string;
+}
+
+export async function requireMembership(
+  opts: RequireMembershipOpts = {}
+): Promise<MembershipCheck> {
+  const fail = opts.redirectOnFail ?? '/auth/login';
+  const supabase = createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect(fail);
+
+  const orgId = cookies().get('active_org')?.value;
+  if (!orgId) redirect(fail);
+
+  const { data: m } = await supabase
+    .from('memberships')
+    .select('role')
+    .eq('user_id', user.id)
+    .eq('organization_id', orgId)
+    .eq('active', true)
+    .maybeSingle();
+
+  if (!m) {
+    // El user NO es miembro de esa org → no puede tocarla aunque la cookie diga eso.
+    redirect(`${fail}?error=Sin+acceso+a+esa+organizaci%C3%B3n`);
+  }
+
+  if (opts.minRole) {
+    const minRank = ROLE_RANK[opts.minRole];
+    const userRank = ROLE_RANK[m.role as Role] ?? 0;
+    if (userRank < minRank) {
+      redirect(`${fail}?error=Permisos+insuficientes`);
+    }
+  }
+
+  return {
+    userId: user.id,
+    orgId,
+    role: m.role as Role,
+  };
+}

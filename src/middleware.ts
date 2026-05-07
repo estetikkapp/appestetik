@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { updateSession } from '@/lib/supabase/middleware';
 
 const AUTH_ROUTES = ['/auth/login', '/auth/signup'];
-const PUBLIC_PREFIXES = ['/auth', '/c/', '/embed/', '/turno/', '/api/public', '/api/slots', '/api/cron', '/api/whatsapp/webhook', '/api/whatsapp/cloud-webhook', '/api/webhooks', '/api/debug'];
+const PUBLIC_PREFIXES = ['/auth', '/c/', '/embed/', '/turno/', '/api/public', '/api/slots', '/api/cron', '/api/whatsapp/webhook', '/api/whatsapp/cloud-webhook', '/api/webhooks'];
 // /api/whatsapp/test y /api/whatsapp/status van protegidos por auth interno (no public)
 const ACTIVE_ORG_COOKIE = 'active_org';
 
@@ -67,12 +67,22 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  // Caso: user sin ningún membership → estado inválido, logout
+  // Caso: user sin ningún membership → estado inválido, logout.
+  // signOut() modifica cookies internamente vía updateSession — pero el
+  // `response` ya fue construido. Para asegurar que las cookies de auth
+  // se borren correctamente sobre el redirect, construimos uno nuevo y
+  // copiamos las cookies actualizadas.
   if (!memberships || memberships.length === 0) {
     await supabase.auth.signOut();
     const loginUrl = new URL('/auth/login', request.url);
     loginUrl.searchParams.set('error', 'Cuenta sin organizacion asignada');
-    return NextResponse.redirect(loginUrl);
+    const redirectResponse = NextResponse.redirect(loginUrl);
+    // Pasar las cookies actualizadas (de signOut) al redirect para que el
+    // browser efectivamente cierre sesión.
+    response.cookies.getAll().forEach((c) => {
+      redirectResponse.cookies.set(c);
+    });
+    return redirectResponse;
   }
 
   // Resolver active_org: cookie válida o fallback al más reciente

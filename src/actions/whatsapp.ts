@@ -44,8 +44,14 @@ export async function connectWhatsappAction(): Promise<void> {
   // count:0 indefinidamente desde /instance/connect.
   try {
     await deleteInstance(orgId);
-  } catch {
-    // ok si no existe
+  } catch (err) {
+    // Idempotente: si la instancia no existe, está OK. Pero si fue otra cosa
+    // (network, auth) lo logueamos aunque seguimos al create — el create va a
+    // fallar visiblemente con un error útil para el user.
+    console.warn(
+      '[whatsapp/connect] deleteInstance previa falló (continuamos):',
+      err instanceof Error ? err.message : String(err)
+    );
   }
 
   try {

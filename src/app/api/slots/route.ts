@@ -129,7 +129,7 @@ export async function GET(request: NextRequest) {
 
   // Fetch appointments y blocks del día
   const dayStart = new Date(`${dateStr}T00:00:00${getOffsetSuffix(org.timezone)}`);
-  const dayEnd = new Date(dayStart.getTime() + 26 * 60 * 60 * 1000); // +26h por DST
+  const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000); // 24h exactos
 
   const [{ data: appts }, { data: blocks }] = await Promise.all([
     supabase
