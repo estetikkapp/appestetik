@@ -45,7 +45,7 @@ async function loadData() {
   const orgId = cookies().get('active_org')?.value;
   if (!orgId) return null;
 
-  const [paymentsResult, clientsResult, mpEnabledResult] = await Promise.all([
+  const [paymentsResult, clientsResult, mpEnabledResult, orgResult] = await Promise.all([
     supabase
       .from('payments')
       .select('*, client:clients(id, full_name)')
@@ -63,9 +63,18 @@ async function loadData() {
       .select('id', { count: 'exact', head: true })
       .eq('organization_id', orgId)
       .eq('method', 'mp_link'),
+    // MP ahora es per-org: leer mp_config de la organization. La env var
+    // global MP_ACCESS_TOKEN ya no se usa (se removió en el cambio per-org).
+    supabase
+      .from('organizations')
+      .select('mp_config')
+      .eq('id', orgId)
+      .maybeSingle(),
   ]);
 
-  const mpConfigured = !!process.env.MP_ACCESS_TOKEN && !process.env.MP_ACCESS_TOKEN.startsWith('placeholder');
+  const mpCfg = orgResult.data?.mp_config as { access_token?: string } | null;
+  const mpConfigured =
+    !!mpCfg?.access_token && !mpCfg.access_token.startsWith('placeholder');
 
   return {
     payments: paymentsResult.data ?? [],
@@ -100,10 +109,12 @@ export default async function CobrosPage({
 
       {!mpConfigured && (
         <div className="rounded-xl border border-gold-400/40 bg-gold-500/5 p-4 text-sm text-gold-700">
-          <strong>Mercado Pago no configurado todavía.</strong> Los links de pago MP no funcionarán
-          hasta que cargues <code className="bg-gold-500/10 px-1 rounded">MP_ACCESS_TOKEN</code> en
-          Vercel → Project Settings → Environment Variables. El registro manual de pagos
-          (efectivo/transferencia) funciona sin esto.
+          <strong>Mercado Pago no configurado todavía.</strong> Para crear links de pago necesitás
+          cargar tu Access Token MP en{' '}
+          <a href="/configuracion" className="font-medium underline">
+            Configuración → Mercado Pago
+          </a>
+          . El registro manual de pagos (efectivo/transferencia) funciona igual sin esto.
         </div>
       )}
 
