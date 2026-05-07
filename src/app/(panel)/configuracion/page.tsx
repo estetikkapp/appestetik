@@ -8,6 +8,7 @@ import { SubmitButton } from '@/components/ui/submit-button';
 import { updateOrganizationSettings } from '@/actions/organization-settings';
 import { uploadOrganizationLogo } from '@/actions/storage';
 import { saveAfipConfig } from '@/actions/afip-config';
+import { saveMpConfig } from '@/actions/mp-config';
 import { WhatsappConnectCard } from '@/components/whatsapp/whatsapp-connect-card';
 import { EmbedSnippet } from './embed-snippet';
 import { WhatsappProviderSection } from './whatsapp-provider-section';
@@ -48,6 +49,8 @@ export default async function ConfiguracionPage({
           {searchParams.ok === 'afip-configurado' && 'Configuración AFIP guardada.'}
           {searchParams.ok === 'whatsapp-desconectado' && 'WhatsApp desconectado.'}
           {searchParams.ok === 'cloud-conectado' && 'WhatsApp Cloud API conectado correctamente.'}
+          {searchParams.ok === 'mp-configurado' && 'Mercado Pago configurado correctamente.'}
+          {searchParams.ok === 'mp-desactivado' && 'Mercado Pago desactivado.'}
         </div>
       )}
 
@@ -189,6 +192,10 @@ export default async function ConfiguracionPage({
         config={(org?.afip_config as Record<string, unknown> | null) ?? null}
       />
 
+      <MpConfigSection
+        config={(org?.mp_config as Record<string, string | null> | null) ?? null}
+      />
+
       {org?.slug && (
         <section className="rounded-xl border border-stone-200 bg-white p-6">
           <h2 className="mb-2 text-lg font-semibold">Reservas online — link y embed</h2>
@@ -207,17 +214,8 @@ export default async function ConfiguracionPage({
             status={process.env.RESEND_API_KEY ? 'active' : 'pending'}
             hint={
               process.env.RESEND_API_KEY
-                ? 'Configurado. Recordatorios por email funcionan como fallback de WhatsApp.'
-                : 'Sin RESEND_API_KEY. Crear cuenta gratis en resend.com (3000 emails/mes), pegar la key en Vercel y redeploy.'
-            }
-          />
-          <IntegrationRow
-            name="Mercado Pago"
-            status={process.env.MP_ACCESS_TOKEN ? 'active' : 'pending'}
-            hint={
-              process.env.MP_ACCESS_TOKEN
-                ? 'Configurado. Links de pago activos en /cobros.'
-                : 'Cargá MP_ACCESS_TOKEN real en Vercel para activar links de pago.'
+                ? 'Configurado. Confirmaciones, invitaciones, reset de password y recordatorios fallback funcionan.'
+                : 'Configurar RESEND_API_KEY en Vercel.'
             }
           />
           <IntegrationRow
@@ -323,6 +321,126 @@ function AfipConfigSection({
 
         <div className="flex justify-end">
           <SubmitButton pendingText="Guardando...">Guardar config AFIP</SubmitButton>
+        </div>
+      </form>
+    </section>
+  );
+}
+
+function MpConfigSection({
+  config,
+}: {
+  config: Record<string, string | null> | null;
+}) {
+  const enabled = !!config?.access_token;
+  const accessToken = config?.access_token ?? '';
+  const publicKey = config?.public_key ?? '';
+  const webhookSecret = config?.webhook_secret ?? '';
+  const env = accessToken.startsWith('TEST-')
+    ? 'sandbox'
+    : accessToken.startsWith('APP_USR-')
+      ? 'producción'
+      : null;
+
+  return (
+    <section className="rounded-xl border border-stone-200 bg-white p-6">
+      <div className="mb-4 flex items-center gap-3">
+        <h2 className="text-lg font-semibold">Mercado Pago — Cobros online</h2>
+        {enabled && (
+          <Badge variant={env === 'producción' ? 'success' : 'secondary'}>
+            {env === 'producción' ? '✓ Producción' : '⚙️ Sandbox'}
+          </Badge>
+        )}
+        {!enabled && <Badge variant="secondary">Sin configurar</Badge>}
+      </div>
+      <p className="mb-4 text-sm text-stone-500">
+        Cada centro carga sus propias credenciales MP — los cobros van a tu propia
+        cuenta Mercado Pago (no a la del SaaS).
+      </p>
+
+      <form action={saveMpConfig} className="space-y-4">
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            id="mp_enabled"
+            name="enabled"
+            defaultChecked={enabled}
+            className="h-4 w-4 rounded border-stone-300"
+          />
+          <Label htmlFor="mp_enabled" className="cursor-pointer text-sm">
+            Activar Mercado Pago para esta clínica
+          </Label>
+        </div>
+
+        <details
+          className="rounded-lg border border-stone-200 p-3"
+          open={enabled}
+        >
+          <summary className="cursor-pointer text-sm font-medium">
+            Credenciales (obtener en{' '}
+            <a
+              href="https://www.mercadopago.com.ar/developers/panel/app"
+              target="_blank"
+              rel="noreferrer"
+              className="text-brand-600 hover:underline"
+            >
+              MP → Aplicaciones
+            </a>
+            )
+          </summary>
+          <div className="mt-3 space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="access_token">
+                Access Token <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="access_token"
+                name="access_token"
+                type="password"
+                defaultValue={accessToken}
+                placeholder="APP_USR-... (producción) o TEST-... (sandbox)"
+              />
+              <p className="text-xs text-stone-500">
+                MP Dashboard → Tu aplicación → Credenciales de producción → Access Token.
+              </p>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="public_key">Public Key (opcional)</Label>
+              <Input
+                id="public_key"
+                name="public_key"
+                defaultValue={publicKey}
+                placeholder="APP_USR-..."
+              />
+              <p className="text-xs text-stone-500">
+                Solo necesaria si en el futuro usás Checkout Pro embebido. Para
+                links de pago alcanza con Access Token.
+              </p>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="webhook_secret">Webhook Secret (opcional)</Label>
+              <Input
+                id="webhook_secret"
+                name="webhook_secret"
+                type="password"
+                defaultValue={webhookSecret}
+                placeholder="Firma secreta de webhooks"
+              />
+              <p className="text-xs text-stone-500">
+                MP Dashboard → Webhooks → Configurar firma secreta. Si lo cargás,
+                validamos la firma de cada notificación. URL del webhook a poner en MP:
+                {' '}
+                <code className="rounded bg-stone-100 px-1 py-0.5 text-xs">
+                  {process.env.NEXT_PUBLIC_APP_URL ?? 'https://appestetika.vercel.app'}
+                  /api/webhooks/mp
+                </code>
+              </p>
+            </div>
+          </div>
+        </details>
+
+        <div className="flex justify-end">
+          <SubmitButton pendingText="Guardando...">Guardar config MP</SubmitButton>
         </div>
       </form>
     </section>

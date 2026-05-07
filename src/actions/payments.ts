@@ -75,6 +75,7 @@ export async function createMpPaymentLink(formData: FormData): Promise<void> {
   let result;
   try {
     result = await createPaymentPreference({
+      orgId,
       appointmentId: appointmentId ?? undefined,
       clientId,
       amountArs,
@@ -89,7 +90,9 @@ export async function createMpPaymentLink(formData: FormData): Promise<void> {
   }
 
   if (!result) {
-    redirect('/cobros?error=Mercado+Pago+no+est%C3%A1+configurado.+Cargar+MP_ACCESS_TOKEN+en+Vercel.');
+    redirect(
+      '/cobros?error=Mercado+Pago+no+est%C3%A1+configurado+para+esta+cl%C3%ADnica.+Ir+a+Configuraci%C3%B3n+y+pegar+access+token+MP.'
+    );
   }
 
   const { error } = await supabase.from('payments').insert({

@@ -1,17 +1,38 @@
 import { MercadoPagoConfig, Preference, Payment as MpPayment } from 'mercadopago';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 /**
- * Cliente Mercado Pago. Requiere `MP_ACCESS_TOKEN` env var.
+ * Cliente Mercado Pago — per-org.
  *
- * IMPORTANTE: en Sprint 3 se conecta con creds reales del centro. Por ahora
- * funciona con `placeholder-mp-token` y las operaciones devolverán errores
- * controlados (capturados con try/catch en los Server Actions).
+ * Cada organization tiene su propio `mp_config` (access_token + public_key +
+ * webhook_secret). Las acciones que necesitan MP llaman a `loadMpConfig(orgId)`
+ * para obtener las credenciales correctas y construyen el cliente con esas.
+ *
+ * Si la org no tiene MP configurado, las funciones devuelven null y el caller
+ * debe usar un método alternativo o mostrar error informativo.
  */
-export function getMpClient(): MercadoPagoConfig | null {
-  const accessToken = process.env.MP_ACCESS_TOKEN;
-  if (!accessToken || accessToken === 'placeholder' || accessToken.startsWith('placeholder')) {
-    return null;
-  }
+
+export interface MpOrgConfig {
+  access_token: string;
+  public_key?: string | null;
+  webhook_secret?: string | null;
+}
+
+export async function loadMpConfig(orgId: string): Promise<MpOrgConfig | null> {
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from('organizations')
+    .select('mp_config')
+    .eq('id', orgId)
+    .maybeSingle();
+
+  const cfg = data?.mp_config as MpOrgConfig | null | undefined;
+  if (!cfg?.access_token) return null;
+  if (cfg.access_token.startsWith('placeholder')) return null;
+  return cfg;
+}
+
+function buildClient(accessToken: string): MercadoPagoConfig {
   return new MercadoPagoConfig({
     accessToken,
     options: { timeout: 5000 },
@@ -19,6 +40,7 @@ export function getMpClient(): MercadoPagoConfig | null {
 }
 
 export interface CreatePreferenceInput {
+  orgId: string;
   appointmentId?: string;
   clientId: string;
   amountArs: number;
@@ -29,15 +51,16 @@ export interface CreatePreferenceInput {
 }
 
 /**
- * Crea una preference de pago en MP y devuelve el link de checkout.
- * Si MP no está configurado, retorna null y el caller debe usar un método alternativo.
+ * Crea una preference de pago en MP usando las credenciales de la org.
+ * Retorna null si la org no tiene MP configurado.
  */
 export async function createPaymentPreference(
   input: CreatePreferenceInput
 ): Promise<{ preferenceId: string; initPoint: string } | null> {
-  const client = getMpClient();
-  if (!client) return null;
+  const cfg = await loadMpConfig(input.orgId);
+  if (!cfg) return null;
 
+  const client = buildClient(cfg.access_token);
   const preference = new Preference(client);
   const result = await preference.create({
     body: {
@@ -65,9 +88,15 @@ export async function createPaymentPreference(
   return { preferenceId: result.id, initPoint: result.init_point };
 }
 
-export async function fetchPayment(mpPaymentId: string) {
-  const client = getMpClient();
-  if (!client) return null;
+/**
+ * Fetch del estado actual de un payment en MP usando creds de la org.
+ * Llamado desde el webhook handler cuando ya identificamos a qué org pertenece
+ * el pago (via external_reference o mp_payment_id ya guardado).
+ */
+export async function fetchPaymentForOrg(orgId: string, mpPaymentId: string) {
+  const cfg = await loadMpConfig(orgId);
+  if (!cfg) return null;
+  const client = buildClient(cfg.access_token);
   const payment = new MpPayment(client);
   return await payment.get({ id: mpPaymentId });
 }
