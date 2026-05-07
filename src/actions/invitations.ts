@@ -1,47 +1,31 @@
 'use server';
 
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { randomBytes } from 'node:crypto';
 import { createClient } from '@/lib/supabase/server';
-import { createAdminClient } from '@/lib/supabase/admin';
 import { isValidEmail, normalizeEmail } from '@/lib/validators/email';
 import { translateDbError } from '@/lib/utils/db-errors';
+import { sendEmail } from '@/lib/integrations/email/resend';
+import { invitationEmail } from '@/lib/integrations/email/templates';
+import { requireMembership } from '@/lib/auth/require-membership';
+import { audit } from '@/lib/audit';
 import type { InviteRole } from '@/types/app';
 
-async function requireOwnerOrAdmin(): Promise<
-  { ok: true; orgId: string; userId: string } | { ok: false; error: string }
-> {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: 'Sin sesión' };
-
-  const orgId = cookies().get('active_org')?.value;
-  if (!orgId) return { ok: false, error: 'Sin organización activa' };
-
-  const { data: membership } = await supabase
-    .from('memberships')
-    .select('role')
-    .eq('user_id', user.id)
-    .eq('organization_id', orgId)
-    .eq('active', true)
-    .single();
-
-  if (!membership || !['owner', 'admin'].includes(membership.role)) {
-    return { ok: false, error: 'Solo owner o admin puede invitar empleadas' };
-  }
-
-  return { ok: true, orgId, userId: user.id };
-}
-
 /**
- * Crea una invitación + dispara el email a través de Supabase Auth admin API.
- * El trigger on_auth_user_created resuelve la invitación al registrarse el user.
+ * Crea una invitación + dispara email vía Resend (no Supabase Auth mailer —
+ * éste tiene rate limits muy bajos y entrega inconsistente).
+ *
+ * Flow:
+ *   1. Crear invitations row con token random
+ *   2. Mandar email con link a /auth/signup?invite=TOKEN&email=EMAIL
+ *   3. La invitada abre el link, signup precompletado (email read-only)
+ *   4. Al hacer signUp, supabase recibe `invitation_token` en raw_user_meta_data
+ *   5. Trigger DB handle_new_user() valida token + crea membership con rol
  */
 export async function inviteEmployee(formData: FormData): Promise<void> {
-  const check = await requireOwnerOrAdmin();
-  if (!check.ok) redirect(`/empleadas?error=${encodeURIComponent(check.error)}`);
+  // requireMembership con minRole admin (solo owner/admin pueden invitar)
+  const { orgId, userId } = await requireMembership({ minRole: 'admin' });
 
   const rawEmail = String(formData.get('email') ?? '').trim();
   const role = String(formData.get('role') ?? '') as InviteRole;
@@ -62,7 +46,7 @@ export async function inviteEmployee(formData: FormData): Promise<void> {
   const { data: existing } = await supabase
     .from('invitations')
     .select('id')
-    .eq('organization_id', check.orgId)
+    .eq('organization_id', orgId)
     .eq('email', email)
     .is('accepted_at', null)
     .gte('expires_at', new Date().toISOString())
@@ -72,46 +56,161 @@ export async function inviteEmployee(formData: FormData): Promise<void> {
     redirect('/empleadas?error=Ya+hay+una+invitaci%C3%B3n+pendiente+para+ese+email');
   }
 
-  // Obtener nombre de la organización para incluir en el email
-  const { data: org } = await supabase
-    .from('organizations')
-    .select('name')
-    .eq('id', check.orgId)
-    .single();
+  // Cargar contexto: nombre de la org + nombre de quien invita
+  const [{ data: org }, { data: inviter }] = await Promise.all([
+    supabase.from('organizations').select('name').eq('id', orgId).single(),
+    supabase
+      .from('memberships')
+      .select('display_name')
+      .eq('user_id', userId)
+      .eq('organization_id', orgId)
+      .maybeSingle(),
+  ]);
 
+  // Crear invitation row
   const { error: invError } = await supabase.from('invitations').insert({
-    organization_id: check.orgId,
+    organization_id: orgId,
     email,
     role,
     token,
-    invited_by: check.userId,
+    invited_by: userId,
   });
 
-  if (invError) redirect(`/empleadas?error=${encodeURIComponent(invError.message)}`);
+  if (invError) redirect(`/empleadas?error=${encodeURIComponent(translateDbError(invError))}`);
 
-  // Disparar email via Supabase admin API
-  try {
-    const admin = createAdminClient();
-    await admin.auth.admin.inviteUserByEmail(email, {
-      data: {
-        invitation_token: token,
-        organization_name: org?.name ?? 'tu centro',
+  // Disparar email via Resend
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://estetikkapp.com';
+  const acceptUrl =
+    `${baseUrl}/auth/signup?invite=${encodeURIComponent(token)}` +
+    `&email=${encodeURIComponent(email)}`;
+
+  const tpl = invitationEmail({
+    inviteeName: null,
+    orgName: org?.name ?? 'tu centro',
+    inviterName: inviter?.display_name ?? null,
+    acceptUrl,
+    role,
+  });
+
+  const result = await sendEmail({
+    to: email,
+    subject: tpl.subject,
+    html: tpl.html,
+    text: tpl.text,
+    replyTo: undefined, // si el FROM es noreply@, el reply rebota — OK por ahora
+    tags: [
+      { name: 'type', value: 'invitation' },
+      { name: 'org_id', value: orgId },
+    ],
+  });
+
+  if (!result.ok) {
+    // Si el email falló, dejamos la invitation en DB pero avisamos al user.
+    // El owner puede reenviar manualmente desde la UI (revoke + invite again).
+    console.error('[invitations] email send failed:', result.code, result.error);
+
+    await audit({
+      organizationId: orgId,
+      action: 'invitation.send.failed',
+      entityType: 'invitation',
+      entityId: token.slice(0, 12),
+      payload: {
+        email,
+        role,
+        error_code: result.code ?? 'unknown',
+        error: result.error ?? null,
       },
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/`,
     });
-  } catch (err) {
-    // Si falla el envío del email, marcamos la invitación como cancelada
-    // (el token expirará a los 7 días de todos modos)
-    console.error('Error al enviar email de invitacion:', err);
+
+    redirect(
+      `/empleadas?error=${encodeURIComponent(
+        `Invitación creada pero el email falló: ${result.code === 'no_api_key' ? 'falta RESEND_API_KEY' : result.error}. La invitada puede entrar igual con este link manual: ${acceptUrl.slice(0, 80)}...`
+      )}`
+    );
   }
+
+  await audit({
+    organizationId: orgId,
+    action: 'invitation.create',
+    entityType: 'invitation',
+    entityId: token.slice(0, 12),
+    payload: { email, role },
+  });
 
   revalidatePath('/empleadas');
   redirect('/empleadas?ok=invitada');
 }
 
+/**
+ * Reenvío de un email de invitación existente (no crea otra row).
+ */
+export async function resendInvitation(formData: FormData): Promise<void> {
+  const { orgId, userId } = await requireMembership({ minRole: 'admin' });
+
+  const id = String(formData.get('id') ?? '');
+  if (!id) redirect('/empleadas?error=ID+invalido');
+
+  const supabase = createClient();
+
+  const { data: inv } = await supabase
+    .from('invitations')
+    .select('email, role, token, expires_at, accepted_at')
+    .eq('id', id)
+    .eq('organization_id', orgId)
+    .maybeSingle();
+
+  if (!inv) redirect('/empleadas?error=Invitaci%C3%B3n+no+encontrada');
+  if (inv.accepted_at) redirect('/empleadas?error=Ya+fue+aceptada');
+  if (new Date(inv.expires_at) < new Date()) {
+    redirect('/empleadas?error=Invitaci%C3%B3n+vencida.+Cancelala+y+volv%C3%A9+a+invitar');
+  }
+
+  const [{ data: org }, { data: inviter }] = await Promise.all([
+    supabase.from('organizations').select('name').eq('id', orgId).single(),
+    supabase
+      .from('memberships')
+      .select('display_name')
+      .eq('user_id', userId)
+      .eq('organization_id', orgId)
+      .maybeSingle(),
+  ]);
+
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://estetikkapp.com';
+  const acceptUrl =
+    `${baseUrl}/auth/signup?invite=${encodeURIComponent(inv.token)}` +
+    `&email=${encodeURIComponent(inv.email)}`;
+
+  const tpl = invitationEmail({
+    inviteeName: null,
+    orgName: org?.name ?? 'tu centro',
+    inviterName: inviter?.display_name ?? null,
+    acceptUrl,
+    role: inv.role,
+  });
+
+  const result = await sendEmail({
+    to: inv.email,
+    subject: `[Reenvío] ${tpl.subject}`,
+    html: tpl.html,
+    text: tpl.text,
+    tags: [
+      { name: 'type', value: 'invitation_resend' },
+      { name: 'org_id', value: orgId },
+    ],
+  });
+
+  if (!result.ok) {
+    redirect(
+      `/empleadas?error=${encodeURIComponent('Reenvío falló: ' + (result.error ?? result.code))}`
+    );
+  }
+
+  revalidatePath('/empleadas');
+  redirect('/empleadas?ok=reenviada');
+}
+
 export async function revokeInvitation(formData: FormData): Promise<void> {
-  const check = await requireOwnerOrAdmin();
-  if (!check.ok) redirect(`/empleadas?error=${encodeURIComponent(check.error)}`);
+  const { orgId } = await requireMembership({ minRole: 'admin' });
 
   const id = String(formData.get('id') ?? '');
   if (!id) redirect('/empleadas?error=ID+invalido');
@@ -121,7 +220,7 @@ export async function revokeInvitation(formData: FormData): Promise<void> {
     .from('invitations')
     .delete()
     .eq('id', id)
-    .eq('organization_id', check.orgId);
+    .eq('organization_id', orgId);
 
   if (error) redirect(`/empleadas?error=${encodeURIComponent(error.message)}`);
 
@@ -130,8 +229,7 @@ export async function revokeInvitation(formData: FormData): Promise<void> {
 }
 
 export async function toggleMembershipActive(formData: FormData): Promise<void> {
-  const check = await requireOwnerOrAdmin();
-  if (!check.ok) redirect(`/empleadas?error=${encodeURIComponent(check.error)}`);
+  const { orgId } = await requireMembership({ minRole: 'admin' });
 
   const id = String(formData.get('id') ?? '');
   const active = formData.get('active') === 'true';
@@ -141,7 +239,7 @@ export async function toggleMembershipActive(formData: FormData): Promise<void> 
     .from('memberships')
     .update({ active: !active })
     .eq('id', id)
-    .eq('organization_id', check.orgId)
+    .eq('organization_id', orgId)
     .neq('role', 'owner'); // no permitimos desactivar al owner desde aquí
 
   if (error) redirect(`/empleadas?error=${encodeURIComponent(error.message)}`);
@@ -151,8 +249,7 @@ export async function toggleMembershipActive(formData: FormData): Promise<void> 
 }
 
 export async function deleteMembership(formData: FormData): Promise<void> {
-  const check = await requireOwnerOrAdmin();
-  if (!check.ok) redirect(`/empleadas?error=${encodeURIComponent(check.error)}`);
+  const { orgId } = await requireMembership({ minRole: 'admin' });
 
   const id = String(formData.get('id') ?? '');
   if (!id) redirect('/empleadas?error=ID+invalido');
@@ -163,7 +260,7 @@ export async function deleteMembership(formData: FormData): Promise<void> {
     .from('memberships')
     .select('role')
     .eq('id', id)
-    .eq('organization_id', check.orgId)
+    .eq('organization_id', orgId)
     .single();
 
   if (!m) redirect('/empleadas?error=Empleada+no+encontrada');
@@ -175,7 +272,7 @@ export async function deleteMembership(formData: FormData): Promise<void> {
     .from('memberships')
     .delete()
     .eq('id', id)
-    .eq('organization_id', check.orgId)
+    .eq('organization_id', orgId)
     .neq('role', 'owner');
 
   if (error) redirect(`/empleadas?error=${encodeURIComponent(translateDbError(error))}`);

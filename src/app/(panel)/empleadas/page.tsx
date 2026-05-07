@@ -105,7 +105,8 @@ export default async function EmpleadasPage({
       )}
       {searchParams.ok && (
         <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
-          {searchParams.ok === 'invitada' && 'Invitación enviada.'}
+          {searchParams.ok === 'invitada' && 'Invitación enviada por email.'}
+          {searchParams.ok === 'reenviada' && 'Email de invitación reenviado.'}
           {searchParams.ok === 'revocada' && 'Invitación revocada.'}
           {searchParams.ok === 'eliminada' && 'Empleada eliminada.'}
           {searchParams.ok === 'plantilla-asignada' && 'Plantilla de horarios asignada.'}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Archive, ArchiveRestore, X, Settings2 } from 'lucide-react';
+import { Plus, Archive, ArchiveRestore, X, Settings2, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SubmitButton } from '@/components/ui/submit-button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/sheet';
 import {
   inviteEmployee,
+  resendInvitation,
   revokeInvitation,
   toggleMembershipActive,
   deleteMembership,
@@ -125,12 +126,32 @@ export function EmpleadasClient({
 
   if (mode === 'revoke' && invitation) {
     return (
-      <form action={revokeInvitation}>
-        <input type="hidden" name="id" value={invitation.id} />
-        <SubmitButton variant="ghost" size="sm" title="Revocar invitación" hideSpinner>
-          <X className="h-4 w-4" />
-        </SubmitButton>
-      </form>
+      <div className="flex items-center justify-end gap-1">
+        <form action={resendInvitation}>
+          <input type="hidden" name="id" value={invitation.id} />
+          <SubmitButton
+            variant="ghost"
+            size="sm"
+            title="Reenviar email de invitación"
+            aria-label="Reenviar email de invitación"
+            hideSpinner
+          >
+            <Send className="h-4 w-4 text-blue-600" aria-hidden="true" />
+          </SubmitButton>
+        </form>
+        <form action={revokeInvitation}>
+          <input type="hidden" name="id" value={invitation.id} />
+          <SubmitButton
+            variant="ghost"
+            size="sm"
+            title="Revocar invitación"
+            aria-label="Revocar invitación"
+            hideSpinner
+          >
+            <X className="h-4 w-4 text-red-600" aria-hidden="true" />
+          </SubmitButton>
+        </form>
+      </div>
     );
   }
 
