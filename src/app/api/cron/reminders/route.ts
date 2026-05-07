@@ -6,7 +6,7 @@
 // La ventana 12h-36h asegura que cada turno reciba 1 solo reminder.
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { sendTextMessage } from '@/lib/integrations/whatsapp/evolution';
+import { sendWhatsappMessage } from '@/lib/integrations/whatsapp';
 import { sendEmail } from '@/lib/integrations/email/resend';
 import { appointmentReminderEmail } from '@/lib/integrations/email/templates';
 import { formatInTimeZone } from 'date-fns-tz';
@@ -96,7 +96,7 @@ export async function GET(req: NextRequest) {
         hora,
       });
       try {
-        await sendTextMessage(appt.organization_id, client.phone_e164!, message);
+        await sendWhatsappMessage(appt.organization_id, client.phone_e164!, message);
         await admin.from('whatsapp_reminder_log').insert({
           organization_id: appt.organization_id,
           appointment_id: appt.id,

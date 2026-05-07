@@ -10,6 +10,7 @@ import { uploadOrganizationLogo } from '@/actions/storage';
 import { saveAfipConfig } from '@/actions/afip-config';
 import { WhatsappConnectCard } from '@/components/whatsapp/whatsapp-connect-card';
 import { EmbedSnippet } from './embed-snippet';
+import { WhatsappProviderSection } from './whatsapp-provider-section';
 
 export const metadata = { title: 'Configuración — appestetika' };
 
@@ -46,6 +47,7 @@ export default async function ConfiguracionPage({
           {searchParams.ok === 'logo-subido' && 'Logo actualizado.'}
           {searchParams.ok === 'afip-configurado' && 'Configuración AFIP guardada.'}
           {searchParams.ok === 'whatsapp-desconectado' && 'WhatsApp desconectado.'}
+          {searchParams.ok === 'cloud-conectado' && 'WhatsApp Cloud API conectado correctamente.'}
         </div>
       )}
 
@@ -139,11 +141,47 @@ export default async function ConfiguracionPage({
           Conectá el número de WhatsApp de tu centro para enviar recordatorios automáticos
           24hs antes de cada turno.
         </p>
-        <WhatsappConnectCard
-          initialStatus={(org?.whatsapp_status as 'disconnected' | 'connecting' | 'connected') ?? 'disconnected'}
-          initialPhone={org?.whatsapp_phone ?? null}
-          startPolling={searchParams.wapp === 'qr'}
+
+        <WhatsappProviderSection
+          currentProvider={(org?.whatsapp_provider as 'evolution' | 'cloud_api') ?? 'evolution'}
+          cloudConfig={
+            (org?.whatsapp_cloud_config as Record<string, string> | null) ?? null
+          }
+          webhookUrl={`${process.env.NEXT_PUBLIC_APP_URL ?? 'https://estetikkapp.com'}/api/whatsapp/cloud-webhook`}
         />
+
+        {/* Connect card de Evolution solo si la org está en provider 'evolution' */}
+        {(!org?.whatsapp_provider || org.whatsapp_provider === 'evolution') && (
+          <div className="mt-4 border-t border-stone-100 pt-4">
+            <h3 className="mb-3 text-sm font-semibold text-stone-900">
+              Conexión Evolution (escaneá QR)
+            </h3>
+            <WhatsappConnectCard
+              initialStatus={(org?.whatsapp_status as 'disconnected' | 'connecting' | 'connected') ?? 'disconnected'}
+              initialPhone={org?.whatsapp_phone ?? null}
+              startPolling={searchParams.wapp === 'qr'}
+            />
+          </div>
+        )}
+
+        {org?.whatsapp_provider === 'cloud_api' && (
+          <div className="mt-4 border-t border-stone-100 pt-4">
+            <p className="text-xs text-stone-500">
+              {org.whatsapp_status === 'connected' ? (
+                <>
+                  ✅ Cloud API conectado. Número:{' '}
+                  <strong>{org.whatsapp_phone ?? 'verificado'}</strong>. Recordatorios automáticos
+                  activos.
+                </>
+              ) : (
+                <>
+                  ⚠️ Cloud API configurada pero las credenciales fallaron en la última validación.
+                  Verificá Phone Number ID + Access Token y guardá de nuevo.
+                </>
+              )}
+            </p>
+          </div>
+        )}
       </section>
 
       <AfipConfigSection

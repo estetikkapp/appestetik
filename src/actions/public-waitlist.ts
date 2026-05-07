@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { isValidPhoneAr, normalizePhoneAr } from '@/lib/validators/phone-ar';
 import { isValidEmail, normalizeEmail } from '@/lib/validators/email';
-import { sendTextMessage } from '@/lib/integrations/whatsapp/evolution';
+import { sendWhatsappMessage } from '@/lib/integrations/whatsapp';
 import { notifyOrgAdmins } from '@/lib/notifications';
 import { audit } from '@/lib/audit';
 
@@ -108,7 +108,7 @@ Te agregamos a la lista de espera de *${org.name}* para *${service.name}*.
 
 Te vamos a avisar por acá si se libera un turno. ¡Gracias por la paciencia!`;
     try {
-      await sendTextMessage(org.id, phone, message);
+      await sendWhatsappMessage(org.id, phone, message);
     } catch (err) {
       console.error('[public-waitlist] WhatsApp send error:', err);
     }

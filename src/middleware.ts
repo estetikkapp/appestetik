@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { updateSession } from '@/lib/supabase/middleware';
 
 const AUTH_ROUTES = ['/auth/login', '/auth/signup'];
-const PUBLIC_PREFIXES = ['/auth', '/c/', '/embed/', '/turno/', '/api/public', '/api/slots', '/api/cron', '/api/whatsapp/webhook', '/api/webhooks', '/api/debug'];
+const PUBLIC_PREFIXES = ['/auth', '/c/', '/embed/', '/turno/', '/api/public', '/api/slots', '/api/cron', '/api/whatsapp/webhook', '/api/whatsapp/cloud-webhook', '/api/webhooks', '/api/debug'];
 // /api/whatsapp/test y /api/whatsapp/status van protegidos por auth interno (no public)
 const ACTIVE_ORG_COOKIE = 'active_org';
 

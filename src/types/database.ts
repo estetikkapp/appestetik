@@ -32,6 +32,8 @@ export type Database = {
           whatsapp_status: 'disconnected' | 'connecting' | 'connected';
           whatsapp_phone: string | null;
           whatsapp_connected_at: string | null;
+          whatsapp_provider: 'evolution' | 'cloud_api';
+          whatsapp_cloud_config: Json | null;
           created_at: string;
           updated_at: string;
         };
@@ -52,6 +54,8 @@ export type Database = {
           whatsapp_status?: 'disconnected' | 'connecting' | 'connected';
           whatsapp_phone?: string | null;
           whatsapp_connected_at?: string | null;
+          whatsapp_provider?: 'evolution' | 'cloud_api';
+          whatsapp_cloud_config?: Json | null;
           created_at?: string;
           updated_at?: string;
         };

@@ -6,7 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { translateDbError } from '@/lib/utils/db-errors';
-import { sendTextMessage } from '@/lib/integrations/whatsapp/evolution';
+import { sendWhatsappMessage } from '@/lib/integrations/whatsapp';
 import { audit } from '@/lib/audit';
 import type { AppointmentStatus } from '@/types/app';
 import type { TablesUpdate } from '@/types/database';
@@ -328,7 +328,7 @@ Tu turno en *${org.name}* fue reagendado.
 
 Si esto no te queda bien, respondé este mensaje y coordinamos.`;
         try {
-          await sendTextMessage(orgId, cli.phone_e164, message);
+          await sendWhatsappMessage(orgId, cli.phone_e164, message);
         } catch (err) {
           console.error('[reschedule] whatsapp send fail', err);
         }

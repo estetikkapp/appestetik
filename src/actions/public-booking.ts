@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { isValidPhoneAr, normalizePhoneAr } from '@/lib/validators/phone-ar';
 import { isValidEmail, normalizeEmail } from '@/lib/validators/email';
-import { sendTextMessage } from '@/lib/integrations/whatsapp/evolution';
+import { sendWhatsappMessage } from '@/lib/integrations/whatsapp';
 import { sendEmail } from '@/lib/integrations/email/resend';
 import { bookingConfirmationEmail } from '@/lib/integrations/email/templates';
 import { notifyOrgAdmins } from '@/lib/notifications';
@@ -192,7 +192,7 @@ Está pendiente de confirmación por el centro.
 Por favor no compartas este código.`;
 
     try {
-      await sendTextMessage(org.id, phone, message);
+      await sendWhatsappMessage(org.id, phone, message);
     } catch (err) {
       console.error('[public-booking] WhatsApp send error:', err);
       // best-effort, sigue

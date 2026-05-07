@@ -6,7 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { translateDbError } from '@/lib/utils/db-errors';
-import { sendTextMessage } from '@/lib/integrations/whatsapp/evolution';
+import { sendWhatsappMessage } from '@/lib/integrations/whatsapp';
 import { audit } from '@/lib/audit';
 
 async function getActiveOrgOrRedirect(): Promise<string> {
@@ -138,7 +138,7 @@ Si querés tomarlo, respondé este mensaje y coordinamos. ¡Gracias por esperar!
   }
 
   try {
-    await sendTextMessage(orgId, cli.phone_e164, message);
+    await sendWhatsappMessage(orgId, cli.phone_e164, message);
     await admin
       .from('waitlist_entries')
       .update({ status: 'notified', notified_at: new Date().toISOString() })
