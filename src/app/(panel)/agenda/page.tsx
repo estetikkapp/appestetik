@@ -5,6 +5,7 @@ import { DayView, type AppointmentWithRelations } from '@/components/agenda/day-
 import { WeekView } from '@/components/agenda/week-view';
 import { MonthView } from '@/components/agenda/month-view';
 import { CreateAppointmentSheet } from '@/components/agenda/create-appointment-sheet';
+import { SetupStatusBanner } from '@/components/setup-status-banner';
 import { formatArs } from '@/lib/utils/format-ars';
 
 export const metadata = { title: 'Agenda — appestetika' };
@@ -461,6 +462,8 @@ export default async function AgendaPage({
           />
         </div>
       </div>
+
+      <SetupStatusBanner />
 
       {searchParams.error && (
         <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">

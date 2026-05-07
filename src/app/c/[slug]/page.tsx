@@ -188,9 +188,11 @@ export default async function PublicReservationPage({ params, searchParams }: Pa
             </div>
 
             {profsForService.length === 0 ? (
-              <div className="rounded-lg border border-stone-200 bg-stone-50 p-6 text-center text-sm text-stone-500">
-                Este servicio no está disponible para reserva online (no hay profesionales con
-                horarios configurados que lo ofrezcan).
+              <div className="rounded-lg border border-stone-200 bg-stone-50 p-6 text-center text-sm text-stone-600">
+                <p className="font-medium">Este servicio aún no está disponible online</p>
+                <p className="mt-2 text-xs text-stone-500">
+                  Contactá directamente al centro para reservar.
+                </p>
               </div>
             ) : (
               <BookingForm

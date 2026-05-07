@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/table';
 import { formatArs } from '@/lib/utils/format-ars';
 import { ServicesPageClient } from './services-client';
+import { SetupStatusBanner } from '@/components/setup-status-banner';
 
 export const metadata = { title: 'Servicios — appestetika' };
 
@@ -50,6 +51,8 @@ export default async function ServiciosPage({
         </div>
         <ServicesPageClient mode="create" />
       </div>
+
+      <SetupStatusBanner />
 
       {searchParams.error && (
         <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
