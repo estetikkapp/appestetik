@@ -12,6 +12,7 @@ import { saveMpConfig } from '@/actions/mp-config';
 import { WhatsappConnectCard } from '@/components/whatsapp/whatsapp-connect-card';
 import { EmbedSnippet } from './embed-snippet';
 import { WhatsappProviderSection } from './whatsapp-provider-section';
+import { EmailTestSection } from './email-test-section';
 
 export const metadata = { title: 'Configuración — appestetika' };
 
@@ -206,18 +207,11 @@ export default async function ConfiguracionPage({
         </section>
       )}
 
+      <EmailTestSection />
+
       <section className="rounded-xl border border-stone-200 bg-white p-6">
         <h2 className="mb-4 text-lg font-semibold">Otras integraciones</h2>
         <div className="space-y-3">
-          <IntegrationRow
-            name="Email transaccional (Resend)"
-            status={process.env.RESEND_API_KEY ? 'active' : 'pending'}
-            hint={
-              process.env.RESEND_API_KEY
-                ? 'Configurado. Confirmaciones, invitaciones, reset de password y recordatorios fallback funcionan.'
-                : 'Configurar RESEND_API_KEY en Vercel.'
-            }
-          />
           <IntegrationRow
             name="Claude API (IA)"
             status={process.env.ANTHROPIC_API_KEY ? 'active' : 'pending'}
