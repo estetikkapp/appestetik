@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Image from 'next/image';
 import { ChevronDown } from 'lucide-react';
 import { DeleteConfirmButton } from '@/components/ui/delete-confirm-button';
 import { deleteTreatmentSession } from '@/actions/treatment-sessions';
@@ -77,11 +78,13 @@ export function TreatmentSessionRow({
                   <p className="mb-1 text-xs font-medium text-stone-700">Antes</p>
                   <div className="flex gap-2 overflow-x-auto">
                     {session.photos_before_urls.map((url, i) => (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
+                      <Image
                         key={i}
                         src={url}
-                        alt={`Antes ${i + 1}`}
+                        alt={`Foto antes ${i + 1} — ${formatDateTimeAr(session.performed_at)}`}
+                        width={96}
+                        height={96}
+                        unoptimized
                         className="h-24 w-24 shrink-0 rounded border border-stone-200 object-cover"
                       />
                     ))}
@@ -93,11 +96,13 @@ export function TreatmentSessionRow({
                   <p className="mb-1 text-xs font-medium text-stone-700">Después</p>
                   <div className="flex gap-2 overflow-x-auto">
                     {session.photos_after_urls.map((url, i) => (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
+                      <Image
                         key={i}
                         src={url}
-                        alt={`Después ${i + 1}`}
+                        alt={`Foto después ${i + 1} — ${formatDateTimeAr(session.performed_at)}`}
+                        width={96}
+                        height={96}
+                        unoptimized
                         className="h-24 w-24 shrink-0 rounded border border-stone-200 object-cover"
                       />
                     ))}

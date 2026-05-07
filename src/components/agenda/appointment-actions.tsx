@@ -79,7 +79,7 @@ function StatusButton({
     <form action={updateAppointmentStatus}>
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="status" value={toStatus} />
-      <SubmitButton variant="ghost" size="sm" title={title} hideSpinner>
+      <SubmitButton variant="ghost" size="sm" title={title} aria-label={title} hideSpinner>
         {children}
       </SubmitButton>
     </form>

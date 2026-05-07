@@ -49,10 +49,13 @@ export function NotificationsBell({ userId }: { userId: string }) {
     }
   }, []);
 
-  // Initial load + polling fallback (60s)
+  // Initial load + polling fallback espaciado (5min) — el realtime subscription
+  // de abajo cubre la mayoría de los casos. El polling es un safety net para
+  // cuando la conexión WS muere silenciosamente. 60s era demasiado agresivo
+  // (60req/h × usuarias logueadas).
   React.useEffect(() => {
     refresh();
-    const interval = setInterval(refresh, 60_000);
+    const interval = setInterval(refresh, 5 * 60_000);
     return () => clearInterval(interval);
   }, [refresh]);
 
@@ -101,11 +104,21 @@ export function NotificationsBell({ userId }: { userId: string }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative" title="Notificaciones">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="relative"
+          title="Notificaciones"
+          aria-label={
+            unread > 0
+              ? `Notificaciones (${unread} sin leer)`
+              : 'Notificaciones'
+          }
+        >
           {unread > 0 ? (
-            <BellDot className="h-5 w-5 text-brand-600" />
+            <BellDot className="h-5 w-5 text-brand-600" aria-hidden="true" />
           ) : (
-            <Bell className="h-5 w-5 text-stone-500" />
+            <Bell className="h-5 w-5 text-stone-500" aria-hidden="true" />
           )}
           {unread > 0 && (
             <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-brand-500 px-1 text-[10px] font-medium text-white">

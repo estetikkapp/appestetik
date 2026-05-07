@@ -62,9 +62,10 @@ export function RescheduleButton({ id, currentStartsAt, clientName, hasPhone }: 
           variant="ghost"
           size="sm"
           title="Reagendar"
+          aria-label={`Reagendar turno de ${clientName}`}
           className="text-blue-600 hover:bg-blue-50 hover:text-blue-700"
         >
-          <CalendarClock className="h-4 w-4" />
+          <CalendarClock className="h-4 w-4" aria-hidden="true" />
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
