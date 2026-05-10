@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>appestetika bridge</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <h1>appestetika bridge</h1>
+    <p class="subtitle">Conecta tu WhatsApp con appestetika</p>
+  </header>
+
+  <main>
+    <!-- Pantalla 1: pedir token (cuando no hay configurado) -->
+    <section id="setup-screen" hidden>
+      <div class="card">
+        <h2>Pegá tu código de vinculación</h2>
+        <p class="hint">
+          Generá un código en
+          <a href="#" id="open-config-link">appestetika.com → Configuración → Agente local</a>
+          y pegalo acá.
+        </p>
+        <input
+          type="text"
+          id="token-input"
+          placeholder="abp_xxxxxxxxxxxxxxxxxxxxxxxx"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button id="save-token-btn">Conectar</button>
+        <p class="error" id="token-error" hidden></p>
+      </div>
+    </section>
+
+    <!-- Pantalla 2: estado normal (token ya configurado) -->
+    <section id="status-screen" hidden>
+      <div class="card">
+        <div class="status-row">
+          <span class="status-dot" id="status-dot"></span>
+          <span class="status-text" id="status-text">Cargando...</span>
+        </div>
+
+        <div class="phone-row" id="phone-row" hidden>
+          <span class="phone-label">Número:</span>
+          <span class="phone-value" id="phone-value"></span>
+        </div>
+
+        <!-- QR cuando hay que escanear -->
+        <div class="qr-container" id="qr-container" hidden>
+          <p class="qr-hint">Escaneá con tu celular:</p>
+          <img id="qr-image" alt="QR de WhatsApp" />
+          <p class="qr-instructions">
+            WhatsApp → Configuración → Dispositivos vinculados → Vincular dispositivo
+          </p>
+          <p class="hint" style="margin-top: 12px; font-size: 12px;">
+            El QR también aparece en
+            <a href="#" id="open-panel-link">appestetika.com → Configuración</a>
+            por si preferís escanearlo desde ahí.
+          </p>
+        </div>
+
+        <!-- Connecting spinner -->
+        <div class="loading" id="connecting-screen" hidden>
+          <div class="spinner"></div>
+          <p>Conectando con WhatsApp...</p>
+        </div>
+
+        <!-- Ready -->
+        <div class="ready-screen" id="ready-screen" hidden>
+          <div class="check-icon">✓</div>
+          <p class="ready-text">
+            Conectado · Los recordatorios se envían automáticamente.
+          </p>
+          <p class="ready-hint">
+            Podés cerrar esta ventana — la app sigue corriendo en la barra de tareas.
+          </p>
+        </div>
+      </div>
+
+      <div class="card meta-card">
+        <div class="meta-row">
+          <span>Servidor:</span>
+          <code id="app-url">https://estetikkapp.com</code>
+        </div>
+        <div class="meta-row">
+          <span>Versión:</span>
+          <code id="version">-</code>
+        </div>
+        <div class="meta-row">
+          <label>
+            <input type="checkbox" id="auto-start-toggle" />
+            Iniciar con Windows
+          </label>
+        </div>
+        <div class="meta-row actions">
+          <button class="btn-secondary" id="reset-btn">Desvincular este equipo</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Token inválido -->
+    <section id="invalid-screen" hidden>
+      <div class="card error-card">
+        <div class="error-icon">⚠</div>
+        <h2>Código inválido o revocado</h2>
+        <p>
+          El código que cargaste fue revocado desde el panel. Generá uno nuevo
+          en appestetika.com → Configuración → Agente local y pegalo abajo.
+        </p>
+        <button id="reset-from-invalid">Volver a pegar código</button>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <small>© appestetika · v<span id="footer-version">-</span></small>
+  </footer>
+
+  <script src="renderer.js"></script>
+</body>
+</html>
