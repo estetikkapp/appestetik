@@ -13,6 +13,7 @@ import { WhatsappConnectCard } from '@/components/whatsapp/whatsapp-connect-card
 import { EmbedSnippet } from './embed-snippet';
 import { WhatsappProviderSection } from './whatsapp-provider-section';
 import { EmailTestSection } from './email-test-section';
+import { BridgeSection } from './bridge-section';
 
 export const metadata = { title: 'Configuración — appestetika' };
 
@@ -52,6 +53,9 @@ export default async function ConfiguracionPage({
           {searchParams.ok === 'cloud-conectado' && 'WhatsApp Cloud API conectado correctamente.'}
           {searchParams.ok === 'mp-configurado' && 'Mercado Pago configurado correctamente.'}
           {searchParams.ok === 'mp-desactivado' && 'Mercado Pago desactivado.'}
+          {searchParams.ok === 'bridge-token-creado' && 'Token generado. Copialo y pegalo en el agente.'}
+          {searchParams.ok === 'bridge-token-revocado' && 'Token revocado. El agente se desconectará.'}
+          {searchParams.ok === 'bridge-activado' && 'Agente local activado como provider.'}
         </div>
       )}
 
@@ -139,11 +143,20 @@ export default async function ConfiguracionPage({
         </form>
       </section>
 
+      <BridgeSection
+        currentProvider={
+          (org?.whatsapp_provider as 'evolution' | 'cloud_api' | 'local_bridge') ??
+          'evolution'
+        }
+        newTokenPlaintext={cookies().get('bridge_new_token')?.value ?? null}
+        newTokenId={cookies().get('bridge_new_token_id')?.value ?? null}
+      />
+
       <section className="rounded-xl border border-stone-200 bg-white p-6">
-        <h2 className="mb-4 text-lg font-semibold">WhatsApp — Recordatorios automáticos</h2>
+        <h2 className="mb-4 text-lg font-semibold">WhatsApp — opciones avanzadas (Cloud API / Evolution)</h2>
         <p className="mb-4 text-sm text-stone-500">
-          Conectá el número de WhatsApp de tu centro para enviar recordatorios automáticos
-          24hs antes de cada turno.
+          Estas alternativas son para clínicas técnicas. Para uso normal, alcanza
+          con el <strong>Agente local</strong> de arriba.
         </p>
 
         <WhatsappProviderSection
