@@ -32,7 +32,7 @@ export type Database = {
           whatsapp_status: 'disconnected' | 'connecting' | 'connected';
           whatsapp_phone: string | null;
           whatsapp_connected_at: string | null;
-          whatsapp_provider: 'evolution' | 'cloud_api';
+          whatsapp_provider: 'evolution' | 'cloud_api' | 'local_bridge';
           whatsapp_cloud_config: Json | null;
           mp_config: Json | null;
           created_at: string;
@@ -55,7 +55,7 @@ export type Database = {
           whatsapp_status?: 'disconnected' | 'connecting' | 'connected';
           whatsapp_phone?: string | null;
           whatsapp_connected_at?: string | null;
-          whatsapp_provider?: 'evolution' | 'cloud_api';
+          whatsapp_provider?: 'evolution' | 'cloud_api' | 'local_bridge';
           whatsapp_cloud_config?: Json | null;
           mp_config?: Json | null;
           created_at?: string;
@@ -566,6 +566,86 @@ export type Database = {
           created_at?: string;
         };
         Update: Partial<Database['public']['Tables']['waitlist_entries']['Insert']>;
+        Relationships: [];
+      };
+      bridge_tokens: {
+        Row: {
+          id: string;
+          organization_id: string;
+          token_hash: string;
+          label: string;
+          created_at: string;
+          last_seen_at: string | null;
+          revoked_at: string | null;
+          created_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          token_hash: string;
+          label?: string;
+          created_at?: string;
+          last_seen_at?: string | null;
+          revoked_at?: string | null;
+          created_by?: string | null;
+        };
+        Update: Partial<Database['public']['Tables']['bridge_tokens']['Insert']>;
+        Relationships: [];
+      };
+      bridge_state: {
+        Row: {
+          bridge_token_id: string;
+          status: 'starting' | 'qr_pending' | 'connecting' | 'ready' | 'disconnected';
+          phone_e164: string | null;
+          qr_base64: string | null;
+          qr_updated_at: string | null;
+          last_heartbeat_at: string | null;
+          agent_version: string | null;
+          agent_os: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          bridge_token_id: string;
+          status?: 'starting' | 'qr_pending' | 'connecting' | 'ready' | 'disconnected';
+          phone_e164?: string | null;
+          qr_base64?: string | null;
+          qr_updated_at?: string | null;
+          last_heartbeat_at?: string | null;
+          agent_version?: string | null;
+          agent_os?: string | null;
+          updated_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['bridge_state']['Insert']>;
+        Relationships: [];
+      };
+      bridge_commands: {
+        Row: {
+          id: string;
+          organization_id: string;
+          bridge_token_id: string | null;
+          action: 'send_text' | 'send_media';
+          payload: Json;
+          status: 'pending' | 'processing' | 'sent' | 'failed' | 'expired';
+          attempts: number;
+          last_error: string | null;
+          created_at: string;
+          processed_at: string | null;
+          expires_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          bridge_token_id?: string | null;
+          action: 'send_text' | 'send_media';
+          payload: Json;
+          status?: 'pending' | 'processing' | 'sent' | 'failed' | 'expired';
+          attempts?: number;
+          last_error?: string | null;
+          created_at?: string;
+          processed_at?: string | null;
+          expires_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['bridge_commands']['Insert']>;
         Relationships: [];
       };
       payments: {

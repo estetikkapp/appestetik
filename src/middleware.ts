@@ -4,10 +4,18 @@ import { updateSession } from '@/lib/supabase/middleware';
 const AUTH_ROUTES = ['/auth/login', '/auth/signup'];
 const PUBLIC_PREFIXES = ['/auth', '/c/', '/embed/', '/turno/', '/api/public', '/api/slots', '/api/cron', '/api/whatsapp/webhook', '/api/whatsapp/cloud-webhook', '/api/webhooks'];
 // /api/whatsapp/test y /api/whatsapp/status van protegidos por auth interno (no public)
+// /api/bridge/{poll,result,qr,connected,disconnected} usan Bearer token del bridge
+// (auth en cada endpoint con authenticateBridge). /api/bridge/state usa Supabase session.
+const BRIDGE_TOKEN_PATHS = ['/api/bridge/poll', '/api/bridge/result', '/api/bridge/qr', '/api/bridge/connected', '/api/bridge/disconnected'];
 const ACTIVE_ORG_COOKIE = 'active_org';
 
 function isPublicRoute(pathname: string): boolean {
   if (pathname === '/') return false; // home va al panel
+  // Bridge endpoints: el agente local manda Bearer token, no tiene cookies de
+  // Supabase. Lo dejamos pasar sin auth de middleware; el endpoint valida.
+  if (BRIDGE_TOKEN_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'))) {
+    return true;
+  }
   if (pathname.startsWith('/_next')) return true;
   if (pathname.startsWith('/favicon')) return true;
   // PWA + assets en /public deben ser accesibles sin auth

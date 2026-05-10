@@ -1,11 +1,14 @@
 /**
- * Abstracción de provider WhatsApp: Evolution (Baileys) o Cloud API (Meta oficial).
+ * Abstracción de provider WhatsApp.
  *
- * Toda la app usa `sendWhatsappMessage(orgId, phone, text)` y este helper resuelve
- * cuál provider usar según `organizations.whatsapp_provider`.
+ * 3 providers soportados:
+ *  - 'evolution': Baileys via VPS Evolution API (datacenter IP → bloqueado por Meta, no anda)
+ *  - 'cloud_api': Meta WhatsApp Cloud API oficial (requiere Meta Business + templates aprobados)
+ *  - 'local_bridge': agente local de la clínica (whatsapp-web.js + Chrome en su PC residencial)
  *
- * Reemplaza llamadas directas a `sendTextMessage` de evolution.ts que ahora pasan
- * por acá. evolution.ts y cloud-api.ts quedan como clientes de bajo nivel.
+ * Toda la app llama `sendWhatsappMessage(orgId, phone, text)`; este helper
+ * resuelve el provider y rutea. evolution.ts / cloud-api.ts / bridge enqueue
+ * quedan como clientes de bajo nivel.
  */
 
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -16,8 +19,10 @@ import {
   type WhatsappCloudConfig,
 } from './cloud-api';
 
+type WhatsappProvider = 'evolution' | 'cloud_api' | 'local_bridge';
+
 interface OrgWhatsappConfig {
-  whatsapp_provider: 'evolution' | 'cloud_api';
+  whatsapp_provider: WhatsappProvider;
   whatsapp_status: 'disconnected' | 'connecting' | 'connected';
   whatsapp_cloud_config: WhatsappCloudConfig | null;
 }
@@ -31,6 +36,27 @@ async function loadOrgWhatsappConfig(orgId: string): Promise<OrgWhatsappConfig |
     .maybeSingle();
   if (!data) return null;
   return data as unknown as OrgWhatsappConfig;
+}
+
+/**
+ * Enqueue un comando en la cola del bridge local. El agente lo procesa
+ * en el próximo poll (<= 3-5 segundos típico).
+ */
+async function enqueueBridgeCommand(
+  orgId: string,
+  action: 'send_text' | 'send_media',
+  payload: Record<string, unknown>
+): Promise<void> {
+  const admin = createAdminClient();
+  const { error } = await admin.from('bridge_commands').insert({
+    organization_id: orgId,
+    action,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    payload: payload as any,
+  });
+  if (error) {
+    throw new Error(`enqueue bridge command failed: ${error.message}`);
+  }
 }
 
 /**
@@ -49,6 +75,13 @@ export async function sendWhatsappMessage(
     throw new Error('WhatsApp no conectado para esta org');
   }
 
+  if (cfg.whatsapp_provider === 'local_bridge') {
+    // Asíncrono: el bridge lo procesa cuando hace polling. Caller no espera
+    // la entrega real, solo que se enqueuee correctamente.
+    await enqueueBridgeCommand(orgId, 'send_text', { to: phoneE164, text });
+    return;
+  }
+
   if (cfg.whatsapp_provider === 'cloud_api') {
     if (!cfg.whatsapp_cloud_config) {
       throw new Error('whatsapp_cloud_config falta para org configurada como cloud_api');
@@ -62,9 +95,8 @@ export async function sendWhatsappMessage(
 }
 
 /**
- * Manda un mensaje basado en template (solo Cloud API).
- * Si la org está en Evolution, esto cae al texto regular como fallback —
- * Evolution no tiene concepto de template aprobado.
+ * Manda un mensaje basado en template (Cloud API). Para Evolution / local_bridge
+ * no aplica template oficial — caen al fallback text plano si está dado.
  */
 export async function sendWhatsappTemplate(
   orgId: string,
@@ -92,15 +124,19 @@ export async function sendWhatsappTemplate(
     return;
   }
 
-  // Evolution fallback: mandar como texto plano si tenemos uno
+  // local_bridge o evolution: fallback a texto plano
   if (fallbackText) {
-    await sendEvolutionText(orgId, phoneE164, fallbackText);
+    if (cfg.whatsapp_provider === 'local_bridge') {
+      await enqueueBridgeCommand(orgId, 'send_text', { to: phoneE164, text: fallbackText });
+    } else {
+      await sendEvolutionText(orgId, phoneE164, fallbackText);
+    }
     return;
   }
 
   throw new Error(
-    'Esta org usa Evolution sin fallbackText. Para mensajes con template hay que estar en Cloud API.'
+    `Provider ${cfg.whatsapp_provider} requiere fallbackText para enviar templates.`
   );
 }
 
-export type { WhatsappCloudConfig };
+export type { WhatsappCloudConfig, WhatsappProvider };
