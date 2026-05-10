@@ -1,0 +1,68 @@
+# Build + release del agente Electron en push de tag `agent-vX.Y.Z`.
+#
+# Resultado: un release de GitHub con los 3 binarios (Windows .exe, Mac .dmg,
+# Linux .AppImage) que la página /agente linkea para descarga.
+
+name: Build agent release
+
+on:
+  push:
+    tags:
+      - 'agent-v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: agent/package-lock.json
+
+      - name: Install dependencies
+        working-directory: agent
+        run: npm install --no-audit --no-fund
+
+      - name: Build (Windows)
+        if: matrix.os == 'windows-latest'
+        working-directory: agent
+        run: npm run build:win
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build (macOS)
+        if: matrix.os == 'macos-latest'
+        working-directory: agent
+        run: npm run build:mac
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        working-directory: agent
+        run: npm run build:linux
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-${{ matrix.os }}
+          path: |
+            agent/dist/*.exe
+            agent/dist/*.dmg
+            agent/dist/*.AppImage
+            agent/dist/latest*.yml
+          if-no-files-found: warn

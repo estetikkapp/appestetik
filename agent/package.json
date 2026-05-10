@@ -1,0 +1,74 @@
+{
+  "name": "appestetika-bridge",
+  "productName": "appestetika bridge",
+  "version": "1.0.0",
+  "description": "Agente local de appestetika — conecta WhatsApp via whatsapp-web.js para enviar recordatorios desde la PC del consultorio.",
+  "main": "src/main.js",
+  "author": "appestetika",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --enable-logging",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux",
+    "build:all": "electron-builder -mwl"
+  },
+  "dependencies": {
+    "electron-store": "8.2.0",
+    "electron-updater": "6.3.9",
+    "qrcode": "1.5.4",
+    "whatsapp-web.js": "1.26.0"
+  },
+  "devDependencies": {
+    "electron": "33.0.0",
+    "electron-builder": "25.1.8"
+  },
+  "build": {
+    "appId": "com.estetikkapp.bridge",
+    "productName": "appestetika bridge",
+    "copyright": "Copyright © 2026 appestetika",
+    "asar": true,
+    "directories": {
+      "output": "dist",
+      "buildResources": "assets"
+    },
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "estetikkapp",
+        "repo": "appestetik"
+      }
+    ],
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "icon": "assets/icon.ico",
+      "publisherName": "appestetika"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "shortcutName": "appestetika bridge",
+      "createDesktopShortcut": true
+    },
+    "mac": {
+      "target": [{ "target": "dmg", "arch": ["x64", "arm64"] }],
+      "icon": "assets/icon.icns",
+      "category": "public.app-category.business",
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false
+    },
+    "linux": {
+      "target": [{ "target": "AppImage", "arch": ["x64"] }],
+      "icon": "assets/icon.png",
+      "category": "Office"
+    }
+  }
+}
