@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
+import { requireMembership } from '@/lib/auth/require-membership';
 import { Badge } from '@/components/ui/badge';
 import {
   Table,
@@ -77,6 +78,7 @@ export default async function EmpleadasPage({
 }: {
   searchParams: { error?: string; ok?: string };
 }) {
+  await requireMembership({ minRole: 'admin' });
   const { memberships, invitations, templates, services, proServices } = await loadData();
   const proServicesByMembership = new Map<string, string[]>();
   for (const ps of proServices) {

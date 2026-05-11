@@ -20,6 +20,7 @@ import {
   BarChart3,
 } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
+import { canAccessRoute, type Role } from '@/lib/auth/rbac';
 
 interface NavItem {
   href: string;
@@ -46,8 +47,16 @@ const NAV: NavItem[] = [
   { href: '/configuracion', label: 'Configuración', icon: Settings },
 ];
 
-export function Sidebar() {
+interface Props {
+  role: Role;
+}
+
+export function Sidebar({ role }: Props) {
   const pathname = usePathname();
+  // RBAC: filtramos los items que el rol del user no puede tocar. La capa
+  // server-side (requireMembership) lo bloquea aunque ponga la URL a mano —
+  // esto es solo UX para que no vea links que después le van a rebotar.
+  const visibleNav = NAV.filter((item) => canAccessRoute(role, item.href));
 
   return (
     <aside className="flex w-60 flex-col border-r border-stone-200 bg-white">
@@ -55,7 +64,7 @@ export function Sidebar() {
         <h1 className="text-lg font-bold text-brand-700">appestetika</h1>
       </div>
       <nav className="flex-1 space-y-1 p-3">
-        {NAV.map((item) => {
+        {visibleNav.map((item) => {
           const isActive = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
           const Icon = item.icon;
           if (item.disabled) {

@@ -21,9 +21,9 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 
-type Role = 'owner' | 'admin' | 'professional' | 'receptionist';
+export type Role = 'owner' | 'admin' | 'professional' | 'receptionist';
 
-const ROLE_RANK: Record<Role, number> = {
+export const ROLE_RANK: Record<Role, number> = {
   receptionist: 1,
   professional: 2,
   admin: 3,
@@ -42,8 +42,14 @@ export interface MembershipCheck {
 export interface RequireMembershipOpts {
   /** Si se pasa, exige que el user tenga al menos este rol (rank). */
   minRole?: Role;
-  /** URL a la que redirigir si falla. Default: `/auth/login`. */
+  /** URL a la que redirigir si falla (no sesion / no miembro). Default: `/auth/login`. */
   redirectOnFail?: string;
+  /**
+   * URL a la que redirigir si está logueado pero le falta rango (minRole no
+   * alcanza). Default: `/`. Distinto de `redirectOnFail` porque acá el user
+   * SÍ está autenticado, solo no autorizado para esa sección.
+   */
+  redirectOnInsufficientRole?: string;
 }
 
 export async function requireMembership(
@@ -77,7 +83,11 @@ export async function requireMembership(
     const minRank = ROLE_RANK[opts.minRole];
     const userRank = ROLE_RANK[m.role as Role] ?? 0;
     if (userRank < minRank) {
-      redirect(`${fail}?error=Permisos+insuficientes`);
+      // Acá el user SÍ tiene sesión y SÍ es miembro de la org — solo le falta
+      // rango. Redirigirlo a /auth/login sería confuso (lo dejaría rebotando
+      // contra el middleware). Lo mandamos al home con un mensaje.
+      const insufficientRedirect = opts.redirectOnInsufficientRole ?? '/';
+      redirect(`${insufficientRedirect}?error=No+ten%C3%A9s+permiso+para+esa+secci%C3%B3n`);
     }
   }
 

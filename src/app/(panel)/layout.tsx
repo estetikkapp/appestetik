@@ -5,6 +5,7 @@ import { Sidebar } from '@/components/layout/sidebar';
 import { UserMenu } from '@/components/layout/user-menu';
 import { OrgSwitcher } from '@/components/layout/org-switcher';
 import { NotificationsBell } from '@/components/notifications/notifications-bell';
+import type { Role } from '@/lib/auth/require-membership';
 
 export default async function PanelLayout({ children }: { children: React.ReactNode }) {
   const supabase = createClient();
@@ -29,9 +30,14 @@ export default async function PanelLayout({ children }: { children: React.ReactN
     if (org) orgs.push({ id: org.id, name: org.name, role: m.role });
   }
 
+  // Si no hay activeMembership (caso raro: cookie stale), default a
+  // 'professional' (rol mínimo seguro) para que el Sidebar no muestre admin
+  // tools. El middleware ya valida sesión + membership antes de llegar acá.
+  const activeRole = (activeMembership?.role ?? 'professional') as Role;
+
   return (
     <div className="flex min-h-screen bg-brand-50/30">
-      <Sidebar />
+      <Sidebar role={activeRole} />
       <div className="flex flex-1 flex-col">
         <header className="flex items-center justify-between border-b border-stone-200 bg-white px-6 py-3">
           <OrgSwitcher orgs={orgs} activeOrgId={activeOrgId ?? ''} />

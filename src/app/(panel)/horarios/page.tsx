@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
 import { Clock } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
+import { requireMembership } from '@/lib/auth/require-membership';
 import { Badge } from '@/components/ui/badge';
 import {
   Table,
@@ -58,6 +59,7 @@ export default async function HorariosPage({
 }: {
   searchParams: { error?: string; ok?: string };
 }) {
+  await requireMembership({ minRole: 'admin' });
   const templates = (await loadData()) ?? [];
 
   return (

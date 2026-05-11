@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
 import { History } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
+import { requireMembership } from '@/lib/auth/require-membership';
 import { Badge } from '@/components/ui/badge';
 import {
   Table,
@@ -42,6 +43,7 @@ async function loadData() {
 }
 
 export default async function AuditLogPage() {
+  await requireMembership({ minRole: 'admin' });
   const log = await loadData();
 
   return (

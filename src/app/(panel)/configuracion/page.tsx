@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
+import { requireMembership } from '@/lib/auth/require-membership';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -30,6 +31,11 @@ export default async function ConfiguracionPage({
 }: {
   searchParams: { error?: string; ok?: string; wapp?: string };
 }) {
+  // RBAC: configuracion toca integraciones (AFIP, MP, WhatsApp) + datos
+  // fiscales. Solo admin/owner. Si profesional/recepcionista pone la URL
+  // a mano, rebota a / con error.
+  await requireMembership({ minRole: 'admin' });
+
   const org = await loadOrg();
 
   return (

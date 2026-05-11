@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
+import { requireMembership } from '@/lib/auth/require-membership';
 import { Badge } from '@/components/ui/badge';
 import {
   Table,
@@ -37,6 +38,7 @@ export default async function ServiciosPage({
 }: {
   searchParams: { error?: string; ok?: string; archived?: string };
 }) {
+  await requireMembership({ minRole: 'admin' });
   const showArchived = searchParams.archived === '1';
   const services = await loadServices(showArchived);
 
