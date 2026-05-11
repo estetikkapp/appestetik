@@ -34,6 +34,12 @@ const els = {
   resetFromInvalid: $('reset-from-invalid'),
   openConfigLink: $('open-config-link'),
   openPanelLink: $('open-panel-link'),
+  updateStatusText: $('update-status-text'),
+  checkUpdateBtn: $('check-update-btn'),
+  installUpdateBtn: $('install-update-btn'),
+  updateProgress: $('update-progress'),
+  updateProgressFill: $('update-progress-fill'),
+  openLogsLink: $('open-logs-link'),
 };
 
 function showScreen(name) {
@@ -222,6 +228,68 @@ window.agentAPI.onWaEvent(({ event, payload }) => {
 
 window.agentAPI.onTokenInvalid(() => {
   showScreen('invalid');
+});
+
+// ── Actualizaciones ──────────────────────────────────────────────────────
+els.checkUpdateBtn.addEventListener('click', async () => {
+  els.checkUpdateBtn.disabled = true;
+  els.updateStatusText.textContent = 'Buscando...';
+  const res = await window.agentAPI.checkForUpdates();
+  if (!res.ok) {
+    els.updateStatusText.textContent = res.error || 'No se pudo chequear';
+  } else if (res.hasUpdate) {
+    els.updateStatusText.textContent = `Disponible: v${res.version}`;
+  } else {
+    els.updateStatusText.textContent = 'Estás al día';
+  }
+  els.checkUpdateBtn.disabled = false;
+});
+
+els.installUpdateBtn.addEventListener('click', async () => {
+  if (!confirm('¿Reiniciar el agente para instalar la actualización? Los recordatorios se pausan unos segundos.')) {
+    return;
+  }
+  await window.agentAPI.installUpdate();
+});
+
+els.openLogsLink.addEventListener('click', async (e) => {
+  e.preventDefault();
+  await window.agentAPI.openLogFolder();
+});
+
+window.agentAPI.onUpdateStatus((payload) => {
+  switch (payload.status) {
+    case 'checking':
+      els.updateStatusText.textContent = 'Buscando...';
+      els.updateProgress.hidden = true;
+      els.installUpdateBtn.hidden = true;
+      break;
+    case 'available':
+      els.updateStatusText.textContent = `Descargando v${payload.version}...`;
+      els.updateProgress.hidden = false;
+      els.installUpdateBtn.hidden = true;
+      break;
+    case 'not-available':
+      els.updateStatusText.textContent = 'Estás al día';
+      els.updateProgress.hidden = true;
+      els.installUpdateBtn.hidden = true;
+      break;
+    case 'downloading':
+      els.updateStatusText.textContent = `Descargando... ${payload.percent}%`;
+      els.updateProgress.hidden = false;
+      els.updateProgressFill.style.width = `${payload.percent}%`;
+      break;
+    case 'downloaded':
+      els.updateStatusText.textContent = `v${payload.version} lista — reiniciá para instalar`;
+      els.updateProgress.hidden = true;
+      els.installUpdateBtn.hidden = false;
+      break;
+    case 'error':
+      els.updateStatusText.textContent = `Error: ${payload.error}`;
+      els.updateProgress.hidden = true;
+      els.installUpdateBtn.hidden = true;
+      break;
+  }
 });
 
 init();

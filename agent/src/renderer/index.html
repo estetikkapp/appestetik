@@ -109,6 +109,24 @@
           <button class="btn-secondary" id="reset-btn">Desvincular este equipo</button>
         </div>
       </div>
+
+      <!-- Card de actualizaciones -->
+      <div class="card update-card">
+        <div class="update-row">
+          <span class="update-label">Actualizaciones:</span>
+          <span class="update-status" id="update-status-text">—</span>
+        </div>
+        <div class="update-actions">
+          <button class="btn-secondary btn-inline" id="check-update-btn">Buscar actualizaciones</button>
+          <button class="btn-inline" id="install-update-btn" hidden>Reiniciar e instalar</button>
+        </div>
+        <div class="update-progress" id="update-progress" hidden>
+          <div class="progress-bar"><div class="progress-fill" id="update-progress-fill"></div></div>
+        </div>
+        <div class="meta-row">
+          <a href="#" id="open-logs-link" class="hint" style="font-size: 11px;">Abrir carpeta de logs (para diagnóstico)</a>
+        </div>
+      </div>
     </section>
 
     <!-- Token inválido -->
