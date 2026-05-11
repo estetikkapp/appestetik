@@ -20,6 +20,10 @@ const els = {
   qrContainer: $('qr-container'),
   qrImage: $('qr-image'),
   connectingScreen: $('connecting-screen'),
+  connectingText: $('connecting-text'),
+  loadingProgressBar: $('loading-progress-bar'),
+  loadingProgressFill: $('loading-progress-fill'),
+  loadingHint: $('loading-hint'),
   readyScreen: $('ready-screen'),
   appUrl: $('app-url'),
   version: $('version'),
@@ -38,11 +42,12 @@ function showScreen(name) {
 
 function setStatusUI(status, payload) {
   const labels = {
-    ready: '✓ Conectado a WhatsApp',
-    qr_pending: '⏳ Esperando que escanees el QR',
-    connecting: '… Conectando con WhatsApp',
-    starting: '⏳ Arrancando navegador',
-    disconnected: '✗ Desconectado',
+    ready: 'Conectado a WhatsApp',
+    qr_pending: 'Esperando que escanees el QR',
+    connecting: 'Conectando con WhatsApp',
+    starting: 'Arrancando navegador',
+    loading: 'Cargando WhatsApp',
+    disconnected: 'Desconectado',
   };
 
   els.statusDot.className = 'status-dot ' + status;
@@ -57,8 +62,25 @@ function setStatusUI(status, payload) {
   if (status === 'qr_pending' && payload) {
     els.qrImage.src = payload;
     els.qrContainer.hidden = false;
-  } else if (status === 'connecting' || status === 'starting') {
+  } else if (status === 'connecting' || status === 'starting' || status === 'loading') {
     els.connectingScreen.hidden = false;
+    if (status === 'loading') {
+      const pct = payload && typeof payload.percent === 'number' ? payload.percent : null;
+      const msg = payload && payload.message ? payload.message : 'Cargando WhatsApp';
+      els.connectingText.textContent = pct !== null ? `${msg} · ${pct}%` : msg;
+      els.loadingHint.hidden = false;
+      if (pct !== null) {
+        els.loadingProgressBar.hidden = false;
+        els.loadingProgressFill.style.width = `${Math.max(0, Math.min(100, pct))}%`;
+      } else {
+        els.loadingProgressBar.hidden = true;
+      }
+    } else {
+      els.connectingText.textContent =
+        status === 'starting' ? 'Arrancando navegador...' : 'Conectando con WhatsApp...';
+      els.loadingProgressBar.hidden = true;
+      els.loadingHint.hidden = true;
+    }
   } else if (status === 'ready') {
     els.readyScreen.hidden = false;
     if (payload?.phone) {
@@ -174,6 +196,8 @@ window.agentAPI.onWaEvent(({ event, payload }) => {
     setStatusUI('qr_pending', payload);
   } else if (event === 'connecting') {
     setStatusUI('connecting');
+  } else if (event === 'loading') {
+    setStatusUI('loading', payload);
   } else if (event === 'ready') {
     setStatusUI('ready', payload);
   } else if (event === 'disconnected') {

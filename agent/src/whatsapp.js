@@ -155,6 +155,13 @@ async function initClient() {
       emit('connecting');
     });
 
+    // Después del auth, whatsapp-web.js descarga la historia de chats; puede
+    // tardar 30s-2min. Sin este evento la UI parece colgada en "Conectando".
+    client.on('loading_screen', (percent, message) => {
+      const pct = Number(percent);
+      emit('loading', { percent: Number.isFinite(pct) ? pct : null, message });
+    });
+
     client.on('auth_failure', (msg) => {
       logger.warn('auth_failure:', msg);
       scheduleReconnect('auth_failure', 10);

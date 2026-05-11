@@ -190,6 +190,22 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
+.progress-bar {
+  margin: 12px auto 0;
+  width: 80%;
+  height: 6px;
+  border-radius: 3px;
+  background: #e7e5e4;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #be93a8;
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
 /* Ready */
 .ready-screen {
   text-align: center;

@@ -64,12 +64,20 @@
         <!-- Connecting spinner -->
         <div class="loading" id="connecting-screen" hidden>
           <div class="spinner"></div>
-          <p>Conectando con WhatsApp...</p>
+          <p id="connecting-text">Conectando con WhatsApp...</p>
+          <div class="progress-bar" id="loading-progress-bar" hidden>
+            <div class="progress-fill" id="loading-progress-fill"></div>
+          </div>
+          <p class="hint" id="loading-hint" hidden>
+            Descargando la historia de chats — puede tardar hasta 2 minutos la primera vez.
+          </p>
         </div>
 
         <!-- Ready -->
         <div class="ready-screen" id="ready-screen" hidden>
-          <div class="check-icon">✓</div>
+          <div class="check-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+          </div>
           <p class="ready-text">
             Conectado · Los recordatorios se envían automáticamente.
           </p>
@@ -103,7 +111,9 @@
     <!-- Token inválido -->
     <section id="invalid-screen" hidden>
       <div class="card error-card">
-        <div class="error-icon">⚠</div>
+        <div class="error-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+        </div>
         <h2>Código inválido o revocado</h2>
         <p>
           El código que cargaste fue revocado desde el panel. Generá uno nuevo

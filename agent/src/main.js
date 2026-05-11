@@ -61,15 +61,17 @@ function buildTrayMenu() {
 function formatStatus(s) {
   switch (s) {
     case 'ready':
-      return '✓ Conectado';
+      return 'Conectado';
     case 'qr_pending':
-      return '⏳ Esperando QR scan';
+      return 'Esperando QR scan';
     case 'connecting':
-      return '… Conectando';
+      return 'Conectando';
     case 'starting':
-      return '⏳ Arrancando';
+      return 'Arrancando';
+    case 'loading':
+      return 'Cargando WhatsApp';
     case 'disconnected':
-      return '✗ Desconectado';
+      return 'Desconectado';
     default:
       return s || 'inicializando';
   }

@@ -9,6 +9,7 @@ import {
   Trash2,
   Copy,
   QrCode,
+  Phone,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -267,7 +268,7 @@ export function BridgeSection({ currentProvider, newTokenPlaintext, newTokenId }
 
       {/* Acciones */}
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-stone-100 pt-4">
-        <CreateTokenDialog />
+        <CreateTokenDialog tokenJustCreated={Boolean(newTokenPlaintext)} />
         <div className="flex items-center gap-2">
           {!isBridgeActive && data && data.tokens.length > 0 && (
             <form action={setWhatsappProviderLocalBridge}>
@@ -302,7 +303,11 @@ function StatusBadge({
     return <Badge variant="outline">Provider no activo</Badge>;
   }
   if (activeToken) {
-    return <Badge variant="success">✓ Conectado · {activeToken.state?.phone_e164}</Badge>;
+    return (
+      <Badge variant="success">
+        <CheckCircle2 className="mr-1 h-3 w-3" /> Conectado · {activeToken.state?.phone_e164}
+      </Badge>
+    );
   }
   return <Badge variant="secondary">Esperando agente...</Badge>;
 }
@@ -334,8 +339,12 @@ function TokenRow({ token }: { token: BridgeToken }) {
             <span className="text-amber-500">●</span>
           )}
         </div>
-        <p className="mt-0.5 text-xs text-stone-500">
-          {state?.phone_e164 && <>📱 {state.phone_e164} · </>}
+        <p className="mt-0.5 flex flex-wrap items-center gap-x-1 text-xs text-stone-500">
+          {state?.phone_e164 && (
+            <>
+              <Phone className="inline h-3 w-3" /> {state.phone_e164} ·{' '}
+            </>
+          )}
           {state?.status && <>Estado: <strong>{state.status}</strong> · </>}
           {lastSeen ? (
             isStale ? (
@@ -367,8 +376,11 @@ function TokenRow({ token }: { token: BridgeToken }) {
   );
 }
 
-function CreateTokenDialog() {
+function CreateTokenDialog({ tokenJustCreated }: { tokenJustCreated: boolean }) {
   const [open, setOpen] = React.useState(false);
+  React.useEffect(() => {
+    if (tokenJustCreated) setOpen(false);
+  }, [tokenJustCreated]);
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
