@@ -244,7 +244,16 @@ ipcMain.handle('set-token', async (_event, token) => {
   } catch (err) {
     return { ok: false, error: `No se pudo validar el código: ${err.message}` };
   }
-  store.set('bridgeToken', token.trim());
+  const previousToken = store.get('bridgeToken');
+  const newToken = token.trim();
+  // Si cambió el token (nueva vinculación), borramos la sesión de WhatsApp
+  // anterior para forzar un re-escaneo de QR. Sin esto, una sesión persistida
+  // a medias puede dejar la app pegada en "Conectando" sin mostrar QR.
+  if (previousToken && previousToken !== newToken) {
+    await wa.stop();
+    wa.clearAuth();
+  }
+  store.set('bridgeToken', newToken);
   // Reiniciar polling + WhatsApp con el nuevo token
   startPolling();
   if (!wa.isRunning()) {
@@ -256,11 +265,28 @@ ipcMain.handle('set-token', async (_event, token) => {
 ipcMain.handle('reset', async () => {
   store.delete('bridgeToken');
   await wa.stop();
+  // Limpiar la sesión local de WhatsApp tambien — sin esto, al pegar un token
+  // nuevo el agente intenta restaurar la sesión vieja y queda colgado.
+  wa.clearAuth();
   if (pollInterval) clearInterval(pollInterval);
   pollInterval = null;
   lastReportedQr = null;
   lastReportedPhone = null;
   lastReportedStatus = null;
+  return { ok: true };
+});
+
+ipcMain.handle('rescan-qr', async () => {
+  // Borra la sesión local de WhatsApp y reinicia el cliente. El token queda
+  // intacto. Útil cuando la sesión persistida se rompió y la UI queda pegada.
+  await wa.stop();
+  wa.clearAuth();
+  lastReportedQr = null;
+  lastReportedPhone = null;
+  lastReportedStatus = null;
+  if (store.get('bridgeToken')) {
+    wa.start(onWhatsappEvent);
+  }
   return { ok: true };
 });
 

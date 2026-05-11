@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld('agentAPI', {
   getConfig: () => ipcRenderer.invoke('get-config'),
   setToken: (token) => ipcRenderer.invoke('set-token', token),
   reset: () => ipcRenderer.invoke('reset'),
+  rescanQr: () => ipcRenderer.invoke('rescan-qr'),
   setAppUrl: (url) => ipcRenderer.invoke('set-app-url', url),
   toggleAutoStart: (enabled) => ipcRenderer.invoke('toggle-auto-start', enabled),
   getStatus: () => ipcRenderer.invoke('get-current-status'),

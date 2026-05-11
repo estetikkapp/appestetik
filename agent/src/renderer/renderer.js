@@ -30,6 +30,7 @@ const els = {
   footerVersion: $('footer-version'),
   autoStartToggle: $('auto-start-toggle'),
   resetBtn: $('reset-btn'),
+  rescanBtn: $('rescan-btn'),
   resetFromInvalid: $('reset-from-invalid'),
   openConfigLink: $('open-config-link'),
   openPanelLink: $('open-panel-link'),
@@ -161,6 +162,18 @@ els.resetBtn.addEventListener('click', async () => {
   showScreen('setup');
   els.tokenInput.value = '';
   els.tokenInput.focus();
+});
+
+els.rescanBtn.addEventListener('click', async () => {
+  if (!confirm('¿Volver a escanear el QR? Se va a cerrar la sesión actual de WhatsApp y vas a tener que escanear de nuevo desde tu celular.')) {
+    return;
+  }
+  els.rescanBtn.disabled = true;
+  els.rescanBtn.textContent = 'Reiniciando...';
+  await window.agentAPI.rescanQr();
+  els.rescanBtn.disabled = false;
+  els.rescanBtn.textContent = 'Volver a escanear QR';
+  setStatusUI('starting');
 });
 
 els.resetFromInvalid.addEventListener('click', async () => {

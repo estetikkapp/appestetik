@@ -242,6 +242,20 @@ async function stop() {
   setStatus('disconnected');
   currentQrDataUrl = null;
   currentPhone = null;
+  reconnectAttempts = 0;
+}
+
+// Borra la sesión local de WhatsApp. Necesario cuando el user quiere re-escanear
+// el QR (cambió de número, sesión corrupta, etc.) o cuando se desvincula el equipo.
+function clearAuth() {
+  try {
+    fs.rmSync(getAuthPath(), { recursive: true, force: true });
+    logger.info('Sesión local de WhatsApp borrada');
+    return true;
+  } catch (err) {
+    logger.warn('No se pudo borrar la sesión:', err.message);
+    return false;
+  }
 }
 
 function isRunning() {
@@ -276,6 +290,7 @@ function getCurrentPhone() {
 module.exports = {
   start,
   stop,
+  clearAuth,
   isRunning,
   sendText,
   getCurrentStatus,

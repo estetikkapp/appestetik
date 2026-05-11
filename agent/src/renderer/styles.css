@@ -95,6 +95,13 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 }
 .btn-secondary:hover { background: #f5f4f3; }
 
+.btn-inline {
+  width: auto;
+  display: inline-block;
+  padding: 8px 14px;
+  font-size: 13px;
+}
+
 .error {
   color: #b91c1c;
   font-size: 13px;
