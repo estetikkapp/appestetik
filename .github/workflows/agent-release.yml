@@ -10,6 +10,16 @@ on:
     tags:
       - 'agent-v*'
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag a usar para el release (ej. agent-v1.0.0)'
+        required: true
+        default: 'agent-v1.0.0'
+
+# Default GITHUB_TOKEN en repos modernos es read-only. Damos write para
+# que electron-builder pueda crear el release y subir los artifacts.
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -28,8 +38,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: agent/package-lock.json
+        # Sin cache porque no commiteamos package-lock.json del agent/
 
       - name: Install dependencies
         working-directory: agent
@@ -38,25 +47,28 @@ jobs:
       - name: Build (Windows)
         if: matrix.os == 'windows-latest'
         working-directory: agent
-        run: npm run build:win
+        run: npm run build:win -- --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build (macOS)
         if: matrix.os == 'macos-latest'
         working-directory: agent
-        run: npm run build:mac
+        run: npm run build:mac -- --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Sin code signing — usuarios verán warning de Gatekeeper.
+          # Pueden saltarlo con click derecho → Abrir.
+          CSC_IDENTITY_AUTO_DISCOVERY: false
 
       - name: Build (Linux)
         if: matrix.os == 'ubuntu-latest'
         working-directory: agent
-        run: npm run build:linux
+        run: npm run build:linux -- --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload artifacts
+      - name: Upload artifacts (debug)
         uses: actions/upload-artifact@v4
         with:
           name: agent-${{ matrix.os }}

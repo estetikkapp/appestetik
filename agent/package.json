@@ -49,7 +49,8 @@
     "win": {
       "target": [{ "target": "nsis", "arch": ["x64"] }],
       "icon": "assets/icon.ico",
-      "publisherName": "appestetika"
+      "publisherName": "appestetika",
+      "artifactName": "appestetika-bridge-setup.${ext}"
     },
     "nsis": {
       "oneClick": false,
@@ -63,12 +64,14 @@
       "icon": "assets/icon.icns",
       "category": "public.app-category.business",
       "hardenedRuntime": false,
-      "gatekeeperAssess": false
+      "gatekeeperAssess": false,
+      "artifactName": "appestetika-bridge.${ext}"
     },
     "linux": {
       "target": [{ "target": "AppImage", "arch": ["x64"] }],
       "icon": "assets/icon.png",
-      "category": "Office"
+      "category": "Office",
+      "artifactName": "appestetika-bridge.${ext}"
     }
   }
 }
