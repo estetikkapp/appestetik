@@ -314,13 +314,21 @@ function SelectNative({
   value?: string;
   onChange?: (v: string) => void;
 }) {
+  // Soporta dos modos:
+  //   - Controlado (servicio, profesional): se pasa `value` + `onChange` y el padre
+  //     necesita observar cambios para refetch de slots, etc.
+  //   - Uncontrolled (cliente, recurso): el padre no necesita el valor en JSX,
+  //     basta con que el name salga en el FormData del submit. Si fijáramos
+  //     `value=""` sin `onChange` real, React bloquea las selecciones del user.
+  const controlled = value !== undefined;
   return (
     <select
       id={id}
       name={name}
       required={required}
-      value={value ?? ''}
-      onChange={(e) => onChange?.(e.target.value)}
+      value={controlled ? value : undefined}
+      defaultValue={controlled ? undefined : ''}
+      onChange={controlled ? (e) => onChange?.(e.target.value) : undefined}
       className="flex h-10 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
     >
       <option value="">{emptyLabel}</option>

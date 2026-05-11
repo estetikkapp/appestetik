@@ -5,6 +5,7 @@ import { DayView, type AppointmentWithRelations } from '@/components/agenda/day-
 import { WeekView } from '@/components/agenda/week-view';
 import { MonthView } from '@/components/agenda/month-view';
 import { CreateAppointmentSheet } from '@/components/agenda/create-appointment-sheet';
+import { ShareBookingLink } from '@/components/agenda/share-booking-link';
 import { SetupStatusBanner } from '@/components/setup-status-banner';
 import { formatArs } from '@/lib/utils/format-ars';
 
@@ -388,6 +389,19 @@ async function loadWeekAgenda(weekStart: string) {
   };
 }
 
+async function loadOrgShareInfo(): Promise<{ slug: string | null; name: string } | null> {
+  const supabase = createClient();
+  const orgId = cookies().get('active_org')?.value;
+  if (!orgId) return null;
+  const { data } = await supabase
+    .from('organizations')
+    .select('slug, name')
+    .eq('id', orgId)
+    .maybeSingle();
+  if (!data) return null;
+  return { slug: data.slug, name: data.name };
+}
+
 export default async function AgendaPage({
   searchParams,
 }: {
@@ -399,12 +413,14 @@ export default async function AgendaPage({
   const weekStart = view === 'week' ? getMondayOf(date) : date;
   const monthStart = view === 'month' ? getMonthStartOf(date) : date;
 
-  const data =
+  const [data, orgShare] = await Promise.all([
     view === 'week'
-      ? await loadWeekAgenda(weekStart)
+      ? loadWeekAgenda(weekStart)
       : view === 'month'
-      ? await loadMonthAgenda(monthStart)
-      : await loadDayAgenda(date);
+        ? loadMonthAgenda(monthStart)
+        : loadDayAgenda(date),
+    loadOrgShareInfo(),
+  ]);
 
   if (!data) {
     return <div className="text-sm text-stone-500">No hay organización activa.</div>;
@@ -453,6 +469,9 @@ export default async function AgendaPage({
               Mes
             </Link>
           </div>
+          {orgShare?.slug && (
+            <ShareBookingLink slug={orgShare.slug} orgName={orgShare.name} />
+          )}
           <CreateAppointmentSheet
             services={data.services}
             clients={data.clients}

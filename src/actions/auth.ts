@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { normalizeEmail } from '@/lib/validators/email';
 
 export async function login(formData: FormData): Promise<void> {
@@ -36,40 +37,89 @@ export async function signup(formData: FormData): Promise<void> {
     redirect('/auth/signup?error=La+contrase%C3%B1a+debe+tener+al+menos+8+caracteres');
   }
 
-  // Si tenemos invitation_token, lo pasamos en metadata. El trigger DB
-  // handle_new_user() lo lee y crea membership en la org de la invitación
-  // (en vez de crear org nueva).
-  const userData: Record<string, string | null> = {
-    full_name: fullName || null,
-  };
+  // Dos paths distintos:
+  //
+  // 1) Signup por INVITACIÓN: el email ya fue verificado (el invitee abrió el
+  //    link en su inbox). Usamos admin.createUser con email_confirm:true para
+  //    saltearnos el flujo de confirmación de Supabase Auth (que requiere
+  //    SMTP configurado y agrega fricción). Luego lo logueamos directo.
+  //
+  // 2) Signup NORMAL (free trial, sin invitación): mantenemos signUp() público.
+  //    Supabase manda email de confirmación si está configurado; si no, el user
+  //    quedará "Email not confirmed" en login. Lo abrimos así por seguridad —
+  //    no auto-confirmamos trial accounts (anti-abuso).
   if (invitationToken) {
-    userData.invitation_token = invitationToken;
-  } else {
-    userData.organization_name = organizationName || 'Mi centro';
+    await signupFromInvitation({ email, password, fullName, invitationToken });
+    return; // signupFromInvitation hace su propio redirect
   }
 
+  // Path 2: signup normal sin invitación
   const supabase = createClient();
   const { error } = await supabase.auth.signUp({
     email,
     password,
     options: {
       emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
-      data: userData,
+      data: {
+        full_name: fullName || null,
+        organization_name: organizationName || 'Mi centro',
+      },
     },
   });
 
   if (error) {
-    const errParam = encodeURIComponent(traducirErrorAuth(error.message));
-    if (invitationToken) {
-      // Preservar el invite param para que signup recupere el contexto
-      redirect(
-        `/auth/signup?invite=${encodeURIComponent(invitationToken)}&email=${encodeURIComponent(email)}&error=${errParam}`
-      );
-    }
-    redirect(`/auth/signup?error=${errParam}`);
+    redirect(`/auth/signup?error=${encodeURIComponent(traducirErrorAuth(error.message))}`);
   }
 
   redirect('/auth/login?signup=ok');
+}
+
+/**
+ * Crea usuario con email ya confirmado (porque vino por link de invitación) +
+ * lo loguea de una. El trigger DB handle_new_user() lee `invitation_token` del
+ * raw_user_meta_data y crea la membership en la org correcta.
+ *
+ * Si admin.createUser falla (email duplicado, p.ej.), redirigimos al signup
+ * con el invite param preservado para que el user vea el contexto.
+ */
+async function signupFromInvitation(params: {
+  email: string;
+  password: string;
+  fullName: string;
+  invitationToken: string;
+}): Promise<void> {
+  const { email, password, fullName, invitationToken } = params;
+  const admin = createAdminClient();
+
+  const { error: createErr } = await admin.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    user_metadata: {
+      full_name: fullName || null,
+      invitation_token: invitationToken,
+    },
+  });
+
+  if (createErr) {
+    const errParam = encodeURIComponent(traducirErrorAuth(createErr.message));
+    redirect(
+      `/auth/signup?invite=${encodeURIComponent(invitationToken)}&email=${encodeURIComponent(email)}&error=${errParam}`
+    );
+  }
+
+  // Auto-login con el cliente que escribe cookies de sesión
+  const supabase = createClient();
+  const { error: loginErr } = await supabase.auth.signInWithPassword({ email, password });
+
+  if (loginErr) {
+    // Caso raro: usuario creado pero login falló (ej. trigger falló por race
+    // condition). El user puede loguear manualmente — su cuenta ya existe.
+    redirect('/auth/login?signup=ok');
+  }
+
+  // Middleware decide: si onboarded → /, si no → /waiting-setup o /onboarding.
+  redirect('/');
 }
 
 export async function logout(): Promise<void> {
