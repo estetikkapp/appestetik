@@ -33,6 +33,8 @@ let currentQrDataUrl = null;
 let currentPhone = null;
 let reconnectTimer = null;
 let reconnectAttempts = 0;
+let postAuthWatchdog = null;
+let readyEmitted = false;
 
 // Auth path en userData dir (persiste la sesión entre reinicios)
 function getAuthPath() {
@@ -88,6 +90,67 @@ function emit(event, payload) {
 
 function setStatus(s) {
   status = s;
+}
+
+async function emitReady(source) {
+  if (readyEmitted) return;
+  readyEmitted = true;
+  reconnectAttempts = 0;
+  setStatus('ready');
+  currentQrDataUrl = null;
+
+  let phone = null;
+  try {
+    const info = client?.info;
+    if (info?.wid?.user) phone = `+${info.wid.user}`;
+  } catch (err) {
+    logger.warn('No se pudo obtener phone:', err.message);
+  }
+  currentPhone = phone;
+  logger.info(`Conectado a WhatsApp${phone ? ` con ${phone}` : ''} (via ${source})`);
+  emit('ready', { phone });
+}
+
+// Después de "authenticated", whatsapp-web.js debería emitir "ready" en
+// <2min. Cuando se cuelga (bug conocido: cambios en WhatsApp Web rompen el
+// detector interno), consultamos client.getState() directo cada 5s. Si el
+// estado real es CONNECTED, emitimos ready manualmente. Si pasa 90s sin
+// conexión, forzamos reconexión.
+function startPostAuthWatchdog() {
+  stopPostAuthWatchdog();
+  const startedAt = Date.now();
+  let ticks = 0;
+  postAuthWatchdog = setInterval(async () => {
+    ticks++;
+    if (!client || readyEmitted) {
+      stopPostAuthWatchdog();
+      return;
+    }
+    let state = null;
+    try {
+      state = await client.getState();
+    } catch (err) {
+      logger.warn(`watchdog getState error (tick ${ticks}):`, err.message);
+    }
+    logger.info(`watchdog tick ${ticks} — state: ${state}`);
+    if (state === 'CONNECTED') {
+      stopPostAuthWatchdog();
+      await emitReady('watchdog getState=CONNECTED');
+      return;
+    }
+    if (Date.now() - startedAt > 90_000) {
+      stopPostAuthWatchdog();
+      logger.warn('Watchdog: 90s sin conectar post-auth, forzando reconexión');
+      scheduleReconnect('post_auth_timeout', 3);
+    }
+  }, 5000);
+}
+
+function stopPostAuthWatchdog() {
+  if (postAuthWatchdog) {
+    clearInterval(postAuthWatchdog);
+    postAuthWatchdog = null;
+  }
 }
 
 function scheduleReconnect(reason, baseSeconds = 5) {
@@ -152,7 +215,9 @@ async function initClient() {
     client.on('authenticated', () => {
       setStatus('connecting');
       currentQrDataUrl = null;
+      readyEmitted = false;
       emit('connecting');
+      startPostAuthWatchdog();
     });
 
     // Después del auth, whatsapp-web.js descarga la historia de chats; puede
@@ -162,33 +227,23 @@ async function initClient() {
       emit('loading', { percent: Number.isFinite(pct) ? pct : null, message });
     });
 
+    client.on('change_state', (state) => {
+      logger.info(`WA state -> ${state}`);
+    });
+
     client.on('auth_failure', (msg) => {
       logger.warn('auth_failure:', msg);
       scheduleReconnect('auth_failure', 10);
     });
 
     client.on('ready', async () => {
-      reconnectAttempts = 0;
-      setStatus('ready');
-      currentQrDataUrl = null;
-
-      // Obtener el número del WhatsApp linkeado
-      let phone = null;
-      try {
-        const info = client.info;
-        if (info?.wid?.user) {
-          phone = `+${info.wid.user}`;
-        }
-      } catch (err) {
-        logger.warn('No se pudo obtener phone:', err.message);
-      }
-      currentPhone = phone;
-      logger.info(`Conectado a WhatsApp${phone ? ` con ${phone}` : ''}`);
-      emit('ready', { phone });
+      stopPostAuthWatchdog();
+      await emitReady('ready event');
     });
 
     client.on('disconnected', async (reason) => {
       logger.warn('disconnected:', reason);
+      stopPostAuthWatchdog();
       setStatus('disconnected');
       const prev = client;
       client = null;
@@ -229,6 +284,7 @@ function start(onEvent) {
 }
 
 async function stop() {
+  stopPostAuthWatchdog();
   if (reconnectTimer) {
     clearTimeout(reconnectTimer);
     reconnectTimer = null;
@@ -243,6 +299,7 @@ async function stop() {
   currentQrDataUrl = null;
   currentPhone = null;
   reconnectAttempts = 0;
+  readyEmitted = false;
 }
 
 // Borra la sesión local de WhatsApp. Necesario cuando el user quiere re-escanear
