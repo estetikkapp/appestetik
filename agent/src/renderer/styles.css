@@ -213,6 +213,23 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   transition: width 0.3s ease;
 }
 
+.update-card { background: #fafaf9; }
+.update-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #57534e;
+  margin-bottom: 12px;
+}
+.update-label { color: #a8a29e; }
+.update-status { font-weight: 500; }
+.update-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.update-progress { margin-top: 8px; }
+
 /* Ready */
 .ready-screen {
   text-align: center;

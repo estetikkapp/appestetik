@@ -178,8 +178,19 @@ async function initClient() {
 
     client = new Client({
       authStrategy: new LocalAuth({ dataPath: getAuthPath() }),
+      // Pin a una versión de WhatsApp Web conocida-funcional via el cache de
+      // wppconnect-team. whatsapp-web.js 1.26 trae versiones hardcodeadas que
+      // WhatsApp ya rompió — sin esto, post-auth se cuelga porque el HTML
+      // que espera ya no matchea.
+      webVersionCache: {
+        type: 'remote',
+        remotePath:
+          'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.3000.1023504787.html',
+      },
       puppeteer: {
-        headless: true,
+        // 'new' headless es mucho más compatible con WhatsApp Web que el viejo
+        // (Chrome >=109). El viejo era detectado y rompía render post-auth.
+        headless: 'new',
         executablePath: findChromePath(),
         defaultViewport: { width: 1280, height: 900 },
         args: [
@@ -191,6 +202,9 @@ async function initClient() {
           '--disable-background-timer-throttling',
           '--disable-backgrounding-occluded-windows',
           '--disable-renderer-backgrounding',
+          // Anti-detección: sin esto Meta marca al browser como automatizado y
+          // rompe loaders internos silenciosamente.
+          '--disable-blink-features=AutomationControlled',
           '--window-size=1280,900',
           '--window-position=-2000,0',
         ],

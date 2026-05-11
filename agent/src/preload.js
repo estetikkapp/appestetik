@@ -8,6 +8,9 @@ contextBridge.exposeInMainWorld('agentAPI', {
   setToken: (token) => ipcRenderer.invoke('set-token', token),
   reset: () => ipcRenderer.invoke('reset'),
   rescanQr: () => ipcRenderer.invoke('rescan-qr'),
+  checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
+  installUpdate: () => ipcRenderer.invoke('install-update'),
+  openLogFolder: () => ipcRenderer.invoke('open-log-folder'),
   setAppUrl: (url) => ipcRenderer.invoke('set-app-url', url),
   toggleAutoStart: (enabled) => ipcRenderer.invoke('toggle-auto-start', enabled),
   getStatus: () => ipcRenderer.invoke('get-current-status'),
@@ -18,5 +21,8 @@ contextBridge.exposeInMainWorld('agentAPI', {
   },
   onTokenInvalid: (callback) => {
     ipcRenderer.on('token-invalid', () => callback());
+  },
+  onUpdateStatus: (callback) => {
+    ipcRenderer.on('update-status', (_event, payload) => callback(payload));
   },
 });

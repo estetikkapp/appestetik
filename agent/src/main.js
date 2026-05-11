@@ -276,6 +276,29 @@ ipcMain.handle('reset', async () => {
   return { ok: true };
 });
 
+ipcMain.handle('check-for-updates', async () => {
+  if (!app.isPackaged) {
+    return { ok: false, error: 'Updates solo funcionan en builds instalados (no en modo dev)' };
+  }
+  try {
+    const result = await autoUpdater.checkForUpdates();
+    return { ok: true, hasUpdate: Boolean(result?.updateInfo?.version && result.updateInfo.version !== app.getVersion()), version: result?.updateInfo?.version ?? null };
+  } catch (err) {
+    return { ok: false, error: err.message || String(err) };
+  }
+});
+
+ipcMain.handle('install-update', () => {
+  autoUpdater.quitAndInstall(false, true);
+  return { ok: true };
+});
+
+ipcMain.handle('open-log-folder', () => {
+  const p = logger.getLogFilePath();
+  if (p) shell.showItemInFolder(p);
+  return { ok: true, path: p };
+});
+
 ipcMain.handle('rescan-qr', async () => {
   // Borra la sesión local de WhatsApp y reinicia el cliente. El token queda
   // intacto. Útil cuando la sesión persistida se rompió y la UI queda pegada.
@@ -334,11 +357,27 @@ app.whenReady().then(async () => {
 
   // Auto-updater (check cada 6 horas)
   if (app.isPackaged) {
-    autoUpdater.checkForUpdatesAndNotify().catch((err) =>
+    autoUpdater.autoDownload = true;
+    autoUpdater.on('checking-for-update', () => sendToRenderer('update-status', { status: 'checking' }));
+    autoUpdater.on('update-available', (info) =>
+      sendToRenderer('update-status', { status: 'available', version: info.version })
+    );
+    autoUpdater.on('update-not-available', () => sendToRenderer('update-status', { status: 'not-available' }));
+    autoUpdater.on('download-progress', (p) =>
+      sendToRenderer('update-status', { status: 'downloading', percent: Math.round(p.percent) })
+    );
+    autoUpdater.on('update-downloaded', (info) =>
+      sendToRenderer('update-status', { status: 'downloaded', version: info.version })
+    );
+    autoUpdater.on('error', (err) =>
+      sendToRenderer('update-status', { status: 'error', error: err.message })
+    );
+
+    autoUpdater.checkForUpdates().catch((err) =>
       logger.warn('auto-update check failed:', err.message)
     );
     setInterval(() => {
-      autoUpdater.checkForUpdatesAndNotify().catch(() => {});
+      autoUpdater.checkForUpdates().catch(() => {});
     }, 6 * 60 * 60 * 1000);
   }
 });
