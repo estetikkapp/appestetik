@@ -20,15 +20,12 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { ROLE_RANK, type Role } from './roles';
 
-export type Role = 'owner' | 'admin' | 'professional' | 'receptionist';
-
-export const ROLE_RANK: Record<Role, number> = {
-  receptionist: 1,
-  professional: 2,
-  admin: 3,
-  owner: 4,
-};
+// Re-export para no romper imports existentes que ya usan `from
+// 'require-membership'`. La fuente de verdad sigue siendo `./roles`.
+export type { Role };
+export { ROLE_RANK };
 
 export interface MembershipCheck {
   /** auth.users.id del logueado */

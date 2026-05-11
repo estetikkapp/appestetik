@@ -14,12 +14,13 @@
  * es seguridad (no permitir acceso aunque pongas la URL a mano).
  */
 
-import type { Role } from './require-membership';
-import { ROLE_RANK } from './require-membership';
+import type { Role } from './roles';
+import { ROLE_RANK, hasMinRole } from './roles';
 
 // Re-export para que los consumidores (Sidebar, etc.) no tengan que conocer
-// la doble fuente (rbac + require-membership).
+// la doble fuente.
 export type { Role };
+export { hasMinRole };
 
 export const ROLE_LABEL: Record<Role, string> = {
   owner: 'Dueña',
@@ -69,6 +70,3 @@ export function canAccessRoute(role: Role, pathname: string): boolean {
   return true;
 }
 
-export function hasMinRole(role: Role, minRole: Role): boolean {
-  return ROLE_RANK[role] >= ROLE_RANK[minRole];
-}
