@@ -358,6 +358,12 @@ app.whenReady().then(async () => {
   // Auto-updater (check cada 6 horas)
   if (app.isPackaged) {
     autoUpdater.autoDownload = true;
+    // Bypass de verificación de firma digital. Sin code-signing cert (~$300/año)
+    // electron-updater rechaza el .exe en Windows. Confiamos en GitHub Releases
+    // como fuente: TLS + auth de GitHub. Cuando saquemos cert real, quitar esto.
+    if (process.platform === 'win32') {
+      autoUpdater.verifyUpdateCodeSignature = () => Promise.resolve(null);
+    }
     autoUpdater.on('checking-for-update', () => sendToRenderer('update-status', { status: 'checking' }));
     autoUpdater.on('update-available', (info) =>
       sendToRenderer('update-status', { status: 'available', version: info.version })
