@@ -240,28 +240,42 @@ export function BridgeSection({ currentProvider, newTokenPlaintext, newTokenId }
 
       {/* Stats si hay actividad */}
       {data && (data.pending_count > 0 || data.commands_recent.length > 0) && (
-        <div className="rounded-lg border border-stone-100 bg-stone-50/50 p-3 text-xs text-stone-600">
-          <strong>{data.pending_count}</strong> mensajes pendientes en cola.{' '}
+        <div className="space-y-2 rounded-lg border border-stone-100 bg-stone-50/50 p-3 text-xs text-stone-600">
+          <div>
+            <strong>{data.pending_count}</strong> mensajes pendientes en cola.
+          </div>
           {data.commands_recent.length > 0 && (
-            <>
-              Últimos:{' '}
-              {data.commands_recent.slice(0, 3).map((c, i) => (
-                <span key={c.id}>
-                  {i > 0 && ' · '}
-                  <span
-                    className={
-                      c.status === 'sent'
-                        ? 'text-emerald-700'
-                        : c.status === 'failed'
-                          ? 'text-red-700'
-                          : 'text-stone-500'
-                    }
-                  >
-                    {c.action} {c.status}
-                  </span>
-                </span>
-              ))}
-            </>
+            <div className="space-y-1">
+              <div className="font-medium text-stone-700">Últimos comandos:</div>
+              <ul className="space-y-1">
+                {data.commands_recent.slice(0, 5).map((c) => (
+                  <li key={c.id} className="flex flex-col gap-0.5 rounded bg-white px-2 py-1.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <span
+                        className={
+                          c.status === 'sent'
+                            ? 'font-medium text-emerald-700'
+                            : c.status === 'failed'
+                              ? 'font-medium text-red-700'
+                              : 'text-stone-500'
+                        }
+                      >
+                        {c.action} · {c.status}
+                      </span>
+                      <span className="text-[10px] text-stone-400">
+                        {new Date(c.created_at).toLocaleTimeString('es-AR')}
+                        {c.attempts > 0 && ` · ${c.attempts} intentos`}
+                      </span>
+                    </div>
+                    {c.last_error && (
+                      <div className="break-all text-[11px] text-red-600">
+                        <span className="font-medium">Error:</span> {c.last_error}
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
         </div>
       )}
