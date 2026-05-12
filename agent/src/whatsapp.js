@@ -337,13 +337,25 @@ async function sendText(to, text) {
   if (!client || status !== 'ready') {
     throw new Error(`WhatsApp no listo (status: ${status})`);
   }
-  // Aceptar +5491155551234 o 5491155551234 — normalizar a 5491155551234@c.us
   const digits = String(to).replace(/\D/g, '');
   if (digits.length < 8) {
     throw new Error(`Número inválido: ${to}`);
   }
-  const jid = `${digits}@c.us`;
-  await client.sendMessage(jid, text);
+
+  // CRÍTICO: WhatsApp NO devuelve error si mandás a un JID que no existe.
+  // El mensaje cae al vacío y "todo OK". Verificamos primero con
+  // getNumberId() que además resuelve el formato Argentina (+549 vs +54)
+  // automáticamente — WhatsApp nos devuelve el JID canónico.
+  let numberId;
+  try {
+    numberId = await client.getNumberId(digits);
+  } catch (err) {
+    throw new Error(`Error verificando número ${to}: ${err.message}`);
+  }
+  if (!numberId) {
+    throw new Error(`El número ${to} no está registrado en WhatsApp`);
+  }
+  await client.sendMessage(numberId._serialized, text);
 }
 
 function getCurrentStatus() {
