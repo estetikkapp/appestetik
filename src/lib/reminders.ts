@@ -61,14 +61,22 @@ function buildReminderMessage(args: {
   serviceName: string;
   fecha: string;
   hora: string;
+  cancelUrl: string | null;
 }) {
+  // Si tenemos cancelUrl, incluimos el link explicito + hint del codigo.
+  // Si no (turnos viejos sin security_code_hash), pedimos contactar al centro.
+  // No re-enviamos el codigo en plano porque no lo guardamos — solo el hash.
+  const cancelBlock = args.cancelUrl
+    ? `\n\nPara cancelar (hasta 24hs antes):\n🔗 ${args.cancelUrl}\n🔑 Usá el código que te enviamos al confirmar tu reserva.`
+    : `\n\nSi necesitás reprogramar o cancelar, contactá al centro.`;
+
   return `Hola ${args.clientName} 👋
 
 Te recordamos tu turno en *${args.orgName}* para mañana *${args.fecha}* a las *${args.hora}*.
 
-📌 Servicio: ${args.serviceName}
+📌 Servicio: ${args.serviceName}${cancelBlock}
 
-Si necesitás reprogramar o cancelar, respondé este mensaje. ¡Gracias!`;
+¡Gracias!`;
 }
 
 /**
@@ -84,7 +92,7 @@ export async function sendAppointmentReminder(
   const { data: appt, error } = await admin
     .from('appointments')
     .select(
-      `id, starts_at, organization_id, reminder_sent_at, status,
+      `id, starts_at, organization_id, reminder_sent_at, status, security_code_hash,
        organizations ( name, timezone, whatsapp_status ),
        clients ( full_name, phone_e164, email ),
        services ( name )`
@@ -158,6 +166,13 @@ export async function sendAppointmentReminder(
     };
   }
 
+  // Solo incluimos cancelUrl si el turno tiene security_code_hash (sino el
+  // link no sirve, la clienta no podria pasar la validacion).
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://estetikkapp.com';
+  const cancelUrl = (a as unknown as { security_code_hash: string | null }).security_code_hash
+    ? `${baseUrl}/turno/${a.id}/cancelar`
+    : null;
+
   // Intentar WhatsApp primero
   if (canWhatsapp) {
     const message = buildReminderMessage({
@@ -166,6 +181,7 @@ export async function sendAppointmentReminder(
       serviceName,
       fecha,
       hora,
+      cancelUrl,
     });
     try {
       await sendWhatsappMessage(a.organization_id, client.phone_e164!, message);
@@ -211,7 +227,6 @@ export async function sendAppointmentReminder(
 
   // Email como fallback
   if (canEmail) {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://estetikkapp.com';
     const tpl = appointmentReminderEmail({
       clientName: client.full_name,
       orgName,

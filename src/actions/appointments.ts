@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
+import bcrypt from 'bcryptjs';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { translateDbError } from '@/lib/utils/db-errors';
@@ -11,6 +12,15 @@ import { audit } from '@/lib/audit';
 import { requireMembership } from '@/lib/auth/require-membership';
 import type { AppointmentStatus } from '@/types/app';
 import type { TablesUpdate } from '@/types/database';
+
+// Genera código de 6 dígitos (000000–999999). Se guarda hasheado en
+// appointments.security_code_hash y se envía a la clienta por WhatsApp
+// para que pueda cancelar desde /turno/[id]/cancelar.
+function generateSecurityCode(): string {
+  return Math.floor(Math.random() * 1_000_000)
+    .toString()
+    .padStart(6, '0');
+}
 
 async function getActiveOrgOrRedirect(): Promise<string> {
   const { orgId } = await requireMembership();
@@ -131,19 +141,83 @@ export async function createAppointment(formData: FormData): Promise<void> {
 
   if (conflict) redirect(`/agenda?error=${encodeURIComponent(conflict)}`);
 
-  const { error } = await supabase.from('appointments').insert({
-    organization_id: orgId,
-    client_id: clientId,
-    service_id: serviceId,
-    professional_id: professionalId,
-    resource_id: resourceId,
-    starts_at: startDate.toISOString(),
-    ends_at: endDate.toISOString(),
-    notes,
-    source: 'panel',
-  });
+  // Generar security code para que la clienta pueda cancelar via /turno/[id]/cancelar
+  // Mismo flow que public-booking. Sin esto, turnos creados manualmente desde
+  // el panel no son cancelables por la clienta -> tiene que llamar al centro.
+  const securityCode = generateSecurityCode();
+  const securityHash = await bcrypt.hash(securityCode, 10);
 
-  if (error) redirect(`/agenda?error=${encodeURIComponent(error.message)}`);
+  const { data: created, error } = await supabase
+    .from('appointments')
+    .insert({
+      organization_id: orgId,
+      client_id: clientId,
+      service_id: serviceId,
+      professional_id: professionalId,
+      resource_id: resourceId,
+      starts_at: startDate.toISOString(),
+      ends_at: endDate.toISOString(),
+      notes,
+      source: 'panel',
+      security_code_hash: securityHash,
+    })
+    .select('id')
+    .single();
+
+  if (error || !created) redirect(`/agenda?error=${encodeURIComponent(error?.message ?? 'insert fallo')}`);
+
+  // Best-effort: mandar confirmación por WhatsApp con código + link de cancelación.
+  // Si falla, el turno queda creado igual — staff puede dar el código en persona
+  // si es necesario.
+  try {
+    const admin = createAdminClient();
+    const [{ data: org }, { data: client }, { data: svc }] = await Promise.all([
+      admin
+        .from('organizations')
+        .select('name, whatsapp_status, timezone')
+        .eq('id', orgId)
+        .single(),
+      admin
+        .from('clients')
+        .select('full_name, phone_e164')
+        .eq('id', clientId)
+        .single(),
+      admin.from('services').select('name').eq('id', serviceId).single(),
+    ]);
+
+    if (
+      org?.whatsapp_status === 'connected' &&
+      client?.phone_e164 &&
+      org?.name &&
+      svc?.name
+    ) {
+      const tz = org.timezone ?? 'America/Argentina/Buenos_Aires';
+      const fechaTexto = startDate.toLocaleString('es-AR', {
+        timeZone: tz,
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://estetikkapp.com';
+      const cancelUrl = `${baseUrl}/turno/${created.id}/cancelar`;
+      const message = `Hola ${client.full_name} 👋
+
+Te confirmamos tu turno en *${org.name}* para el ${fechaTexto}.
+📌 Servicio: ${svc.name}
+
+Si necesitás cancelar (hasta 24hs antes):
+🔗 ${cancelUrl}
+🔑 Código: *${securityCode}*
+
+No compartas este código.`;
+      await sendWhatsappMessage(orgId, client.phone_e164, message);
+    }
+  } catch (err) {
+    console.error('[appointments.create] confirmación WA fallo:', err);
+    // sigue — el turno ya está creado
+  }
 
   revalidatePath('/agenda');
   redirect('/agenda?ok=creado');

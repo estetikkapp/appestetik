@@ -8,7 +8,7 @@ import { audit } from '@/lib/audit';
 
 const MAX_ATTEMPTS = 3;
 const COOLDOWN_MS = 5 * 60 * 1000; // 5 min después de 3 intentos fallidos
-const NO_CANCEL_HOURS = 3; // no permitir cancelar 3hs antes del turno
+const NO_CANCEL_HOURS = 24; // no permitir cancelar dentro de las 24hs previas al turno
 
 /**
  * Cancela un turno desde la URL pública usando el security code.
