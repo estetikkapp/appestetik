@@ -70,9 +70,11 @@ function buildReminderMessage(args: {
     ? `\n\nPara cancelar (hasta 24hs antes):\n🔗 ${args.cancelUrl}\n🔑 Usá el código que te enviamos al confirmar tu reserva.`
     : `\n\nSi necesitás reprogramar o cancelar, contactá al centro.`;
 
+  // Sin "mañana" porque el cron mira 25-49hs adelante: a veces la clienta
+  // recibe el recordatorio 2 dias antes, no 1.
   return `Hola ${args.clientName} 👋
 
-Te recordamos tu turno en *${args.orgName}* para mañana *${args.fecha}* a las *${args.hora}*.
+Te recordamos tu turno en *${args.orgName}* el *${args.fecha}* a las *${args.hora}*.
 
 📌 Servicio: ${args.serviceName}${cancelBlock}
 

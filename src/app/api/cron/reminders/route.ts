@@ -26,8 +26,13 @@ export async function GET(req: NextRequest) {
 
   const admin = createAdminClient();
   const now = new Date();
-  const windowStart = new Date(now.getTime() + 12 * 60 * 60 * 1000);
-  const windowEnd = new Date(now.getTime() + 36 * 60 * 60 * 1000);
+  // Ventana 25-49hs adelante: el cron corre 1x al dia (Vercel Hobby), asi
+  // que cada turno cae en exactamente 1 ventana. Empezar en 25hs garantiza
+  // que el recordatorio llega ANTES del bloqueo de 24hs para auto-cancelar
+  // (24hs no-cancel + 1hs de margen para que la clienta alcance a actuar).
+  // Antes era 12-36hs y los turnos nocturnos llegaban dentro del bloqueo.
+  const windowStart = new Date(now.getTime() + 25 * 60 * 60 * 1000);
+  const windowEnd = new Date(now.getTime() + 49 * 60 * 60 * 1000);
 
   const { data: appointments, error } = await admin
     .from('appointments')

@@ -245,6 +245,18 @@ export function BookingForm({
           </div>
 
           <div className="space-y-1.5">
+            <Label htmlFor="dni">DNI</Label>
+            <Input
+              id="dni"
+              name="dni"
+              type="text"
+              inputMode="numeric"
+              placeholder="Opcional — ayuda a vincular tu ficha si ya sos clienta"
+              maxLength={10}
+            />
+          </div>
+
+          <div className="space-y-1.5">
             <Label htmlFor="notes">Comentarios</Label>
             <Textarea id="notes" name="notes" rows={2} placeholder="Opcional" />
           </div>

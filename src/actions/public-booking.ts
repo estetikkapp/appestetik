@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { isValidPhoneAr, normalizePhoneAr } from '@/lib/validators/phone-ar';
 import { isValidEmail, normalizeEmail } from '@/lib/validators/email';
+import { isValidDni, normalizeDni } from '@/lib/validators/dni';
 import { sendWhatsappMessage } from '@/lib/integrations/whatsapp';
 import { sendEmail } from '@/lib/integrations/email/resend';
 import { bookingConfirmationEmail } from '@/lib/integrations/email/templates';
@@ -36,6 +37,7 @@ export async function createPublicReservation(formData: FormData): Promise<void>
   const fullName = String(formData.get('full_name') ?? '').trim();
   const rawPhone = String(formData.get('phone') ?? '').trim();
   const rawEmail = String(formData.get('email') ?? '').trim();
+  const rawDni = String(formData.get('dni') ?? '').trim();
   const notes = String(formData.get('notes') ?? '').trim() || null;
   const isEmbed = String(formData.get('embed') ?? '') === '1';
 
@@ -50,6 +52,9 @@ export async function createPublicReservation(formData: FormData): Promise<void>
   }
   if (rawEmail && !isValidEmail(rawEmail)) {
     redirect(`${baseUrl}?error=Email+inv%C3%A1lido`);
+  }
+  if (rawDni && !isValidDni(rawDni)) {
+    redirect(`${baseUrl}?error=DNI+inv%C3%A1lido+%287%20u%208%20d%C3%ADgitos%29`);
   }
 
   const supabase = createAdminClient();
@@ -119,21 +124,66 @@ export async function createPublicReservation(formData: FormData): Promise<void>
 
   const phone = normalizePhoneAr(rawPhone);
   const email = rawEmail ? normalizeEmail(rawEmail) : null;
+  const dni = rawDni ? normalizeDni(rawDni) : null;
 
-  // Buscar/crear clienta
+  // Buscar/crear clienta. Prioridad de match:
+  //   1. DNI exacto (si la clienta lo cargo) -> mas confiable, no cambia
+  //   2. Phone (fallback historico)
+  // Si encontramos por uno pero el otro identificador esta vacio en DB,
+  // hacemos backfill (la clienta esta auto-actualizando su ficha).
   let clientId: string;
-  const { data: existingClient } = await supabase
-    .from('clients')
-    .select('id')
-    .eq('organization_id', org.id)
-    .eq('phone_e164', phone)
-    .maybeSingle();
-  if (existingClient) {
-    clientId = existingClient.id;
+  let existing: { id: string; phone_e164: string | null; email: string | null; dni: string | null } | null = null;
+
+  if (dni) {
+    const { data } = await supabase
+      .from('clients')
+      .select('id, phone_e164, email, dni')
+      .eq('organization_id', org.id)
+      .eq('dni', dni)
+      .maybeSingle();
+    if (data) existing = data;
+  }
+
+  if (!existing) {
+    const { data } = await supabase
+      .from('clients')
+      .select('id, phone_e164, email, dni')
+      .eq('organization_id', org.id)
+      .eq('phone_e164', phone)
+      .maybeSingle();
+    if (data) existing = data;
+  }
+
+  if (existing) {
+    clientId = existing.id;
+    // Backfill: solo escribimos los campos que estaban null en DB.
+    // No sobreescribimos data existente (preserva lo que cargo el staff).
+    // Spread condicional inline para que TS infiera el tipo del schema sin
+    // necesidad de cast.
+    const hasUpdates =
+      (!existing.phone_e164 && !!phone) ||
+      (!existing.email && !!email) ||
+      (!existing.dni && !!dni);
+    if (hasUpdates) {
+      await supabase
+        .from('clients')
+        .update({
+          ...(!existing.phone_e164 && phone ? { phone_e164: phone } : {}),
+          ...(!existing.email && email ? { email } : {}),
+          ...(!existing.dni && dni ? { dni } : {}),
+        })
+        .eq('id', existing.id);
+    }
   } else {
     const { data: newClient, error: clientError } = await supabase
       .from('clients')
-      .insert({ organization_id: org.id, full_name: fullName, phone_e164: phone, email })
+      .insert({
+        organization_id: org.id,
+        full_name: fullName,
+        phone_e164: phone,
+        email,
+        ...(dni ? { dni } : {}),
+      })
       .select('id')
       .single();
     if (clientError || !newClient) {
