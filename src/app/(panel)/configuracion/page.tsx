@@ -10,10 +10,7 @@ import { updateOrganizationSettings } from '@/actions/organization-settings';
 import { uploadOrganizationLogo } from '@/actions/storage';
 import { saveAfipConfig } from '@/actions/afip-config';
 import { saveMpConfig } from '@/actions/mp-config';
-import { WhatsappConnectCard } from '@/components/whatsapp/whatsapp-connect-card';
 import { EmbedSnippet } from './embed-snippet';
-import { WhatsappProviderSection } from './whatsapp-provider-section';
-import { EmailTestSection } from './email-test-section';
 import { BridgeSection } from './bridge-section';
 
 export const metadata = { title: 'Configuración — appestetika' };
@@ -29,7 +26,7 @@ async function loadOrg() {
 export default async function ConfiguracionPage({
   searchParams,
 }: {
-  searchParams: { error?: string; ok?: string; wapp?: string };
+  searchParams: { error?: string; ok?: string };
 }) {
   // RBAC: configuracion toca integraciones (AFIP, MP, WhatsApp) + datos
   // fiscales. Solo admin/owner. Si profesional/recepcionista pone la URL
@@ -55,8 +52,6 @@ export default async function ConfiguracionPage({
           {searchParams.ok === 'guardado' && 'Cambios guardados.'}
           {searchParams.ok === 'logo-subido' && 'Logo actualizado.'}
           {searchParams.ok === 'afip-configurado' && 'Configuración AFIP guardada.'}
-          {searchParams.ok === 'whatsapp-desconectado' && 'WhatsApp desconectado.'}
-          {searchParams.ok === 'cloud-conectado' && 'WhatsApp Cloud API conectado correctamente.'}
           {searchParams.ok === 'mp-configurado' && 'Mercado Pago configurado correctamente.'}
           {searchParams.ok === 'mp-desactivado' && 'Mercado Pago desactivado.'}
           {searchParams.ok === 'bridge-token-creado' && 'Token generado. Copialo y pegalo en el agente.'}
@@ -158,55 +153,6 @@ export default async function ConfiguracionPage({
         newTokenId={cookies().get('bridge_new_token_id')?.value ?? null}
       />
 
-      <section className="rounded-xl border border-stone-200 bg-white p-6">
-        <h2 className="mb-4 text-lg font-semibold">WhatsApp — opciones avanzadas (Cloud API / Evolution)</h2>
-        <p className="mb-4 text-sm text-stone-500">
-          Estas alternativas son para clínicas técnicas. Para uso normal, alcanza
-          con el <strong>Agente local</strong> de arriba.
-        </p>
-
-        <WhatsappProviderSection
-          currentProvider={(org?.whatsapp_provider as 'evolution' | 'cloud_api') ?? 'evolution'}
-          cloudConfig={
-            (org?.whatsapp_cloud_config as Record<string, string> | null) ?? null
-          }
-          webhookUrl={`${process.env.NEXT_PUBLIC_APP_URL ?? 'https://estetikkapp.com'}/api/whatsapp/cloud-webhook`}
-        />
-
-        {/* Connect card de Evolution solo si la org está en provider 'evolution' */}
-        {(!org?.whatsapp_provider || org.whatsapp_provider === 'evolution') && (
-          <div className="mt-4 border-t border-stone-100 pt-4">
-            <h3 className="mb-3 text-sm font-semibold text-stone-900">
-              Conexión Evolution (escaneá QR)
-            </h3>
-            <WhatsappConnectCard
-              initialStatus={(org?.whatsapp_status as 'disconnected' | 'connecting' | 'connected') ?? 'disconnected'}
-              initialPhone={org?.whatsapp_phone ?? null}
-              startPolling={searchParams.wapp === 'qr'}
-            />
-          </div>
-        )}
-
-        {org?.whatsapp_provider === 'cloud_api' && (
-          <div className="mt-4 border-t border-stone-100 pt-4">
-            <p className="text-xs text-stone-500">
-              {org.whatsapp_status === 'connected' ? (
-                <>
-                  ✅ Cloud API conectado. Número:{' '}
-                  <strong>{org.whatsapp_phone ?? 'verificado'}</strong>. Recordatorios automáticos
-                  activos.
-                </>
-              ) : (
-                <>
-                  ⚠️ Cloud API configurada pero las credenciales fallaron en la última validación.
-                  Verificá Phone Number ID + Access Token y guardá de nuevo.
-                </>
-              )}
-            </p>
-          </div>
-        )}
-      </section>
-
       <AfipConfigSection
         provider={org?.afip_provider ?? 'manual'}
         config={(org?.afip_config as Record<string, unknown> | null) ?? null}
@@ -218,30 +164,13 @@ export default async function ConfiguracionPage({
 
       {org?.slug && (
         <section className="rounded-xl border border-stone-200 bg-white p-6">
-          <h2 className="mb-2 text-lg font-semibold">Reservas online — link y embed</h2>
+          <h2 className="mb-2 text-lg font-semibold">Link de reservas online</h2>
           <p className="mb-4 text-sm text-stone-500">
-            Compartí el link de reserva o embebé el formulario directo en tu sitio web.
+            Compartí este link en tu bio de Instagram, WhatsApp o donde quieras.
           </p>
           <EmbedSnippet slug={org.slug} />
         </section>
       )}
-
-      <EmailTestSection />
-
-      <section className="rounded-xl border border-stone-200 bg-white p-6">
-        <h2 className="mb-4 text-lg font-semibold">Otras integraciones</h2>
-        <div className="space-y-3">
-          <IntegrationRow
-            name="Claude API (IA)"
-            status={process.env.ANTHROPIC_API_KEY ? 'active' : 'pending'}
-            hint={
-              process.env.ANTHROPIC_API_KEY
-                ? 'ANTHROPIC_API_KEY cargada. Usá /ia para análisis de piel y protocolos.'
-                : 'Cargá ANTHROPIC_API_KEY en Vercel para activar /ia.'
-            }
-          />
-        </div>
-      </section>
     </div>
   );
 }
@@ -460,26 +389,3 @@ function MpConfigSection({
   );
 }
 
-function IntegrationRow({
-  name,
-  status,
-  hint,
-}: {
-  name: string;
-  status: 'active' | 'pending';
-  hint: string;
-}) {
-  return (
-    <div className="flex items-start justify-between rounded-lg border border-stone-100 p-3">
-      <div>
-        <div className="font-medium text-stone-900">{name}</div>
-        <p className="mt-0.5 text-xs text-stone-500">{hint}</p>
-      </div>
-      {status === 'active' ? (
-        <Badge variant="success">Activo</Badge>
-      ) : (
-        <Badge variant="secondary">Pendiente</Badge>
-      )}
-    </div>
-  );
-}

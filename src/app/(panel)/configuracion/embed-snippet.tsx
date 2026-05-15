@@ -12,8 +12,6 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://estetikkapp.com';
 
 export function EmbedSnippet({ slug }: Props) {
   const publicUrl = `${APP_URL}/c/${slug}`;
-  const embedUrl = `${APP_URL}/embed/${slug}`;
-  const iframeCode = `<iframe src="${embedUrl}" width="100%" height="720" frameborder="0" style="border:0; max-width:480px; min-height:520px;" loading="lazy" title="Reservá tu turno"></iframe>`;
 
   return (
     <div className="space-y-4">
@@ -21,13 +19,6 @@ export function EmbedSnippet({ slug }: Props) {
         label="Link público para Instagram bio / WhatsApp"
         value={publicUrl}
         hint="Pegá este link en tu bio de Instagram, en mensajes de WhatsApp o en tu sitio web."
-      />
-
-      <CopyField
-        label="Código embed (iframe para sitio propio)"
-        value={iframeCode}
-        textarea
-        hint="Pegá este código en tu sitio web para que la reserva aparezca embebida."
       />
     </div>
   );
