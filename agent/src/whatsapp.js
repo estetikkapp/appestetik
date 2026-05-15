@@ -22,9 +22,23 @@
 const path = require('path');
 const fs = require('fs');
 const { app } = require('electron');
+
+// CRÍTICO: setear PUPPETEER_CACHE_DIR ANTES de require('whatsapp-web.js')
+// para que puppeteer encuentre el Chromium bundled. En dev apunta a
+// agent/.cache/puppeteer (donde lo bajó npm install via .puppeteerrc.cjs).
+// En prod (packaged), apunta a app.asar.unpacked/.cache/puppeteer (donde
+// quedó después del unpack del asar).
+const isPackaged = app?.isPackaged ?? false;
+const puppeteerCacheDir = isPackaged
+  ? path.join(process.resourcesPath, 'app.asar.unpacked', '.cache', 'puppeteer')
+  : path.join(__dirname, '..', '.cache', 'puppeteer');
+process.env.PUPPETEER_CACHE_DIR = puppeteerCacheDir;
+
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const QRCode = require('qrcode');
 const logger = require('./logger');
+
+logger.info(`PUPPETEER_CACHE_DIR = ${puppeteerCacheDir} (exists: ${fs.existsSync(puppeteerCacheDir)})`);
 
 let client = null;
 let eventCallback = null;
@@ -74,7 +88,41 @@ function findChromePath() {
       return p;
     }
   }
-  logger.info('Chrome del sistema no encontrado, usando Chromium bundled de Puppeteer');
+
+  // Fallback: usar el Chromium bundled de puppeteer. Lo buscamos manualmente
+  // dentro del cache local — más confiable que delegar en wwebjs (que en
+  // versiones nuevas asume que existe pero no siempre lo encuentra).
+  try {
+    const chromeFolders = fs.readdirSync(path.join(puppeteerCacheDir, 'chrome'));
+    for (const folder of chromeFolders) {
+      const chromePath =
+        process.platform === 'win32'
+          ? path.join(puppeteerCacheDir, 'chrome', folder, 'chrome-win64', 'chrome.exe')
+          : process.platform === 'darwin'
+            ? path.join(
+                puppeteerCacheDir,
+                'chrome',
+                folder,
+                'chrome-mac-' + (process.arch === 'arm64' ? 'arm64' : 'x64'),
+                'Google Chrome for Testing.app',
+                'Contents',
+                'MacOS',
+                'Google Chrome for Testing'
+              )
+            : path.join(puppeteerCacheDir, 'chrome', folder, 'chrome-linux64', 'chrome');
+      if (fs.existsSync(chromePath)) {
+        logger.info(`Chromium bundled encontrado: ${chromePath}`);
+        return chromePath;
+      }
+    }
+  } catch (err) {
+    logger.warn(`No se pudo leer cache de puppeteer (${puppeteerCacheDir}): ${err.message}`);
+  }
+
+  logger.warn(
+    'Chrome del sistema NO encontrado y Chromium bundled tampoco — el cliente fallará. ' +
+      'Esto no debería pasar en builds release: revisar que .cache/puppeteer esté incluido en el paquete.'
+  );
   return undefined;
 }
 
