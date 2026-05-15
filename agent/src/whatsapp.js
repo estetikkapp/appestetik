@@ -178,22 +178,13 @@ async function initClient() {
 
     client = new Client({
       authStrategy: new LocalAuth({ dataPath: getAuthPath() }),
-      // Pin a una versión de WhatsApp Web conocida-funcional via el cache de
-      // wppconnect-team. whatsapp-web.js 1.26 trae versiones hardcodeadas que
-      // WhatsApp ya rompió — sin esto, post-auth se cuelga porque el HTML
-      // que espera ya no matchea.
-      //
-      // CUIDADO: wppconnect-team borra versiones viejas del repo cada tantos
-      // meses. Si esta URL devuelve 404, el cliente se cuelga eternamente en
-      // 'starting' (no emite ni qr ni auth_failure). Cuando pase, actualizar
-      // a la última disponible en:
-      //   https://github.com/wppconnect-team/wa-version/tree/main/html
-      // El sufijo "-alpha" es normal — todas las versiones nuevas lo traen.
-      webVersionCache: {
-        type: 'remote',
-        remotePath:
-          'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.3000.1036596117-alpha.html',
-      },
+      // Sin webVersionCache manual: whatsapp-web.js >=1.30 detecta y maneja
+      // la versión actual de WA Web automáticamente. El pin manual era un
+      // workaround para 1.26 (selectores hardcodeados). Pinear ahora a una
+      // versión específica además rompe (TypeError 'markedUnread') porque
+      // wwebjs nuevo espera selectores de la versión que WA esté sirviendo.
+      // Si WhatsApp introduce cambios breaking, bumpear wwebjs antes de
+      // volver a tocar este cache.
       puppeteer: {
         // 'new' headless es mucho más compatible con WhatsApp Web que el viejo
         // (Chrome >=109). El viejo era detectado y rompía render post-auth.

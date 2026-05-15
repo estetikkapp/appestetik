@@ -1,7 +1,7 @@
 {
   "name": "appestetika-bridge",
   "productName": "appestetika bridge",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Agente local de appestetika — conecta WhatsApp via whatsapp-web.js para enviar recordatorios desde la PC del consultorio.",
   "main": "src/main.js",
   "author": "appestetika",
@@ -19,7 +19,7 @@
     "electron-store": "8.2.0",
     "electron-updater": "6.3.9",
     "qrcode": "1.5.4",
-    "whatsapp-web.js": "1.26.0"
+    "whatsapp-web.js": "1.34.7"
   },
   "devDependencies": {
     "electron": "33.0.0",
