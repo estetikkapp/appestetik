@@ -1,7 +1,7 @@
 {
   "name": "appestetika-bridge",
   "productName": "appestetika bridge",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Agente local de appestetika — conecta WhatsApp via whatsapp-web.js para enviar recordatorios desde la PC del consultorio.",
   "main": "src/main.js",
   "author": "appestetika",
@@ -30,6 +30,12 @@
     "productName": "appestetika bridge",
     "copyright": "Copyright © 2026 appestetika",
     "asar": true,
+    "asarUnpack": [
+      "**/node_modules/whatsapp-web.js/**",
+      "**/node_modules/puppeteer/**",
+      "**/node_modules/puppeteer-core/**",
+      "**/node_modules/@puppeteer/**"
+    ],
     "directories": {
       "output": "dist",
       "buildResources": "assets"

@@ -182,10 +182,17 @@ async function initClient() {
       // wppconnect-team. whatsapp-web.js 1.26 trae versiones hardcodeadas que
       // WhatsApp ya rompió — sin esto, post-auth se cuelga porque el HTML
       // que espera ya no matchea.
+      //
+      // CUIDADO: wppconnect-team borra versiones viejas del repo cada tantos
+      // meses. Si esta URL devuelve 404, el cliente se cuelga eternamente en
+      // 'starting' (no emite ni qr ni auth_failure). Cuando pase, actualizar
+      // a la última disponible en:
+      //   https://github.com/wppconnect-team/wa-version/tree/main/html
+      // El sufijo "-alpha" es normal — todas las versiones nuevas lo traen.
       webVersionCache: {
         type: 'remote',
         remotePath:
-          'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.3000.1023504787.html',
+          'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.3000.1036596117-alpha.html',
       },
       puppeteer: {
         // 'new' headless es mucho más compatible con WhatsApp Web que el viejo
@@ -279,12 +286,31 @@ async function initClient() {
       }
     });
 
-    await client.initialize().catch((err) => {
-      logger.error('initialize error:', err.message);
-      scheduleReconnect('init_error', 5);
-    });
+    // Timeout de seguridad: si initialize() no resuelve en 90s (browser colgado,
+    // webVersionCache 404, antivirus bloqueando Chromium, etc.) forzamos
+    // reconexión. Sin esto el cliente queda eterno en 'starting' sin error.
+    const INIT_TIMEOUT_MS = 90_000;
+    let initTimedOut = false;
+    const initTimeout = setTimeout(() => {
+      initTimedOut = true;
+      logger.error(`initialize() no respondió en ${INIT_TIMEOUT_MS / 1000}s — forzando reconexión`);
+      scheduleReconnect('init_timeout', 10);
+    }, INIT_TIMEOUT_MS);
 
-    logger.info('whatsapp-web.js client inicializado, esperando QR/auth...');
+    client
+      .initialize()
+      .then(() => {
+        clearTimeout(initTimeout);
+        if (!initTimedOut) {
+          logger.info('whatsapp-web.js client inicializado, esperando QR/auth...');
+        }
+      })
+      .catch((err) => {
+        clearTimeout(initTimeout);
+        if (initTimedOut) return;
+        logger.error('initialize error:', err.message);
+        scheduleReconnect('init_error', 5);
+      });
   } catch (err) {
     logger.error('initClient exception:', err.message);
     scheduleReconnect('init_exception', 5);

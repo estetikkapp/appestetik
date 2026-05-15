@@ -202,6 +202,18 @@ export function BridgeSection({ currentProvider, newTokenPlaintext, newTokenId }
         </div>
       )}
 
+      {/* Link a descarga siempre visible (también cuando ya hay bridge activo,
+          por si la dueña quiere instalar el agente en una segunda PC o
+          reinstalar). */}
+      {(activeToken || qrToken) && (
+        <div className="rounded-lg border border-stone-200 bg-stone-50/40 px-3 py-2 text-xs text-stone-600">
+          ¿Necesitás instalar el agente en otra PC o reinstalar? →{' '}
+          <a href="/agente" className="font-medium text-brand-600 underline">
+            Descargar appestetika bridge
+          </a>
+        </div>
+      )}
+
       {/* QR realtime cuando el agente está pidiendo escaneo */}
       {qrToken?.state?.qr_base64 && (
         <div className="rounded-xl border-2 border-brand-300 bg-brand-50/40 p-6 text-center">
