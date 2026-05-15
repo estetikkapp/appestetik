@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { notifyOrgAdmins } from '@/lib/notifications';
 import { audit } from '@/lib/audit';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 const MAX_ATTEMPTS = 3;
 const COOLDOWN_MS = 5 * 60 * 1000; // 5 min después de 3 intentos fallidos
@@ -26,11 +27,31 @@ export async function cancelAppointmentPublic(formData: FormData): Promise<void>
   const reason = String(formData.get('reason') ?? '').trim();
 
   if (!id) redirect('/?error=Turno+invalido');
+
+  // Rate limit: 2 capas.
+  // 1. Por IP global: max 20 intentos en 10min (frena scraping de ids).
+  // 2. Por turno + IP: max 5 intentos en 10min (complementa el cooldown
+  //    interno por security_code que es por-turno). Sin esto, el
+  //    cooldown solo cuenta intentos con codigo *invalido*; un atacante
+  //    podria spamear con codigos validos formato sin ser frenado.
+  const rlGlobal = await checkRateLimit('public_cancel', 20, 10);
+  if (!rlGlobal.ok) {
+    redirect(
+      `/turno/${id}/cancelar?error=Demasiados+intentos.+Esper%C3%A1+${rlGlobal.retryAfterMinutes}+min.`
+    );
+  }
+  const rlPerTurno = await checkRateLimit('public_cancel', 5, 10, `appt:${id}`);
+  if (!rlPerTurno.ok) {
+    redirect(
+      `/turno/${id}/cancelar?error=Demasiados+intentos+sobre+este+turno.+Esper%C3%A1+${rlPerTurno.retryAfterMinutes}+min.`
+    );
+  }
+
   if (!code || !/^\d{6}$/.test(code)) {
     redirect(`/turno/${id}/cancelar?error=C%C3%B3digo+inv%C3%A1lido`);
   }
-  if (!reason || reason.length < 3) {
-    redirect(`/turno/${id}/cancelar?error=Decinos+por+qu%C3%A9+lo+cancel%C3%A1s+%283%2B+caracteres%29`);
+  if (!reason || reason.length < 3 || reason.length > 500) {
+    redirect(`/turno/${id}/cancelar?error=Decinos+por+qu%C3%A9+lo+cancel%C3%A1s+%283-500+caracteres%29`);
   }
 
   const supabase = createAdminClient();

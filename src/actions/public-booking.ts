@@ -11,6 +11,7 @@ import { sendEmail } from '@/lib/integrations/email/resend';
 import { bookingConfirmationEmail } from '@/lib/integrations/email/templates';
 import { notifyOrgAdmins } from '@/lib/notifications';
 import { audit } from '@/lib/audit';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 function generateSecurityCode(): string {
   // 6 dígitos numéricos
@@ -44,17 +45,34 @@ export async function createPublicReservation(formData: FormData): Promise<void>
   const baseUrl = isEmbed ? `/embed/${slug}` : `/c/${slug}`;
 
   if (!slug) redirect('/?error=URL+invalida');
-  if (!serviceId || !startsAt || !fullName) {
-    redirect(`${baseUrl}?error=Completa+todos+los+campos`);
+
+  // Rate limit por IP: max 5 intentos en 10min. Frena spam/scripts pero
+  // permite retries legitimos si hay error de validacion + reintento.
+  const rl = await checkRateLimit('public_booking', 5, 10);
+  if (!rl.ok) {
+    redirect(
+      `${baseUrl}?error=Demasiadas+reservas+desde+esta+IP.+Esper%C3%A1+${rl.retryAfterMinutes}+min.`
+    );
+  }
+
+  // Validaciones — todos los campos del form son obligatorios (notes opcional).
+  if (!serviceId || !startsAt) {
+    redirect(`${baseUrl}?error=Faltan+datos+del+turno`);
+  }
+  if (!fullName || fullName.length < 2 || fullName.length > 100) {
+    redirect(`${baseUrl}?error=Nombre+inv%C3%A1lido+%282-100+caracteres%29`);
   }
   if (!rawPhone || !isValidPhoneAr(rawPhone)) {
     redirect(`${baseUrl}?error=Tel%C3%A9fono+inv%C3%A1lido`);
   }
-  if (rawEmail && !isValidEmail(rawEmail)) {
-    redirect(`${baseUrl}?error=Email+inv%C3%A1lido`);
+  if (!rawEmail || !isValidEmail(rawEmail)) {
+    redirect(`${baseUrl}?error=Email+inv%C3%A1lido+o+vac%C3%ADo`);
   }
-  if (rawDni && !isValidDni(rawDni)) {
+  if (!rawDni || !isValidDni(rawDni)) {
     redirect(`${baseUrl}?error=DNI+inv%C3%A1lido+%287%20u%208%20d%C3%ADgitos%29`);
+  }
+  if (notes && notes.length > 500) {
+    redirect(`${baseUrl}?error=Comentario+demasiado+largo+%28m%C3%A1x+500%29`);
   }
 
   const supabase = createAdminClient();
@@ -123,57 +141,69 @@ export async function createPublicReservation(formData: FormData): Promise<void>
   }
 
   const phone = normalizePhoneAr(rawPhone);
-  const email = rawEmail ? normalizeEmail(rawEmail) : null;
-  const dni = rawDni ? normalizeDni(rawDni) : null;
+  const email = normalizeEmail(rawEmail);
+  const dni = normalizeDni(rawDni);
 
-  // Buscar/crear clienta. Prioridad de match:
-  //   1. DNI exacto (si la clienta lo cargo) -> mas confiable, no cambia
-  //   2. Phone (fallback historico)
-  // Si encontramos por uno pero el otro identificador esta vacio en DB,
-  // hacemos backfill (la clienta esta auto-actualizando su ficha).
+  // Match de clienta — DNI es la fuente de verdad porque es identificador
+  // unico no transferible. Reglas:
+  //   1. Si hay clienta con MISMO dni -> es ella. (backfill phone/email
+  //      si estaban null en DB).
+  //   2. Si NO hay match por dni:
+  //      a. Si hay clienta con MISMO phone PERO con dni null -> es ella
+  //         (clienta vieja que nunca cargo dni). Backfill dni.
+  //      b. Si hay clienta con MISMO phone Y dni distinto -> es OTRA
+  //         persona compartiendo telefono (ej. madre/hijo). CREAR NUEVA.
+  //      c. Si no hay match por phone -> CREAR NUEVA.
   let clientId: string;
-  let existing: { id: string; phone_e164: string | null; email: string | null; dni: string | null } | null = null;
+  let matched: { id: string; phone_e164: string | null; email: string | null; dni: string | null } | null = null;
+  let backfillReason: 'by_dni' | 'phone_no_dni' | null = null;
 
-  if (dni) {
-    const { data } = await supabase
-      .from('clients')
-      .select('id, phone_e164, email, dni')
-      .eq('organization_id', org.id)
-      .eq('dni', dni)
-      .maybeSingle();
-    if (data) existing = data;
-  }
+  // 1. Match por DNI
+  const { data: byDni } = await supabase
+    .from('clients')
+    .select('id, phone_e164, email, dni')
+    .eq('organization_id', org.id)
+    .eq('dni', dni)
+    .maybeSingle();
 
-  if (!existing) {
-    const { data } = await supabase
+  if (byDni) {
+    matched = byDni;
+    backfillReason = 'by_dni';
+  } else {
+    // 2. No match por DNI -> chequear phone, pero solo si esa clienta NO
+    //    tiene un dni distinto cargado (sino es otra persona).
+    const { data: byPhone } = await supabase
       .from('clients')
       .select('id, phone_e164, email, dni')
       .eq('organization_id', org.id)
       .eq('phone_e164', phone)
       .maybeSingle();
-    if (data) existing = data;
+    if (byPhone && byPhone.dni === null) {
+      matched = byPhone;
+      backfillReason = 'phone_no_dni';
+    }
+    // Si byPhone existe pero tiene dni distinto -> NO matcheamos. Crear nueva.
   }
 
-  if (existing) {
-    clientId = existing.id;
+  if (matched) {
+    clientId = matched.id;
     // Backfill: solo escribimos los campos que estaban null en DB.
     // No sobreescribimos data existente (preserva lo que cargo el staff).
-    // Spread condicional inline para que TS infiera el tipo del schema sin
-    // necesidad de cast.
-    const hasUpdates =
-      (!existing.phone_e164 && !!phone) ||
-      (!existing.email && !!email) ||
-      (!existing.dni && !!dni);
-    if (hasUpdates) {
+    const updates: Array<keyof typeof matched> = [];
+    if (!matched.phone_e164) updates.push('phone_e164');
+    if (!matched.email) updates.push('email');
+    if (!matched.dni) updates.push('dni');
+    if (updates.length > 0) {
       await supabase
         .from('clients')
         .update({
-          ...(!existing.phone_e164 && phone ? { phone_e164: phone } : {}),
-          ...(!existing.email && email ? { email } : {}),
-          ...(!existing.dni && dni ? { dni } : {}),
+          ...(!matched.phone_e164 ? { phone_e164: phone } : {}),
+          ...(!matched.email ? { email } : {}),
+          ...(!matched.dni ? { dni } : {}),
         })
-        .eq('id', existing.id);
+        .eq('id', matched.id);
     }
+    void backfillReason; // solo para documentacion / debug
   } else {
     const { data: newClient, error: clientError } = await supabase
       .from('clients')
@@ -182,7 +212,7 @@ export async function createPublicReservation(formData: FormData): Promise<void>
         full_name: fullName,
         phone_e164: phone,
         email,
-        ...(dni ? { dni } : {}),
+        dni,
       })
       .select('id')
       .single();

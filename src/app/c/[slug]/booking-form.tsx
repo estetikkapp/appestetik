@@ -239,19 +239,28 @@ export function BookingForm({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" name="email" type="email" placeholder="Opcional" />
+              <Label htmlFor="email">Email *</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                required
+                placeholder="tu@email.com"
+              />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="dni">DNI</Label>
+            <Label htmlFor="dni">DNI *</Label>
             <Input
               id="dni"
               name="dni"
               type="text"
               inputMode="numeric"
-              placeholder="Opcional — ayuda a vincular tu ficha si ya sos clienta"
+              required
+              pattern="\d{7,8}"
+              title="DNI sin puntos (7 u 8 dígitos)"
+              placeholder="Sin puntos"
               maxLength={10}
             />
           </div>
@@ -296,9 +305,24 @@ export function BookingForm({
             <Input id="wl_phone" name="phone" type="tel" required placeholder="+549..." />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="wl_email">Email</Label>
-            <Input id="wl_email" name="email" type="email" placeholder="Opcional" />
+            <Label htmlFor="wl_email">Email *</Label>
+            <Input id="wl_email" name="email" type="email" required placeholder="tu@email.com" />
           </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="wl_dni">DNI *</Label>
+          <Input
+            id="wl_dni"
+            name="dni"
+            type="text"
+            inputMode="numeric"
+            required
+            pattern="\d{7,8}"
+            title="DNI sin puntos (7 u 8 dígitos)"
+            placeholder="Sin puntos"
+            maxLength={10}
+          />
         </div>
 
         <div className="space-y-1.5">
