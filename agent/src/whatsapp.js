@@ -193,8 +193,18 @@ function startPostAuthWatchdog() {
     }
     logger.info(`watchdog tick ${ticks} — state: ${state}`);
     if (state === 'CONNECTED') {
+      // Antes de emitir ready, verificar que window.WWebJS este inyectado.
+      // El watchdog forzaba ready demasiado temprano cuando getState era
+      // CONNECTED pero los scripts internos no estaban listos -> primer
+      // sendMessage explotaba con "Cannot read properties of undefined
+      // (reading 'getChat')".
+      const wwebjsReady = await waitForWWebJSReady(2_000);
+      if (!wwebjsReady) {
+        logger.info(`watchdog tick ${ticks} — CONNECTED pero window.WWebJS aun no listo`);
+        return; // no detener watchdog, seguir esperando
+      }
       stopPostAuthWatchdog();
-      await emitReady('watchdog getState=CONNECTED');
+      await emitReady('watchdog getState=CONNECTED+WWebJS_ready');
       return;
     }
     if (Date.now() - startedAt > 90_000) {
@@ -409,6 +419,34 @@ function isRunning() {
   return client !== null;
 }
 
+// Espera hasta `timeoutMs` a que window.WWebJS esté inyectado en la página
+// con sus métodos críticos disponibles. Sin esto, sendMessage tira
+// "Cannot read properties of undefined (reading 'getChat')" porque el
+// watchdog emitió ready antes de que los scripts internos terminen de
+// cargarse.
+async function waitForWWebJSReady(timeoutMs = 30_000) {
+  if (!client?.pupPage) return false;
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    try {
+      const ready = await client.pupPage.evaluate(() => {
+        return (
+          typeof window !== 'undefined' &&
+          typeof window.WWebJS === 'object' &&
+          window.WWebJS !== null &&
+          typeof window.WWebJS.getChat === 'function' &&
+          typeof window.WWebJS.sendMessage === 'function'
+        );
+      });
+      if (ready) return true;
+    } catch {
+      // pupPage puede haber muerto entre evaluaciones; esperamos y reintentamos
+    }
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  return false;
+}
+
 async function sendText(to, text) {
   if (!client || status !== 'ready') {
     throw new Error(`WhatsApp no listo (status: ${status})`);
@@ -416,6 +454,13 @@ async function sendText(to, text) {
   const digits = String(to).replace(/\D/g, '');
   if (digits.length < 8) {
     throw new Error(`Número inválido: ${to}`);
+  }
+
+  // Esperar a que wwebjs esté completamente cargado en la pagina antes
+  // de tocar getNumberId/sendMessage.
+  const wwebjsReady = await waitForWWebJSReady(30_000);
+  if (!wwebjsReady) {
+    throw new Error('window.WWebJS no inicializado tras 30s — wwebjs incompatible con WA Web actual');
   }
 
   // CRÍTICO: WhatsApp NO devuelve error si mandás a un JID que no existe.
@@ -431,7 +476,25 @@ async function sendText(to, text) {
   if (!numberId) {
     throw new Error(`El número ${to} no está registrado en WhatsApp`);
   }
-  await client.sendMessage(numberId._serialized, text);
+
+  // Reintentos en errores transitorios de wwebjs (getChat undefined,
+  // markedUnread undefined). Pasan cuando los scripts internos de WA Web
+  // están a medio cargar. Con espera entre intentos suele resolverse.
+  const TRANSIENT = /(getChat|markedUnread|Cannot read properties of undefined)/i;
+  let lastErr;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      await client.sendMessage(numberId._serialized, text);
+      return;
+    } catch (err) {
+      lastErr = err;
+      const msg = err?.message || String(err);
+      if (!TRANSIENT.test(msg)) throw err;
+      logger.warn(`sendMessage intento ${attempt + 1} fallo (${msg.slice(0, 80)}) — reintento en 3s`);
+      await new Promise((r) => setTimeout(r, 3000));
+    }
+  }
+  throw lastErr;
 }
 
 function getCurrentStatus() {
