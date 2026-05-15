@@ -199,18 +199,31 @@ function startPostAuthWatchdog() {
       // sendMessage explotaba con "Cannot read properties of undefined
       // (reading 'getChat')".
       const wwebjsReady = await waitForWWebJSReady(2_000);
-      if (!wwebjsReady) {
-        logger.info(`watchdog tick ${ticks} — CONNECTED pero window.WWebJS aun no listo`);
-        return; // no detener watchdog, seguir esperando
+      if (wwebjsReady) {
+        stopPostAuthWatchdog();
+        await emitReady('watchdog getState=CONNECTED+WWebJS_ready');
+        return;
       }
-      stopPostAuthWatchdog();
-      await emitReady('watchdog getState=CONNECTED+WWebJS_ready');
-      return;
+      logger.info(`watchdog tick ${ticks} — CONNECTED pero window.WWebJS aun no listo`);
+      // FALLTHROUGH al check de timeout abajo — sin esto el watchdog spinea
+      // forever cuando wwebjs nunca termina de inyectar sus scripts.
     }
     if (Date.now() - startedAt > 90_000) {
       stopPostAuthWatchdog();
-      logger.warn('Watchdog: 90s sin conectar post-auth, forzando reconexión');
-      scheduleReconnect('post_auth_timeout', 3);
+      logger.warn(
+        `Watchdog: 90s sin conectar post-auth (state=${state}), forzando reconexión + clearAuth`
+      );
+      // Si quedamos colgados con CONNECTED pero WWebJS no listo, la sesion
+      // persistida puede estar corrupta o ser incompatible con la wwebjs
+      // version actual. Limpiar fuerza un re-scan de QR limpio.
+      try {
+        const fs = require('fs');
+        fs.rmSync(getAuthPath(), { recursive: true, force: true });
+        logger.info('Sesion local borrada por post_auth_timeout');
+      } catch (err) {
+        logger.warn(`No se pudo borrar sesion: ${err.message}`);
+      }
+      scheduleReconnect('post_auth_timeout', 5);
     }
   }, 5000);
 }
@@ -424,19 +437,23 @@ function isRunning() {
 // "Cannot read properties of undefined (reading 'getChat')" porque el
 // watchdog emitió ready antes de que los scripts internos terminen de
 // cargarse.
+// Detecta si wwebjs ya inyectó su capa de scripts en la pagina. La forma
+// confiable cross-version es chequear window.Store (modulos internos de WA
+// Web que wwebjs hookea) — eso esta antes que cualquier método propio de
+// WWebJS. Esto soporta v1.26 hasta v1.34+, donde la API publica de
+// window.WWebJS cambio nombres pero Store no.
 async function waitForWWebJSReady(timeoutMs = 30_000) {
   if (!client?.pupPage) return false;
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     try {
       const ready = await client.pupPage.evaluate(() => {
-        return (
-          typeof window !== 'undefined' &&
-          typeof window.WWebJS === 'object' &&
-          window.WWebJS !== null &&
-          typeof window.WWebJS.getChat === 'function' &&
-          typeof window.WWebJS.sendMessage === 'function'
-        );
+        // Disponibles cuando wwebjs termino de inicializarse:
+        //   - window.Store (alias del module bundle de WA Web que wwebjs setea)
+        //   - window.WWebJS (object propio de wwebjs)
+        const hasStore = typeof window.Store === 'object' && window.Store !== null;
+        const hasWWebJS = typeof window.WWebJS === 'object' && window.WWebJS !== null;
+        return hasStore && hasWWebJS;
       });
       if (ready) return true;
     } catch {
