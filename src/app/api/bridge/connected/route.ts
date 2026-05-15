@@ -47,27 +47,27 @@ export async function POST(req: NextRequest) {
 
   // Para org.whatsapp_phone: solo overwrite si tenemos un phone valido.
   // Sin phone preservamos lo que ya estaba (puede que se haya capturado en una
-  // conexion anterior).
-  const orgUpdate: Record<string, unknown> = {
-    whatsapp_status: 'connected',
-    whatsapp_connected_at: nowIso,
-    whatsapp_provider: 'local_bridge',
-  };
-  if (phone) orgUpdate.whatsapp_phone = phone;
-
-  const stateUpdate: Record<string, unknown> = {
-    bridge_token_id: auth.tokenId,
-    status: 'ready',
-    qr_base64: null,
-    qr_updated_at: null,
-    last_heartbeat_at: nowIso,
-    updated_at: nowIso,
-  };
-  if (phone) stateUpdate.phone_e164 = phone;
-
+  // conexion anterior). Spread condicional para que TS infiera el tipo del
+  // table schema sin necesidad de cast.
   await Promise.all([
-    admin.from('bridge_state').upsert(stateUpdate),
-    admin.from('organizations').update(orgUpdate).eq('id', auth.organizationId),
+    admin.from('bridge_state').upsert({
+      bridge_token_id: auth.tokenId,
+      status: 'ready' as const,
+      qr_base64: null,
+      qr_updated_at: null,
+      last_heartbeat_at: nowIso,
+      updated_at: nowIso,
+      ...(phone ? { phone_e164: phone } : {}),
+    }),
+    admin
+      .from('organizations')
+      .update({
+        whatsapp_status: 'connected',
+        whatsapp_connected_at: nowIso,
+        whatsapp_provider: 'local_bridge' as const,
+        ...(phone ? { whatsapp_phone: phone } : {}),
+      })
+      .eq('id', auth.organizationId),
   ]);
 
   return NextResponse.json({ ok: true, phone_captured: !!phone });
