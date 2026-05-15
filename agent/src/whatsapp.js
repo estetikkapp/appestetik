@@ -147,15 +147,26 @@ async function emitReady(source) {
   setStatus('ready');
   currentQrDataUrl = null;
 
+  // wwebjs a veces emite 'ready' antes de que client.info esté populado.
+  // Reintentamos hasta 10s con backoff de 500ms.
   let phone = null;
-  try {
-    const info = client?.info;
-    if (info?.wid?.user) phone = `+${info.wid.user}`;
-  } catch (err) {
-    logger.warn('No se pudo obtener phone:', err.message);
+  for (let i = 0; i < 20; i++) {
+    try {
+      const info = client?.info;
+      if (info?.wid?.user) {
+        phone = `+${info.wid.user}`;
+        break;
+      }
+    } catch (err) {
+      logger.warn(`getPhone intento ${i + 1} error: ${err.message}`);
+    }
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  if (!phone) {
+    logger.warn('No se pudo obtener phone después de 10s — reportando ready sin número');
   }
   currentPhone = phone;
-  logger.info(`Conectado a WhatsApp${phone ? ` con ${phone}` : ''} (via ${source})`);
+  logger.info(`Conectado a WhatsApp${phone ? ` con ${phone}` : ' (sin phone)'} (via ${source})`);
   emit('ready', { phone });
 }
 

@@ -53,6 +53,28 @@ export async function POST(req: NextRequest) {
       ...(heartbeat.agent_os ? { agent_os: heartbeat.agent_os } : {}),
     });
 
+  // Sincronizar org.whatsapp_status con el heartbeat. Necesario porque
+  // /api/bridge/connected puede no haber llegado nunca (ej: el agente
+  // reportó phone_e164=null y la versión vieja del endpoint rechazaba).
+  // Sin este sync, lib/reminders.ts ve whatsapp_status='disconnected'
+  // y no encola comandos, aunque el bridge esté operativo.
+  if (heartbeat.status === 'ready') {
+    await admin
+      .from('organizations')
+      .update({
+        whatsapp_status: 'connected',
+        whatsapp_provider: 'local_bridge',
+      })
+      .eq('id', auth.organizationId)
+      .neq('whatsapp_status', 'connected'); // evita writes inutiles
+  } else if (heartbeat.status === 'disconnected') {
+    await admin
+      .from('organizations')
+      .update({ whatsapp_status: 'disconnected' })
+      .eq('id', auth.organizationId)
+      .neq('whatsapp_status', 'disconnected');
+  }
+
   // Expirar comandos viejos antes de tomar nuevos
   await admin
     .from('bridge_commands')
