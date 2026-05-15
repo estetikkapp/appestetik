@@ -32,9 +32,12 @@ async function loadData() {
   const orgId = cookies().get('active_org')?.value;
   if (!orgId) return [];
 
+  // OJO: no joinear con memberships acá — no hay FK entre audit_log
+  // y memberships, PostgREST falla con PGRST200 y la query devuelve null.
+  // El JSX solo usa actor_label y actor_user_id, no necesita el join.
   const { data } = await supabase
     .from('audit_log')
-    .select(`*, actor:memberships(display_name, role)`)
+    .select('*')
     .eq('organization_id', orgId)
     .order('created_at', { ascending: false })
     .limit(200);
