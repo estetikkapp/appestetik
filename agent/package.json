@@ -1,7 +1,7 @@
 {
   "name": "appestetika-bridge",
   "productName": "appestetika bridge",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Agente local de appestetika — conecta WhatsApp via Baileys (multi-device protocol nativo) para enviar recordatorios desde la PC del consultorio.",
   "main": "src/main.js",
   "author": "appestetika",
@@ -19,7 +19,8 @@
     "@whiskeysockets/baileys": "6.7.15",
     "electron-store": "8.2.0",
     "electron-updater": "6.3.9",
-    "pino": "9.5.0",
+    "pino": "9.6.0",
+    "pino-std-serializers": "7.0.0",
     "qrcode": "1.5.4"
   },
   "devDependencies": {
