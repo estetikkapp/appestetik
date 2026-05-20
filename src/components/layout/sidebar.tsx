@@ -18,6 +18,7 @@ import {
   History,
   ListChecks,
   BarChart3,
+  HelpCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { canAccessRoute, type Role } from '@/lib/auth/rbac';
@@ -45,6 +46,7 @@ const NAV: NavItem[] = [
   { href: '/ia', label: 'IA', icon: Sparkles },
   { href: '/audit-log', label: 'Audit log', icon: History },
   { href: '/configuracion', label: 'Configuración', icon: Settings },
+  { href: '/ayuda', label: 'Ayuda', icon: HelpCircle },
 ];
 
 interface Props {
