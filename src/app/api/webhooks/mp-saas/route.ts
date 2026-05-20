@@ -28,6 +28,10 @@ import {
   MpNotConfiguredError,
 } from '@/lib/integrations/mp-saas/client';
 import {
+  fetchPreapproval,
+  mapPreapprovalStatusToSubStatus,
+} from '@/lib/integrations/mp-saas/preapproval';
+import {
   markPaymentSucceeded,
   markPaymentFailed,
 } from '@/lib/plans/subscription-service';
@@ -60,10 +64,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Firma inválida' }, { status: 401 });
   }
 
+  // Topic 'preapproval' / 'subscription_preapproval': cambios de estado del
+  // preapproval (autorizado, pausado, cancelado). Los cobros recurrentes
+  // exitosos vienen como `payment` aparte (con external_reference que
+  // matchea con un saas_invoice nuevo creado por nuestro lado o por MP).
+  if (topic === 'preapproval' || topic === 'subscription_preapproval') {
+    return await handlePreapprovalEvent(dataId);
+  }
+
   if (topic !== 'payment') {
-    // Por ahora solo procesamos payments. Para preapprovals MP manda
-    // notifications cuando cobra exitosamente, y eso viene como un payment
-    // separado con external_reference del preapproval.
     return NextResponse.json({ ok: true, ignored: topic });
   }
 
@@ -191,4 +200,69 @@ async function handleInvoicePayment(
   }
 
   return NextResponse.json({ ok: true, action: 'noop', payment_status: payment.status });
+}
+
+/**
+ * Handler de eventos de preapproval (cambios de estado del débito recurrente).
+ *
+ * MP nos avisa cuando:
+ *   - pending → authorized: la clínica autorizó el débito en el banco
+ *   - authorized → paused: MP pausó por falla repetida de cobro
+ *   - authorized → cancelled: la clínica canceló desde MP (o nosotros via API)
+ *
+ * Por cada uno actualizamos el status de la sub local para mantener
+ * paridad. Cuando MP cobra exitosamente, eso viene como un `payment` aparte
+ * con external_reference de la sub — eso lo maneja handleInvoicePayment.
+ */
+async function handlePreapprovalEvent(preapprovalId: string) {
+  let preapproval;
+  try {
+    preapproval = await fetchPreapproval(preapprovalId);
+  } catch (err) {
+    if (err instanceof MpNotConfiguredError) {
+      return NextResponse.json({ ok: true, skipped: 'mp_not_configured' });
+    }
+    console.error('[mp-saas webhook] fetchPreapproval fail:', err);
+    return NextResponse.json({ error: 'No se pudo traer preapproval' }, { status: 502 });
+  }
+
+  const admin = createAdminClient();
+
+  const { data: sub } = await admin
+    .from('plan_subscriptions')
+    .select('id, status')
+    .eq('mp_preapproval_id', preapproval.id)
+    .maybeSingle();
+
+  if (!sub) {
+    // Aún no asociamos el preapproval_id a la sub. Puede pasar si el webhook
+    // llega antes que terminemos el flow de creación. MP reintenta.
+    console.warn('[mp-saas webhook] preapproval sin sub local todavía:', preapproval.id);
+    return NextResponse.json({ ok: true, ignored: 'no_sub_yet' });
+  }
+
+  const newStatus = mapPreapprovalStatusToSubStatus(preapproval.status);
+
+  // Idempotencia
+  if (sub.status === newStatus) {
+    return NextResponse.json({ ok: true, idempotent: true });
+  }
+
+  // No degradamos desde estados terminales por respuesta a webhook
+  const noDowngradeFrom = ['suspended', 'trial_expired', 'expired'];
+  if (noDowngradeFrom.includes(sub.status)) {
+    return NextResponse.json({ ok: true, ignored: 'sub_in_terminal_state' });
+  }
+
+  await admin
+    .from('plan_subscriptions')
+    .update({ status: newStatus })
+    .eq('id', sub.id);
+
+  return NextResponse.json({
+    ok: true,
+    action: 'preapproval_status_update',
+    from: sub.status,
+    to: newStatus,
+  });
 }

@@ -79,3 +79,26 @@ export async function cancelPreapproval(preapprovalId: string): Promise<void> {
 export async function fetchPreapproval(preapprovalId: string): Promise<MpPreapproval> {
   return mpFetch<MpPreapproval>(`/preapproval/${preapprovalId}`);
 }
+
+/**
+ * Mapea el status del preapproval de MP al status de la sub local.
+ *   pending     → trialing (todavía no autorizó el débito)
+ *   authorized  → active (autorizó, MP va a empezar a debitar)
+ *   paused      → past_due (lo pausamos por fallo de cobro)
+ *   cancelled   → cancelled (cancela MP o nosotros)
+ */
+export function mapPreapprovalStatusToSubStatus(
+  preapprovalStatus: MpPreapproval['status']
+): 'trialing' | 'active' | 'past_due' | 'cancelled' {
+  switch (preapprovalStatus) {
+    case 'authorized':
+      return 'active';
+    case 'paused':
+      return 'past_due';
+    case 'cancelled':
+      return 'cancelled';
+    case 'pending':
+    default:
+      return 'trialing';
+  }
+}
