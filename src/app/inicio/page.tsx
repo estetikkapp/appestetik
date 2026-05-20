@@ -4,20 +4,27 @@ import {
   MessageCircle,
   CreditCard,
   Sparkles,
-  CheckCircle2,
   ArrowRight,
   Users,
   Receipt,
   FileText,
   Camera,
   Package,
-  Clock,
   ShieldCheck,
   Globe,
   Smartphone,
   ChevronDown,
 } from 'lucide-react';
 import { ProbarGratisCTA } from '@/components/analytics/probar-gratis-cta';
+import {
+  FadeUp,
+  Stagger,
+  StaggerItem,
+  Float,
+  CountUp,
+  HoverLift,
+} from '@/components/motion/primitives';
+import { HeroAgendaMockup } from './hero-mockup';
 
 export const metadata = {
   title: 'appestetika — Gestión completa para tu centro de estética',
@@ -46,31 +53,46 @@ export default function InicioPage() {
 
 function Hero() {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-brand-50 to-white">
-      <div className="mx-auto grid max-w-6xl gap-12 px-4 py-14 md:grid-cols-2 md:items-center md:py-28">
-        <div className="text-center md:text-left">
-          <h1 className="text-3xl font-bold leading-tight text-stone-900 sm:text-4xl md:text-5xl">
+    <section className="relative overflow-hidden bg-gradient-to-b from-brand-50 via-white to-white">
+      {/* Blobs de fondo decorativos — sutiles, no compiten con el contenido */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -left-32 -top-32 h-96 w-96 rounded-full bg-brand-200/40 blur-3xl"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -right-24 top-40 h-80 w-80 rounded-full bg-amber-100/40 blur-3xl"
+      />
+
+      <div className="relative mx-auto grid max-w-6xl gap-12 px-4 py-14 md:grid-cols-2 md:items-center md:py-28">
+        <FadeUp className="text-center md:text-left" distance={24} duration={0.7}>
+          <span className="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-white/80 px-3 py-1 text-xs font-medium text-brand-700 backdrop-blur">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            Hecho en Argentina · 100% en pesos
+          </span>
+          <h1 className="mt-5 text-3xl font-bold leading-tight tracking-tight text-stone-900 sm:text-4xl md:text-5xl lg:text-6xl">
             Tu centro de estética,{' '}
-            <span className="text-brand-600">manejado en un solo lugar.</span>
+            <span className="bg-gradient-to-r from-brand-600 to-brand-500 bg-clip-text text-transparent">
+              manejado en un solo lugar.
+            </span>
           </h1>
           <p className="mx-auto mt-5 max-w-lg text-base text-stone-600 sm:text-lg md:mx-0">
             Agenda, reservas online, recordatorios automáticos por WhatsApp,
-            cobros con Mercado Pago, facturación AFIP, ficha clínica de
-            pacientes y análisis de piel con IA. Todo desde una sola app, en
-            castellano, pensada para Argentina.
+            cobros con Mercado Pago, facturación AFIP, ficha clínica y análisis
+            de piel con IA. Todo desde una sola app, en castellano.
           </p>
 
           <div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center md:justify-start">
             <ProbarGratisCTA
               contentName="hero_cta"
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-500 px-6 py-3 text-base font-semibold text-white shadow-sm transition-colors hover:bg-brand-600"
+              className="group inline-flex items-center justify-center gap-2 rounded-lg bg-brand-500 px-6 py-3 text-base font-semibold text-white shadow-lg shadow-brand-500/20 transition-all hover:bg-brand-600 hover:shadow-xl hover:shadow-brand-500/30"
             >
               Probar 30 días gratis
-              <ArrowRight className="h-5 w-5" />
+              <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
             </ProbarGratisCTA>
             <Link
               href="/precios"
-              className="inline-flex items-center justify-center gap-2 rounded-lg border-2 border-stone-300 px-6 py-3 text-base font-medium text-stone-800 hover:border-stone-400"
+              className="inline-flex items-center justify-center gap-2 rounded-lg border-2 border-stone-300 bg-white/60 px-6 py-3 text-base font-medium text-stone-800 backdrop-blur transition-colors hover:border-stone-400 hover:bg-white"
             >
               Ver precios
             </Link>
@@ -79,87 +101,15 @@ function Hero() {
           <p className="mt-4 text-sm text-stone-500">
             Sin tarjeta. Sin contrato. Pagás cuando te convence.
           </p>
-        </div>
+        </FadeUp>
 
-        <div className="mx-auto w-full max-w-sm rounded-2xl border border-stone-200 bg-white p-5 shadow-lg sm:max-w-md md:max-w-none md:p-6">
-          <div className="flex items-center gap-3 border-b border-stone-100 pb-4">
-            <div className="h-3 w-3 rounded-full bg-red-400" />
-            <div className="h-3 w-3 rounded-full bg-amber-400" />
-            <div className="h-3 w-3 rounded-full bg-emerald-400" />
-            <span className="ml-2 text-xs text-stone-500">tu agenda hoy</span>
-          </div>
-
-          <div className="mt-4 space-y-3">
-            <AppointmentRow
-              time="09:30"
-              client="María Fernández"
-              service="Limpieza profunda"
-              duration="60 min"
-              status="confirmed"
-            />
-            <AppointmentRow
-              time="11:00"
-              client="Lucía Pérez"
-              service="Botox frente"
-              duration="30 min"
-              status="confirmed"
-            />
-            <AppointmentRow
-              time="12:00"
-              client="Sofía Ruiz"
-              service="Masaje relajante"
-              duration="90 min"
-              status="pending"
-            />
-            <AppointmentRow
-              time="15:00"
-              client="Carla Méndez"
-              service="Diseño de cejas"
-              duration="45 min"
-              status="confirmed"
-            />
-          </div>
-
-          <div className="mt-4 rounded-lg bg-emerald-50 p-3 text-xs text-emerald-800">
-            <div className="flex items-center gap-2 font-medium">
-              <MessageCircle className="h-3.5 w-3.5" />
-              Recordatorio enviado por WhatsApp a 4 clientas
-            </div>
-          </div>
-        </div>
+        <FadeUp delay={0.2} distance={32} duration={0.8} className="relative">
+          <Float distance={6} duration={5}>
+            <HeroAgendaMockup />
+          </Float>
+        </FadeUp>
       </div>
     </section>
-  );
-}
-
-function AppointmentRow({
-  time,
-  client,
-  service,
-  duration,
-  status,
-}: {
-  time: string;
-  client: string;
-  service: string;
-  duration: string;
-  status: 'confirmed' | 'pending';
-}) {
-  return (
-    <div className="flex items-center gap-3 rounded-lg border border-stone-100 p-3">
-      <div className="w-12 shrink-0 text-sm font-semibold text-stone-900">{time}</div>
-      <div className="flex-1 min-w-0">
-        <p className="truncate text-sm font-medium text-stone-900">{client}</p>
-        <p className="truncate text-xs text-stone-500">
-          {service} · {duration}
-        </p>
-      </div>
-      {status === 'confirmed' ? (
-        <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-      ) : (
-        <Clock className="h-4 w-4 text-amber-500" />
-      )}
-    </div>
   );
 }
 
@@ -193,17 +143,17 @@ function ValueProps() {
   return (
     <section className="border-t border-stone-100 py-20">
       <div className="mx-auto max-w-6xl px-4">
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+        <Stagger className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
           {props.map((p) => (
-            <div key={p.title}>
-              <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-brand-100 text-brand-700">
+            <StaggerItem key={p.title}>
+              <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-brand-100 to-brand-200 text-brand-700">
                 <p.icon className="h-6 w-6" />
               </div>
               <h3 className="mt-4 text-lg font-semibold text-stone-900">{p.title}</h3>
-              <p className="mt-2 text-sm text-stone-600">{p.text}</p>
-            </div>
+              <p className="mt-2 text-sm leading-relaxed text-stone-600">{p.text}</p>
+            </StaggerItem>
           ))}
-        </div>
+        </Stagger>
       </div>
     </section>
   );
@@ -215,17 +165,19 @@ function ValueProps() {
 
 function HowItWorks() {
   return (
-    <section className="bg-stone-50 py-20">
+    <section className="relative overflow-hidden bg-stone-50 py-20">
       <div className="mx-auto max-w-6xl px-4">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-bold text-stone-900">Empezás en minutos</h2>
+        <FadeUp className="mx-auto max-w-2xl text-center">
+          <h2 className="text-3xl font-bold tracking-tight text-stone-900 sm:text-4xl">
+            Empezás en minutos
+          </h2>
           <p className="mt-3 text-base text-stone-600">
             Sin instalaciones complicadas ni capacitaciones largas. Te registrás
             y arrancás el mismo día.
           </p>
-        </div>
+        </FadeUp>
 
-        <div className="mt-12 grid gap-8 md:grid-cols-3">
+        <Stagger className="mt-12 grid gap-8 md:grid-cols-3">
           <Step
             n={1}
             icon={Globe}
@@ -244,7 +196,7 @@ function HowItWorks() {
             title="Empezás a recibir reservas"
             text="Compartís tu link de reservas en Instagram o WhatsApp. Las clientas eligen solas."
           />
-        </div>
+        </Stagger>
       </div>
     </section>
   );
@@ -262,16 +214,20 @@ function Step({
   text: string;
 }) {
   return (
-    <div className="rounded-2xl bg-white p-6">
-      <div className="flex items-center gap-3">
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-500 text-sm font-bold text-white">
-          {n}
-        </span>
-        <Icon className="h-5 w-5 text-stone-400" />
-      </div>
-      <h3 className="mt-4 text-lg font-semibold text-stone-900">{title}</h3>
-      <p className="mt-2 text-sm text-stone-600">{text}</p>
-    </div>
+    <StaggerItem>
+      <HoverLift className="h-full">
+        <div className="h-full rounded-2xl bg-white p-6 shadow-sm ring-1 ring-stone-100 transition-shadow hover:shadow-md">
+          <div className="flex items-center gap-3">
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-600 text-sm font-bold text-white shadow-sm">
+              {n}
+            </span>
+            <Icon className="h-5 w-5 text-stone-400" />
+          </div>
+          <h3 className="mt-4 text-lg font-semibold text-stone-900">{title}</h3>
+          <p className="mt-2 text-sm leading-relaxed text-stone-600">{text}</p>
+        </div>
+      </HoverLift>
+    </StaggerItem>
   );
 }
 
@@ -281,95 +237,48 @@ function Step({
 
 function FeaturesGrid() {
   const features = [
-    {
-      icon: Calendar,
-      title: 'Agenda visual',
-      text: 'Vista día, semana y mes. Arrastrá para reagendar. Códigos de color por estado y profesional.',
-    },
-    {
-      icon: Globe,
-      title: 'Reservas online',
-      text: 'Tu link público (estetikkapp.com/c/tu-clinica) o widget embebido en tu web.',
-    },
-    {
-      icon: MessageCircle,
-      title: 'WhatsApp recordatorios',
-      text: 'Conectás tu WhatsApp con QR. La PC del consultorio manda los avisos automáticos.',
-    },
-    {
-      icon: Receipt,
-      title: 'Facturación AFIP',
-      text: 'Factura C, B, A automática al finalizar el turno. Vinculado a TusFacturas.',
-    },
-    {
-      icon: CreditCard,
-      title: 'Mercado Pago',
-      text: 'Pedí seña al reservar. Cobrá en el momento con link. Conciliación automática.',
-    },
-    {
-      icon: FileText,
-      title: 'Ficha clínica',
-      text: 'Historia, contraindicaciones, alergias, consentimientos firmados digitalmente.',
-    },
-    {
-      icon: Camera,
-      title: 'Fotos antes/después',
-      text: 'Tracking visual del progreso de cada tratamiento. Guardadas privadas.',
-    },
-    {
-      icon: Package,
-      title: 'Paquetes prepagos',
-      text: 'Vendé bonos de sesiones con descuento. Tracking de sesiones usadas/restantes.',
-    },
-    {
-      icon: Users,
-      title: 'Multi-empleada',
-      text: 'Equipo con permisos por rol. Comisiones automáticas. Dashboard por empleada.',
-    },
-    {
-      icon: Sparkles,
-      title: 'IA Claude Vision',
-      text: 'Subís foto de la piel y la IA te sugiere protocolo de tratamiento personalizado.',
-    },
-    {
-      icon: ShieldCheck,
-      title: 'Cancelaciones seguras',
-      text: 'Las clientas cancelan con un link único y código. Ventana configurable de 24h.',
-    },
-    {
-      icon: Smartphone,
-      title: 'Andá del celu o PC',
-      text: 'Funciona en cualquier dispositivo. App web responsive, sin instalar nada.',
-    },
+    { icon: Calendar, title: 'Agenda visual', text: 'Vista día, semana y mes. Arrastrá para reagendar. Códigos de color por estado y profesional.' },
+    { icon: Globe, title: 'Reservas online', text: 'Tu link público (estetikkapp.com/c/tu-clinica) o widget embebido en tu web.' },
+    { icon: MessageCircle, title: 'WhatsApp recordatorios', text: 'Conectás tu WhatsApp con QR. La PC del consultorio manda los avisos automáticos.' },
+    { icon: Receipt, title: 'Facturación AFIP', text: 'Factura C, B, A automática al finalizar el turno. Vinculado a TusFacturas.' },
+    { icon: CreditCard, title: 'Mercado Pago', text: 'Pedí seña al reservar. Cobrá en el momento con link. Conciliación automática.' },
+    { icon: FileText, title: 'Ficha clínica', text: 'Historia, contraindicaciones, alergias, consentimientos firmados digitalmente.' },
+    { icon: Camera, title: 'Fotos antes/después', text: 'Tracking visual del progreso de cada tratamiento. Guardadas privadas.' },
+    { icon: Package, title: 'Paquetes prepagos', text: 'Vendé bonos de sesiones con descuento. Tracking de sesiones usadas/restantes.' },
+    { icon: Users, title: 'Multi-empleada', text: 'Equipo con permisos por rol. Comisiones automáticas. Dashboard por empleada.' },
+    { icon: Sparkles, title: 'IA Claude Vision', text: 'Subís foto de la piel y la IA te sugiere protocolo de tratamiento personalizado.' },
+    { icon: ShieldCheck, title: 'Cancelaciones seguras', text: 'Las clientas cancelan con un link único y código. Ventana configurable de 24h.' },
+    { icon: Smartphone, title: 'Andá del celu o PC', text: 'Funciona en cualquier dispositivo. App web responsive, sin instalar nada.' },
   ];
 
   return (
     <section className="py-20">
       <div className="mx-auto max-w-6xl px-4">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-bold text-stone-900">
+        <FadeUp className="mx-auto max-w-2xl text-center">
+          <h2 className="text-3xl font-bold tracking-tight text-stone-900 sm:text-4xl">
             Todo lo que necesitás, sin complicarte
           </h2>
           <p className="mt-3 text-base text-stone-600">
             Reemplazá Excel, agendas de papel, WhatsApp Business y mil planillas
             por una sola herramienta.
           </p>
-        </div>
+        </FadeUp>
 
-        <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <Stagger className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {features.map((f) => (
-            <div
-              key={f.title}
-              className="rounded-2xl border border-stone-100 bg-white p-6 transition-all hover:border-brand-200 hover:shadow-sm"
-            >
-              <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
-                <f.icon className="h-5 w-5" />
-              </div>
-              <h3 className="mt-4 text-base font-semibold text-stone-900">{f.title}</h3>
-              <p className="mt-2 text-sm text-stone-600">{f.text}</p>
-            </div>
+            <StaggerItem key={f.title}>
+              <HoverLift className="h-full">
+                <div className="h-full rounded-2xl border border-stone-100 bg-white p-6 transition-all hover:border-brand-200 hover:shadow-md">
+                  <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-brand-50 to-brand-100 text-brand-600">
+                    <f.icon className="h-5 w-5" />
+                  </div>
+                  <h3 className="mt-4 text-base font-semibold text-stone-900">{f.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-stone-600">{f.text}</p>
+                </div>
+              </HoverLift>
+            </StaggerItem>
           ))}
-        </div>
+        </Stagger>
       </div>
     </section>
   );
@@ -381,28 +290,40 @@ function FeaturesGrid() {
 
 function Trust() {
   return (
-    <section className="bg-brand-700 py-16 text-white">
-      <div className="mx-auto max-w-6xl px-4">
-        <div className="grid gap-8 text-center md:grid-cols-3">
-          <div>
-            <p className="text-3xl font-bold">100%</p>
-            <p className="mt-2 text-sm text-brand-100">
+    <section className="relative overflow-hidden bg-gradient-to-br from-brand-700 to-brand-600 py-20 text-white">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -right-32 -top-32 h-96 w-96 rounded-full bg-brand-400/20 blur-3xl"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -bottom-32 -left-32 h-96 w-96 rounded-full bg-amber-300/10 blur-3xl"
+      />
+      <div className="relative mx-auto max-w-6xl px-4">
+        <Stagger className="grid gap-8 text-center md:grid-cols-3">
+          <StaggerItem>
+            <p className="text-5xl font-bold tracking-tight">
+              <CountUp to={100} suffix="%" />
+            </p>
+            <p className="mt-3 text-sm text-brand-100">
               Hecho en Argentina, pensado para nuestra realidad (AFIP, MP, pesos).
             </p>
-          </div>
-          <div>
-            <p className="text-3xl font-bold">30 días</p>
-            <p className="mt-2 text-sm text-brand-100">
+          </StaggerItem>
+          <StaggerItem>
+            <p className="text-5xl font-bold tracking-tight">
+              <CountUp to={30} suffix=" días" />
+            </p>
+            <p className="mt-3 text-sm text-brand-100">
               De prueba gratis. Sin tarjeta. Sin compromisos.
             </p>
-          </div>
-          <div>
-            <p className="text-3xl font-bold">WhatsApp</p>
-            <p className="mt-2 text-sm text-brand-100">
+          </StaggerItem>
+          <StaggerItem>
+            <p className="text-5xl font-bold tracking-tight">WhatsApp</p>
+            <p className="mt-3 text-sm text-brand-100">
               Soporte por WhatsApp en horario AR. Hablás con personas, no con bots.
             </p>
-          </div>
-        </div>
+          </StaggerItem>
+        </Stagger>
       </div>
     </section>
   );
@@ -415,20 +336,22 @@ function Trust() {
 function PricingTeaser() {
   return (
     <section className="py-20">
-      <div className="mx-auto max-w-4xl px-4 text-center">
-        <h2 className="text-3xl font-bold text-stone-900">Precios simples y claros</h2>
+      <FadeUp className="mx-auto max-w-4xl px-4 text-center">
+        <h2 className="text-3xl font-bold tracking-tight text-stone-900 sm:text-4xl">
+          Precios simples y claros
+        </h2>
         <p className="mt-3 text-base text-stone-600">
           Desde <strong>$29.990/mes</strong> para profesionales que atienden solas.{' '}
           Hasta <strong>$54.990/mes</strong> para equipos completos. Sin sorpresas.
         </p>
         <Link
           href="/precios"
-          className="mt-6 inline-flex items-center gap-2 rounded-lg border-2 border-stone-300 px-6 py-3 font-medium text-stone-800 hover:border-stone-400"
+          className="group mt-6 inline-flex items-center gap-2 rounded-lg border-2 border-stone-300 px-6 py-3 font-medium text-stone-800 transition-all hover:border-stone-400 hover:bg-stone-50"
         >
           Ver todos los planes
-          <ArrowRight className="h-4 w-4" />
+          <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
         </Link>
-      </div>
+      </FadeUp>
     </section>
   );
 }
@@ -468,13 +391,19 @@ function Faq() {
   return (
     <section className="border-t border-stone-100 bg-stone-50 py-20">
       <div className="mx-auto max-w-3xl px-4">
-        <h2 className="text-center text-3xl font-bold text-stone-900">Preguntas frecuentes</h2>
+        <FadeUp>
+          <h2 className="text-center text-3xl font-bold tracking-tight text-stone-900 sm:text-4xl">
+            Preguntas frecuentes
+          </h2>
+        </FadeUp>
 
-        <div className="mt-10 space-y-3">
+        <Stagger className="mt-10 space-y-3">
           {items.map((it) => (
-            <FaqItem key={it.q} q={it.q} a={it.a} />
+            <StaggerItem key={it.q}>
+              <FaqItem q={it.q} a={it.a} />
+            </StaggerItem>
           ))}
-        </div>
+        </Stagger>
       </div>
     </section>
   );
@@ -482,12 +411,12 @@ function Faq() {
 
 function FaqItem({ q, a }: { q: string; a: string }) {
   return (
-    <details className="group rounded-xl border border-stone-200 bg-white">
-      <summary className="flex cursor-pointer items-center justify-between p-5 text-sm font-medium text-stone-900">
+    <details className="group rounded-xl border border-stone-200 bg-white transition-shadow hover:shadow-sm">
+      <summary className="flex cursor-pointer items-center justify-between p-5 text-sm font-medium text-stone-900 [&::-webkit-details-marker]:hidden">
         {q}
         <ChevronDown className="h-4 w-4 text-stone-400 transition-transform group-open:rotate-180" />
       </summary>
-      <p className="border-t border-stone-100 p-5 text-sm text-stone-600">{a}</p>
+      <p className="border-t border-stone-100 p-5 text-sm leading-relaxed text-stone-600">{a}</p>
     </details>
   );
 }
@@ -498,9 +427,13 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 
 function FinalCta() {
   return (
-    <section className="py-20">
-      <div className="mx-auto max-w-3xl px-4 text-center">
-        <h2 className="text-3xl font-bold text-stone-900 sm:text-4xl">
+    <section className="relative overflow-hidden py-20">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-gradient-to-br from-brand-50/60 via-white to-amber-50/30"
+      />
+      <FadeUp className="relative mx-auto max-w-3xl px-4 text-center">
+        <h2 className="text-3xl font-bold tracking-tight text-stone-900 sm:text-4xl">
           Probalo 30 días gratis y decidí
         </h2>
         <p className="mt-4 text-base text-stone-600">
@@ -508,10 +441,10 @@ function FinalCta() {
         </p>
         <ProbarGratisCTA
           contentName="final_cta"
-          className="mt-8 inline-flex items-center gap-2 rounded-lg bg-brand-500 px-8 py-4 text-lg font-semibold text-white shadow-sm hover:bg-brand-600"
+          className="group mt-8 inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-brand-500 to-brand-600 px-8 py-4 text-lg font-semibold text-white shadow-xl shadow-brand-500/30 transition-all hover:shadow-2xl hover:shadow-brand-500/40"
         >
           Empezar ahora
-          <ArrowRight className="h-5 w-5" />
+          <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
         </ProbarGratisCTA>
         <p className="mt-4 text-sm text-stone-500">
           ¿Dudas?{' '}
@@ -524,7 +457,8 @@ function FinalCta() {
           </Link>
           .
         </p>
-      </div>
+      </FadeUp>
     </section>
   );
 }
+
