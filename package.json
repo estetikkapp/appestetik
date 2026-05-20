@@ -10,6 +10,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
+    "health": "node scripts/health-check.mjs",
+    "health:local": "BASE_URL=http://localhost:3000 node scripts/health-check.mjs",
     "db:start": "supabase start",
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset",
