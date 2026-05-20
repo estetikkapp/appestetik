@@ -65,7 +65,7 @@ function Hero() {
       />
 
       <div className="relative mx-auto grid max-w-6xl gap-12 px-4 py-14 md:grid-cols-2 md:items-center md:py-28">
-        <FadeUp className="text-center md:text-left" distance={24} duration={0.7}>
+        <FadeUp className="text-center md:text-left" distance={48} duration={1.0} immediate>
           <span className="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-white/80 px-3 py-1 text-xs font-medium text-brand-700 backdrop-blur">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
             Hecho en Argentina · 100% en pesos
@@ -103,8 +103,8 @@ function Hero() {
           </p>
         </FadeUp>
 
-        <FadeUp delay={0.2} distance={32} duration={0.8} className="relative">
-          <Float distance={6} duration={5}>
+        <FadeUp delay={0.3} distance={56} duration={1.1} immediate className="relative">
+          <Float distance={12} duration={4.5}>
             <HeroAgendaMockup />
           </Float>
         </FadeUp>

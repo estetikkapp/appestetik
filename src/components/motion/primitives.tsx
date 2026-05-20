@@ -44,12 +44,14 @@ export function FadeUp({
   children,
   className,
   delay = 0,
-  distance = 16,
-  duration = 0.6,
-  amount = 0.2,
+  distance = 40,
+  duration = 0.9,
+  amount = 0.15,
   once = true,
   as = 'div',
-}: FadeUpProps) {
+  /** Si true, anima en mount (útil para hero que ya está en viewport). */
+  immediate = false,
+}: FadeUpProps & { immediate?: boolean }) {
   const reduce = useReducedMotion();
   const MotionTag = motion[as] as typeof motion.div;
 
@@ -58,12 +60,18 @@ export function FadeUp({
     return <Tag className={className}>{children}</Tag>;
   }
 
+  const viewportProps = immediate
+    ? { initial: { opacity: 0, y: distance }, animate: { opacity: 1, y: 0 } }
+    : {
+        initial: { opacity: 0, y: distance },
+        whileInView: { opacity: 1, y: 0 },
+        viewport: { once, amount },
+      };
+
   return (
     <MotionTag
       className={className}
-      initial={{ opacity: 0, y: distance }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once, amount }}
+      {...viewportProps}
       transition={{ duration, delay, ease: [0.22, 1, 0.36, 1] }}
     >
       {children}
@@ -79,16 +87,17 @@ const staggerContainer: Variants = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
-    transition: { staggerChildren: 0.08, delayChildren: 0.1 },
+    transition: { staggerChildren: 0.12, delayChildren: 0.15 },
   },
 };
 
 const staggerItem: Variants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 32, scale: 0.96 },
   show: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] satisfies Transition['ease'] },
+    scale: 1,
+    transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] satisfies Transition['ease'] },
   },
 };
 
@@ -145,10 +154,10 @@ export function StaggerItem({
 export function Float({
   children,
   className,
-  /** Píxeles de oscilación. Default 8. */
-  distance = 8,
-  /** Segundos por ciclo completo. Default 6. */
-  duration = 6,
+  /** Píxeles de oscilación. Default 12. */
+  distance = 12,
+  /** Segundos por ciclo completo. Default 4.5. */
+  duration = 4.5,
 }: {
   children: ReactNode;
   className?: string;
