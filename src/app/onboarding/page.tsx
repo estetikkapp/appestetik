@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation';
 import { updateOrganizationFiscal } from '@/actions/organizations';
 import { OnboardingStepper } from '@/components/onboarding/stepper';
 import { Input } from '@/components/ui/input';
@@ -5,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { SubmitButton } from '@/components/ui/submit-button';
 import { createClient } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';
+import { getActiveSubscription } from '@/lib/plans/subscription-service';
 
 export const metadata = { title: 'Onboarding — datos fiscales' };
 
@@ -36,9 +38,18 @@ export default async function OnboardingStep1({
 }) {
   const data = await getCurrentOrg();
 
+  // Capa 4 — Plan picker es el primer paso. Si todavía no eligieron plan
+  // (no hay sub activa), los mandamos a /onboarding/plan antes de seguir.
+  if (data?.org?.id) {
+    const sub = await getActiveSubscription(data.org.id);
+    if (!sub) {
+      redirect('/onboarding/plan');
+    }
+  }
+
   return (
     <div>
-      <OnboardingStepper current={1} />
+      <OnboardingStepper current={2} />
 
       <div className="rounded-2xl bg-white p-8 shadow-sm">
         <div className="mb-6">

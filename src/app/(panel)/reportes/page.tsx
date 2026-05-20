@@ -2,6 +2,7 @@ import { cookies } from 'next/headers';
 import { BarChart3, Download, TrendingUp, Users, Calendar, Percent } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { requireMembership } from '@/lib/auth/require-membership';
+import { requireFeature } from '@/lib/plans/require-feature';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -170,6 +171,7 @@ export default async function ReportesPage({
   searchParams: { from?: string; to?: string };
 }) {
   await requireMembership({ minRole: 'admin' });
+  await requireFeature('reportes_avanzados');
   const range = defaultRange();
   const from = searchParams.from ?? range.from;
   const to = searchParams.to ?? range.to;

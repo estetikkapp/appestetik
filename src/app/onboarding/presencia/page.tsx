@@ -11,7 +11,7 @@ export const metadata = { title: 'Onboarding — presencia' };
 export default function OnboardingStep4({ searchParams }: { searchParams: { error?: string } }) {
   return (
     <div>
-      <OnboardingStepper current={4} />
+      <OnboardingStepper current={5} />
 
       <div className="rounded-2xl bg-white p-8 shadow-sm">
         <div className="mb-6">

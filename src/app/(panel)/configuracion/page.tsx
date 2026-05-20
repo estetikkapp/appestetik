@@ -12,6 +12,7 @@ import { saveAfipConfig } from '@/actions/afip-config';
 import { saveMpConfig } from '@/actions/mp-config';
 import { EmbedSnippet } from './embed-snippet';
 import { BridgeSection } from './bridge-section';
+import { PlanSection } from './plan-section';
 
 export const metadata = { title: 'Configuración — appestetika' };
 
@@ -57,8 +58,13 @@ export default async function ConfiguracionPage({
           {searchParams.ok === 'bridge-token-creado' && 'Token generado. Copialo y pegalo en el agente.'}
           {searchParams.ok === 'bridge-token-revocado' && 'Token revocado. El agente se desconectará.'}
           {searchParams.ok === 'bridge-activado' && 'Agente local activado como provider.'}
+          {searchParams.ok === 'suscripcion-cancelada' && 'Suscripción cancelada — sigue activa hasta el fin del período.'}
+          {searchParams.ok === 'suscripcion-reactivada' && 'Suscripción reactivada.'}
+          {searchParams.ok === 'upgrade-pagado' && 'Plan actualizado y pago confirmado.'}
         </div>
       )}
+
+      <PlanSection />
 
       <section className="rounded-xl border border-stone-200 bg-white p-6">
         <h2 className="mb-4 text-lg font-semibold">Logo del centro</h2>

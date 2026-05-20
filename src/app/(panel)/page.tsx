@@ -15,6 +15,8 @@ import { Badge } from '@/components/ui/badge';
 import { formatArs } from '@/lib/utils/format-ars';
 import { formatDateTimeAr } from '@/lib/utils/dates';
 import { APPOINTMENT_STATUS_LABELS, type AppointmentStatus } from '@/types/app';
+import { TrialBanner } from '@/components/plans/trial-banner';
+import { AiQuotaWidget } from '@/components/plans/ai-quota-widget';
 
 export const metadata = { title: 'Inicio — appestetika' };
 
@@ -156,11 +158,6 @@ export default async function DashboardPage() {
   const displayName = data?.membership?.display_name ?? 'tu';
   const orgName = org?.name ?? 'tu centro';
 
-  // TODO Capa 4 (UI): reconstruir banner de trial leyendo plan_subscriptions
-  // (status='trialing' + trial_ends_at). Por ahora el banner queda removido;
-  // las orgs grandfathered tampoco lo necesitan, y las trial reales todavía
-  // no existen (no hay onboarding con plan picker hasta capa 4).
-
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -177,6 +174,10 @@ export default async function DashboardPage() {
           </Link>
         </Button>
       </div>
+
+      <TrialBanner />
+
+      <AiQuotaWidget />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard

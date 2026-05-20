@@ -2,10 +2,11 @@ import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 
 const STEPS = [
-  { n: 1, label: 'Datos fiscales', path: '/onboarding' },
-  { n: 2, label: 'Horarios', path: '/onboarding/horarios' },
-  { n: 3, label: 'Primer servicio', path: '/onboarding/servicio' },
-  { n: 4, label: 'Presencia', path: '/onboarding/presencia' },
+  { n: 1, label: 'Tu plan', path: '/onboarding/plan' },
+  { n: 2, label: 'Datos fiscales', path: '/onboarding' },
+  { n: 3, label: 'Horarios', path: '/onboarding/horarios' },
+  { n: 4, label: 'Primer servicio', path: '/onboarding/servicio' },
+  { n: 5, label: 'Presencia', path: '/onboarding/presencia' },
 ];
 
 export function OnboardingStepper({ current }: { current: number }) {
