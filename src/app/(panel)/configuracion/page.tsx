@@ -133,10 +133,11 @@ export default async function ConfiguracionPage({
               </select>
             </div>
           </div>
-          <div className="grid gap-3 rounded-lg bg-stone-50 p-3 text-xs text-stone-500 sm:grid-cols-3">
+          <div className="grid gap-3 rounded-lg bg-stone-50 p-3 text-xs text-stone-500 sm:grid-cols-2">
             <Row label="Slug público" value={org?.slug ? `/c/${org.slug}` : '—'} />
             <Row label="Timezone" value={org?.timezone ?? '—'} />
-            <Row label="Subscripción" value={org?.subscription_tier ?? '—'} />
+            {/* Suscripción: se muestra ahora en su propia sección desde plan_subscriptions
+                — TODO capa 4 (UI). Sacado de acá porque subscription_tier ya no existe. */}
           </div>
           <div className="flex justify-end">
             <SubmitButton pendingText="Guardando...">Guardar cambios</SubmitButton>

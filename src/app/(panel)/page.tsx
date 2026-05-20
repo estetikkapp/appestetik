@@ -58,7 +58,7 @@ async function loadDashboardData() {
   ] = await Promise.all([
     supabase
       .from('memberships')
-      .select('display_name, organizations(name, trial_ends_at)')
+      .select('display_name, organizations(name)')
       .eq('user_id', user.id)
       .eq('organization_id', orgId)
       .single(),
@@ -156,10 +156,10 @@ export default async function DashboardPage() {
   const displayName = data?.membership?.display_name ?? 'tu';
   const orgName = org?.name ?? 'tu centro';
 
-  const trialEndsAt = org?.trial_ends_at ? new Date(org.trial_ends_at) : null;
-  const trialDaysLeft = trialEndsAt
-    ? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
-    : null;
+  // TODO Capa 4 (UI): reconstruir banner de trial leyendo plan_subscriptions
+  // (status='trialing' + trial_ends_at). Por ahora el banner queda removido;
+  // las orgs grandfathered tampoco lo necesitan, y las trial reales todavía
+  // no existen (no hay onboarding con plan picker hasta capa 4).
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
@@ -177,12 +177,6 @@ export default async function DashboardPage() {
           </Link>
         </Button>
       </div>
-
-      {trialDaysLeft !== null && trialDaysLeft > 0 && trialDaysLeft <= 7 && (
-        <div className="rounded-xl border border-gold-400/40 bg-gold-500/5 p-4 text-sm text-gold-600">
-          <strong>Período de prueba:</strong> te quedan {trialDaysLeft} días.
-        </div>
-      )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard

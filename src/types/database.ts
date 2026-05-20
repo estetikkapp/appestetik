@@ -24,8 +24,7 @@ export type Database = {
           logo_url: string | null;
           timezone: string;
           slug: string | null;
-          subscription_tier: string;
-          trial_ends_at: string;
+          legacy_grandfathered: boolean;
           onboarded_at: string | null;
           afip_provider: 'tusfacturas' | 'direct' | 'manual' | null;
           afip_config: Json | null;
@@ -47,8 +46,7 @@ export type Database = {
           logo_url?: string | null;
           timezone?: string;
           slug?: string | null;
-          subscription_tier?: string;
-          trial_ends_at?: string;
+          legacy_grandfathered?: boolean;
           onboarded_at?: string | null;
           afip_provider?: 'tusfacturas' | 'direct' | 'manual' | null;
           afip_config?: Json | null;
