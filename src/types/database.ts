@@ -808,6 +808,178 @@ export type Database = {
         Update: Partial<Database['public']['Tables']['loyalty_points']['Insert']>;
         Relationships: [];
       };
+      plan_subscriptions: {
+        Row: {
+          id: string;
+          organization_id: string;
+          plan_id: string;
+          billing_cycle: 'monthly' | 'yearly';
+          status: 'trialing' | 'active' | 'past_due' | 'suspended' | 'trial_expired' | 'cancelled' | 'expired';
+          trial_started_at: string | null;
+          trial_ends_at: string | null;
+          current_period_started_at: string;
+          current_period_ends_at: string;
+          cancel_at_period_end: boolean;
+          mp_preapproval_id: string | null;
+          mp_external_reference: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          plan_id: string;
+          billing_cycle: 'monthly' | 'yearly';
+          status: 'trialing' | 'active' | 'past_due' | 'suspended' | 'trial_expired' | 'cancelled' | 'expired';
+          trial_started_at?: string | null;
+          trial_ends_at?: string | null;
+          current_period_started_at: string;
+          current_period_ends_at: string;
+          cancel_at_period_end?: boolean;
+          mp_preapproval_id?: string | null;
+          mp_external_reference?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['plan_subscriptions']['Insert']>;
+        Relationships: [];
+      };
+      ai_usage_counters: {
+        Row: {
+          id: string;
+          subscription_id: string;
+          period_started_at: string;
+          period_ends_at: string;
+          skin_diagnosis_used: number;
+          protocol_generator_used: number;
+          skin_diagnosis_bonus_quota: number;
+          protocol_generator_bonus_quota: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          subscription_id: string;
+          period_started_at: string;
+          period_ends_at: string;
+          skin_diagnosis_used?: number;
+          protocol_generator_used?: number;
+          skin_diagnosis_bonus_quota?: number;
+          protocol_generator_bonus_quota?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['ai_usage_counters']['Insert']>;
+        Relationships: [];
+      };
+      ai_addon_purchases: {
+        Row: {
+          id: string;
+          subscription_id: string;
+          addon_type: string;
+          quantity_added: number;
+          amount_ars: number;
+          status: 'pending' | 'paid' | 'failed';
+          mp_payment_id: string | null;
+          mp_external_reference: string | null;
+          applied_to_period_start: string | null;
+          applied_to_period_end: string | null;
+          paid_at: string | null;
+          failed_at: string | null;
+          failed_reason: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          subscription_id: string;
+          addon_type: string;
+          quantity_added: number;
+          amount_ars: number;
+          status?: 'pending' | 'paid' | 'failed';
+          mp_payment_id?: string | null;
+          mp_external_reference?: string | null;
+          applied_to_period_start?: string | null;
+          applied_to_period_end?: string | null;
+          paid_at?: string | null;
+          failed_at?: string | null;
+          failed_reason?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['ai_addon_purchases']['Insert']>;
+        Relationships: [];
+      };
+      saas_invoices: {
+        Row: {
+          id: string;
+          subscription_id: string;
+          amount_ars: number;
+          billing_period_start: string;
+          billing_period_end: string;
+          invoice_kind: 'subscription' | 'addon' | 'upgrade_diff';
+          status: 'pending' | 'paid' | 'failed' | 'refunded';
+          mp_payment_id: string | null;
+          mp_external_reference: string | null;
+          paid_at: string | null;
+          failed_at: string | null;
+          failed_reason: string | null;
+          attempts: number;
+          next_retry_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          subscription_id: string;
+          amount_ars: number;
+          billing_period_start: string;
+          billing_period_end: string;
+          invoice_kind?: 'subscription' | 'addon' | 'upgrade_diff';
+          status?: 'pending' | 'paid' | 'failed' | 'refunded';
+          mp_payment_id?: string | null;
+          mp_external_reference?: string | null;
+          paid_at?: string | null;
+          failed_at?: string | null;
+          failed_reason?: string | null;
+          attempts?: number;
+          next_retry_at?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['saas_invoices']['Insert']>;
+        Relationships: [];
+      };
+      plan_change_events: {
+        Row: {
+          id: string;
+          subscription_id: string;
+          from_plan: string;
+          to_plan: string;
+          from_billing_cycle: string | null;
+          to_billing_cycle: string | null;
+          effective_at: string;
+          applied_at: string | null;
+          charge_amount_ars: number | null;
+          saas_invoice_id: string | null;
+          triggered_by_user_id: string | null;
+          reason: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          subscription_id: string;
+          from_plan: string;
+          to_plan: string;
+          from_billing_cycle?: string | null;
+          to_billing_cycle?: string | null;
+          effective_at: string;
+          applied_at?: string | null;
+          charge_amount_ars?: number | null;
+          saas_invoice_id?: string | null;
+          triggered_by_user_id?: string | null;
+          reason?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['plan_change_events']['Insert']>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
