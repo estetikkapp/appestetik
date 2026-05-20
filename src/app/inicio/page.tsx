@@ -46,30 +46,30 @@ export default function InicioPage() {
 function Hero() {
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-brand-50 to-white">
-      <div className="mx-auto grid max-w-6xl gap-12 px-4 py-20 md:grid-cols-2 md:items-center md:py-28">
-        <div>
-          <h1 className="text-4xl font-bold leading-tight text-stone-900 sm:text-5xl">
+      <div className="mx-auto grid max-w-6xl gap-12 px-4 py-14 md:grid-cols-2 md:items-center md:py-28">
+        <div className="text-center md:text-left">
+          <h1 className="text-3xl font-bold leading-tight text-stone-900 sm:text-4xl md:text-5xl">
             Tu centro de estética,{' '}
             <span className="text-brand-600">manejado en un solo lugar.</span>
           </h1>
-          <p className="mt-5 text-lg text-stone-600">
+          <p className="mx-auto mt-5 max-w-lg text-base text-stone-600 sm:text-lg md:mx-0">
             Agenda, reservas online, recordatorios automáticos por WhatsApp,
             cobros con Mercado Pago, facturación AFIP, ficha clínica de
             pacientes y análisis de piel con IA. Todo desde una sola app, en
             castellano, pensada para Argentina.
           </p>
 
-          <div className="mt-8 flex flex-wrap items-center gap-3">
+          <div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center md:justify-start">
             <Link
               href="/auth/signup"
-              className="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-6 py-3 text-base font-semibold text-white shadow-sm transition-colors hover:bg-brand-600"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-500 px-6 py-3 text-base font-semibold text-white shadow-sm transition-colors hover:bg-brand-600"
             >
               Probar 30 días gratis
               <ArrowRight className="h-5 w-5" />
             </Link>
             <Link
               href="/precios"
-              className="inline-flex items-center gap-2 rounded-lg border-2 border-stone-300 px-6 py-3 text-base font-medium text-stone-800 hover:border-stone-400"
+              className="inline-flex items-center justify-center gap-2 rounded-lg border-2 border-stone-300 px-6 py-3 text-base font-medium text-stone-800 hover:border-stone-400"
             >
               Ver precios
             </Link>
@@ -80,7 +80,7 @@ function Hero() {
           </p>
         </div>
 
-        <div className="rounded-2xl border border-stone-200 bg-white p-6 shadow-lg">
+        <div className="mx-auto w-full max-w-sm rounded-2xl border border-stone-200 bg-white p-5 shadow-lg sm:max-w-md md:max-w-none md:p-6">
           <div className="flex items-center gap-3 border-b border-stone-100 pb-4">
             <div className="h-3 w-3 rounded-full bg-red-400" />
             <div className="h-3 w-3 rounded-full bg-amber-400" />

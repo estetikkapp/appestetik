@@ -9,22 +9,31 @@ export default function InicioLayout({ children }: { children: ReactNode }) {
           <Link href="/inicio" className="text-lg font-bold text-brand-700">
             appestetika
           </Link>
-          <nav className="flex items-center gap-6 text-sm">
-            <Link href="/precios" className="text-stone-600 hover:text-stone-900">
+          {/* Mobile: solo CTA. Los links de navegación (Precios, Ayuda, Login)
+              quedan accesibles desde el footer para no apretar el header.
+              Desktop: nav completa. */}
+          <nav className="flex items-center gap-3 text-sm md:gap-6">
+            <Link
+              href="/precios"
+              className="hidden text-stone-600 hover:text-stone-900 md:inline"
+            >
               Precios
             </Link>
-            <Link href="/ayuda" className="text-stone-600 hover:text-stone-900">
+            <Link
+              href="/ayuda"
+              className="hidden text-stone-600 hover:text-stone-900 md:inline"
+            >
               Ayuda
             </Link>
             <Link
               href="/auth/login"
-              className="text-stone-600 hover:text-stone-900"
+              className="hidden text-stone-600 hover:text-stone-900 md:inline"
             >
               Iniciar sesión
             </Link>
             <Link
               href="/auth/signup"
-              className="rounded-lg bg-brand-500 px-4 py-2 font-medium text-white hover:bg-brand-600"
+              className="rounded-lg bg-brand-500 px-3 py-2 text-sm font-medium text-white hover:bg-brand-600 sm:px-4"
             >
               Probar gratis
             </Link>
