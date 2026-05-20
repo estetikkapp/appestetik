@@ -23,6 +23,7 @@ import {
 } from '@/lib/plans/subscription-service';
 import { audit } from '@/lib/audit';
 import type { PlanId, BillingCycle } from '@/lib/plans/types';
+import { PLANS } from '@/lib/plans/definitions';
 import { cancelPreapproval } from '@/lib/integrations/mp-saas/preapproval';
 import { isMpConfigured } from '@/lib/integrations/mp-saas/client';
 
@@ -73,8 +74,16 @@ export async function selectInitialPlanAction(formData: FormData): Promise<void>
     payload: { plan_id: planId, billing_cycle: billingCycle, userId },
   });
 
+  // Meta Pixel: trackeamos StartTrial al fin del embudo de adquisición.
+  // Pasamos el valor (predicted_ltv aproximado = precio mensual del plan,
+  // sirve a Meta para optimizar campañas de ads que buscan trials valiosos)
+  // y el plan elegido.
+  const planDef = PLANS[planId];
+  const value = planDef?.price_monthly_ars ?? 0;
+  const trialQs = `fbq_started_trial=1&fbq_value=${value}&fbq_plan=${encodeURIComponent(planId)}`;
+
   // Siguiente paso del onboarding (presencia online: slug, horarios, etc.)
-  redirect('/onboarding/presencia');
+  redirect(`/onboarding/presencia?${trialQs}`);
 }
 
 // ────────────────────────────────────────────────────────────────────────────

@@ -71,7 +71,9 @@ export async function signup(formData: FormData): Promise<void> {
     redirect(`/auth/signup?error=${encodeURIComponent(traducirErrorAuth(error.message))}`);
   }
 
-  redirect('/auth/login?signup=ok');
+  // ?fbq_completed_registration=1 lo levanta MetaPixelEventBus en el cliente
+  // y dispara fbq('track', 'CompleteRegistration'), después limpia el param.
+  redirect('/auth/login?signup=ok&fbq_completed_registration=1');
 }
 
 /**
@@ -115,11 +117,14 @@ async function signupFromInvitation(params: {
   if (loginErr) {
     // Caso raro: usuario creado pero login falló (ej. trigger falló por race
     // condition). El user puede loguear manualmente — su cuenta ya existe.
-    redirect('/auth/login?signup=ok');
+    redirect('/auth/login?signup=ok&fbq_completed_registration=1');
   }
 
   // Middleware decide: si onboarded → /, si no → /waiting-setup o /onboarding.
-  redirect('/');
+  // Track CompleteRegistration en la pantalla destino (invitado = nuevo user
+  // creado igual). Para invitados NO sale StartTrial — eso es solo cuando
+  // crean su propia org desde el signup público y eligen plan.
+  redirect('/?fbq_completed_registration=1');
 }
 
 export async function logout(): Promise<void> {

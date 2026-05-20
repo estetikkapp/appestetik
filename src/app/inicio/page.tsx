@@ -17,6 +17,7 @@ import {
   Smartphone,
   ChevronDown,
 } from 'lucide-react';
+import { ProbarGratisCTA } from '@/components/analytics/probar-gratis-cta';
 
 export const metadata = {
   title: 'appestetika — Gestión completa para tu centro de estética',
@@ -60,13 +61,13 @@ function Hero() {
           </p>
 
           <div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center md:justify-start">
-            <Link
-              href="/auth/signup"
+            <ProbarGratisCTA
+              contentName="hero_cta"
               className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-500 px-6 py-3 text-base font-semibold text-white shadow-sm transition-colors hover:bg-brand-600"
             >
               Probar 30 días gratis
               <ArrowRight className="h-5 w-5" />
-            </Link>
+            </ProbarGratisCTA>
             <Link
               href="/precios"
               className="inline-flex items-center justify-center gap-2 rounded-lg border-2 border-stone-300 px-6 py-3 text-base font-medium text-stone-800 hover:border-stone-400"
@@ -505,13 +506,13 @@ function FinalCta() {
         <p className="mt-4 text-base text-stone-600">
           Sin tarjeta. Sin contrato. Si te gusta, pagás. Si no, te vas.
         </p>
-        <Link
-          href="/auth/signup"
+        <ProbarGratisCTA
+          contentName="final_cta"
           className="mt-8 inline-flex items-center gap-2 rounded-lg bg-brand-500 px-8 py-4 text-lg font-semibold text-white shadow-sm hover:bg-brand-600"
         >
           Empezar ahora
           <ArrowRight className="h-5 w-5" />
-        </Link>
+        </ProbarGratisCTA>
         <p className="mt-4 text-sm text-stone-500">
           ¿Dudas?{' '}
           <a href="mailto:hola@estetikkapp.com" className="text-brand-600 underline">
