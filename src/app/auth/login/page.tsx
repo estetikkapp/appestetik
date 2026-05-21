@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Mail, AlertCircle } from 'lucide-react';
 import { login, signInWithGoogle } from '@/actions/auth';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,8 +21,27 @@ export default function LoginPage({
         </div>
 
         {searchParams.signup === 'ok' && (
-          <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
-            Cuenta creada. Revisá tu email para confirmar y después iniciá sesión.
+          <div className="mb-4 rounded-xl border-2 border-emerald-200 bg-emerald-50 p-4">
+            <div className="flex items-start gap-3">
+              <Mail className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+              <div className="flex-1 text-sm">
+                <p className="font-semibold text-emerald-900">¡Cuenta creada!</p>
+                <p className="mt-1 text-emerald-800">
+                  Te mandamos un email para confirmar tu cuenta. Hacé click en el link
+                  y volvé acá para iniciar sesión.
+                </p>
+                <div className="mt-3 flex items-start gap-2 rounded-lg bg-amber-50 p-2.5 text-xs text-amber-900">
+                  <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600" />
+                  <p>
+                    <strong>¿No lo ves?</strong> Revisá la carpeta de{' '}
+                    <strong>Spam</strong> o <strong>Promociones</strong> — a veces
+                    los mails de confirmación caen ahí. Si lo encontrás, marcalo
+                    como &quot;No es spam&quot; para que los próximos lleguen
+                    directo al inbox.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         )}
         {searchParams.error && (
