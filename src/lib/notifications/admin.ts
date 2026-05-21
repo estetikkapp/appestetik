@@ -45,34 +45,29 @@ async function safeSend(input: Parameters<typeof sendEmail>[0]): Promise<void> {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// Signup completado — nuevo usuario en la app
+// Signup completado — nueva clínica registrada
 // ────────────────────────────────────────────────────────────────────────────
+//
+// Solo se dispara para signups del path público (nueva org, nueva dueña).
+// Las invitaciones de empleadas NO disparan esta notificación — la dueña
+// del centro ya las invitó, está al tanto.
 
 export async function notifyAdminNewSignup(params: {
   email: string;
   fullName?: string | null;
-  /** True si vino por invitación (joined existing org). False si signup nuevo. */
-  isInvitation: boolean;
-  /** Nombre de la org. Para signup normal puede no estar aún (se crea via trigger). */
   organizationName?: string | null;
 }): Promise<void> {
   const to = getAdminEmails();
   if (to.length === 0) return;
 
-  const tipo = params.isInvitation
-    ? 'Empleada se unió por invitación'
-    : 'Nueva clínica registrada';
-
-  const subject = params.isInvitation
-    ? `[appestetika] ${params.email} se unió a ${params.organizationName ?? 'una clínica'}`
-    : `[appestetika] Nueva clínica: ${params.email}`;
+  const subject = `[appestetika] Nueva clínica: ${params.email}`;
 
   const html = `
 <!DOCTYPE html>
 <html lang="es-AR"><body style="font-family:-apple-system,BlinkMacSystemFont,sans-serif;max-width:560px;margin:0 auto;padding:24px;color:#1c1917;">
   <div style="background:#fbe9e5;padding:16px;border-radius:12px;margin-bottom:24px;">
     <div style="font-size:12px;color:#a85f58;text-transform:uppercase;font-weight:600;letter-spacing:1px;">appestetika · admin</div>
-    <h1 style="margin:8px 0 0;font-size:18px;color:#1c1917;">${tipo}</h1>
+    <h1 style="margin:8px 0 0;font-size:18px;color:#1c1917;">Nueva clínica registrada</h1>
   </div>
 
   <table style="width:100%;border-collapse:collapse;font-size:14px;">
@@ -88,24 +83,23 @@ export async function notifyAdminNewSignup(params: {
         : ''
     }
     <tr><td style="padding:8px 0;color:#78716c;">Fecha</td><td style="padding:8px 0;">${new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })}</td></tr>
-    <tr><td style="padding:8px 0;color:#78716c;">Origen</td><td style="padding:8px 0;">${params.isInvitation ? 'Invitación' : 'Signup público'}</td></tr>
   </table>
 
-  ${
-    params.isInvitation
-      ? `<p style="margin-top:24px;font-size:13px;color:#78716c;">Esta empleada se unió a una clínica existente — la dueña la invitó. No requiere acción de tu lado.</p>`
-      : `<p style="margin-top:24px;font-size:13px;color:#78716c;">Nueva clínica creada. Todavía no eligió plan — en el próximo paso del onboarding aparece el plan picker. Si elige uno, te llega otro email "trial activado".</p>`
-  }
+  <p style="margin-top:24px;font-size:13px;color:#78716c;">
+    Nueva clínica creada. Todavía no eligió plan — en el próximo paso del
+    onboarding aparece el plan picker. Si elige uno, te llega otro email
+    "trial activado".
+  </p>
 </body></html>`;
 
   await safeSend({
     to,
     subject,
     html,
-    text: `${tipo}\n\nEmail: ${params.email}\n${params.fullName ? `Nombre: ${params.fullName}\n` : ''}${params.organizationName ? `Centro: ${params.organizationName}\n` : ''}Fecha: ${new Date().toISOString()}`,
+    text: `Nueva clínica registrada\n\nEmail: ${params.email}\n${params.fullName ? `Nombre: ${params.fullName}\n` : ''}${params.organizationName ? `Centro: ${params.organizationName}\n` : ''}Fecha: ${new Date().toISOString()}`,
     tags: [
       { name: 'type', value: 'admin_notification' },
-      { name: 'event', value: params.isInvitation ? 'invitation_accepted' : 'new_signup' },
+      { name: 'event', value: 'new_signup' },
     ],
   });
 }

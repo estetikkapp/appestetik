@@ -76,7 +76,6 @@ export async function signup(formData: FormData): Promise<void> {
   await notifyAdminNewSignup({
     email,
     fullName: fullName || null,
-    isInvitation: false,
     organizationName: organizationName || 'Mi centro',
   });
 
@@ -119,27 +118,9 @@ async function signupFromInvitation(params: {
     );
   }
 
-  // Notificar al admin que se sumó alguien por invitación (no bloquea si falla)
-  // Buscamos el nombre de la org via el invitation_token
-  let orgName: string | null = null;
-  try {
-    const { data: inv } = await admin
-      .from('invitations')
-      .select('organization_id, organizations(name)')
-      .eq('token', invitationToken)
-      .maybeSingle();
-    const orgRel = inv?.organizations as { name: string } | { name: string }[] | null | undefined;
-    const org = Array.isArray(orgRel) ? orgRel[0] : orgRel;
-    orgName = org?.name ?? null;
-  } catch {
-    // Si falla la query, mandamos la notif igual sin el orgName
-  }
-  await notifyAdminNewSignup({
-    email,
-    fullName: fullName || null,
-    isInvitation: true,
-    organizationName: orgName,
-  });
+  // NOTA: por decisión del owner, NO notificamos al admin cuando una empleada
+  // se suma por invitación — la dueña del centro ya está al tanto (ella las
+  // invitó). Solo notificamos signups públicos (centros nuevos) en signup().
 
   // Auto-login con el cliente que escribe cookies de sesión
   const supabase = createClient();
