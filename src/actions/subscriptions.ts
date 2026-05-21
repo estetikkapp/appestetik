@@ -24,6 +24,8 @@ import {
 import { audit } from '@/lib/audit';
 import type { PlanId, BillingCycle } from '@/lib/plans/types';
 import { PLANS } from '@/lib/plans/definitions';
+import { notifyAdminTrialStarted } from '@/lib/notifications/admin';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { cancelPreapproval } from '@/lib/integrations/mp-saas/preapproval';
 import { isMpConfigured } from '@/lib/integrations/mp-saas/client';
 
@@ -73,6 +75,26 @@ export async function selectInitialPlanAction(formData: FormData): Promise<void>
     entityId: orgId,
     payload: { plan_id: planId, billing_cycle: billingCycle, userId },
   });
+
+  // Notificar al admin (fire-and-forget). Cargamos el nombre de la org y el
+  // email del owner para que la notificación sea informativa.
+  try {
+    const admin = createAdminClient();
+    const { data: org } = await admin
+      .from('organizations')
+      .select('name')
+      .eq('id', orgId)
+      .maybeSingle();
+    const { data: user } = await admin.auth.admin.getUserById(userId);
+    await notifyAdminTrialStarted({
+      organizationName: org?.name ?? 'Centro sin nombre',
+      email: user?.user?.email ?? null,
+      planId,
+      billingCycle,
+    });
+  } catch (err) {
+    console.warn('[subscriptions] notifyAdminTrialStarted error:', err);
+  }
 
   // Meta Pixel: trackeamos StartTrial al fin del embudo de adquisición.
   // Pasamos el valor (predicted_ltv aproximado = precio mensual del plan,

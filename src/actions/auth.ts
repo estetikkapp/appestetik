@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { normalizeEmail } from '@/lib/validators/email';
+import { notifyAdminNewSignup } from '@/lib/notifications/admin';
 
 export async function login(formData: FormData): Promise<void> {
   const email = normalizeEmail(String(formData.get('email') ?? ''));
@@ -71,6 +72,14 @@ export async function signup(formData: FormData): Promise<void> {
     redirect(`/auth/signup?error=${encodeURIComponent(traducirErrorAuth(error.message))}`);
   }
 
+  // Notificar al admin (fire-and-forget). No bloquea si falla Resend.
+  await notifyAdminNewSignup({
+    email,
+    fullName: fullName || null,
+    isInvitation: false,
+    organizationName: organizationName || 'Mi centro',
+  });
+
   // ?fbq_completed_registration=1 lo levanta MetaPixelEventBus en el cliente
   // y dispara fbq('track', 'CompleteRegistration'), después limpia el param.
   redirect('/auth/login?signup=ok&fbq_completed_registration=1');
@@ -109,6 +118,28 @@ async function signupFromInvitation(params: {
       `/auth/signup?invite=${encodeURIComponent(invitationToken)}&email=${encodeURIComponent(email)}&error=${errParam}`
     );
   }
+
+  // Notificar al admin que se sumó alguien por invitación (no bloquea si falla)
+  // Buscamos el nombre de la org via el invitation_token
+  let orgName: string | null = null;
+  try {
+    const { data: inv } = await admin
+      .from('invitations')
+      .select('organization_id, organizations(name)')
+      .eq('token', invitationToken)
+      .maybeSingle();
+    const orgRel = inv?.organizations as { name: string } | { name: string }[] | null | undefined;
+    const org = Array.isArray(orgRel) ? orgRel[0] : orgRel;
+    orgName = org?.name ?? null;
+  } catch {
+    // Si falla la query, mandamos la notif igual sin el orgName
+  }
+  await notifyAdminNewSignup({
+    email,
+    fullName: fullName || null,
+    isInvitation: true,
+    organizationName: orgName,
+  });
 
   // Auto-login con el cliente que escribe cookies de sesión
   const supabase = createClient();
