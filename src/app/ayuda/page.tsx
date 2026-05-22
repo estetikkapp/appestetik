@@ -316,10 +316,10 @@ export default function AyudaPage() {
         <p className="mx-auto mt-2 max-w-xl text-sm text-stone-600">
           Escribinos a{' '}
           <a
-            href="mailto:hola@estetikkapp.com"
+            href="mailto:estetikkapp@gmail.com"
             className="font-medium text-brand-700 underline"
           >
-            hola@estetikkapp.com
+            estetikkapp@gmail.com
           </a>{' '}
           o por WhatsApp y te ayudamos. El equipo está en Argentina y responde
           en horario laboral.

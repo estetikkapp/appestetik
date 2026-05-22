@@ -55,7 +55,7 @@ export default function InicioLayout({ children }: { children: ReactNode }) {
               <Link href="/agente" className="hover:text-stone-900">
                 Agente WhatsApp
               </Link>
-              <a href="mailto:hola@estetikkapp.com" className="hover:text-stone-900">
+              <a href="mailto:estetikkapp@gmail.com" className="hover:text-stone-900">
                 Contacto
               </a>
             </div>

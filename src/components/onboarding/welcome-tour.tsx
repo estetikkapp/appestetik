@@ -119,7 +119,7 @@ function buildSteps(hasEmpleados: boolean): Step[] {
       target: '[data-tour="ayuda"]',
       title: 'Listo',
       content:
-        '¡Eso es todo! Si tenés dudas, en "Ayuda" hay tutoriales paso a paso de cada feature. Cualquier consulta, escribinos a hola@estetikkapp.com. Buena suerte.',
+        '¡Eso es todo! Si tenés dudas, en "Ayuda" hay tutoriales paso a paso de cada feature. Cualquier consulta, escribinos a estetikkapp@gmail.com. Buena suerte.',
       placement: 'right',
       skipBeacon: true,
       buttons: ['back', 'primary'],

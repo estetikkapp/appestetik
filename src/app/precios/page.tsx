@@ -110,7 +110,7 @@ export default function PreciosPage({
         <section className="mt-16 text-center text-sm text-stone-500">
           <p>
             ¿Sos cadena con más de una sucursal?{' '}
-            <a href="mailto:hola@estetikkapp.com" className="text-brand-600 hover:underline">
+            <a href="mailto:estetikkapp@gmail.com" className="text-brand-600 hover:underline">
               Hablemos
             </a>
             {' '}— tenemos plan para vos.

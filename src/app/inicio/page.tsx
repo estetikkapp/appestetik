@@ -384,7 +384,7 @@ function Faq() {
     },
     {
       q: '¿Y si soy un centro con varias sucursales?',
-      a: 'Tenemos un plan empresarial para multi-sucursal con account manager dedicado. Escribinos a hola@estetikkapp.com y armamos un plan a medida.',
+      a: 'Tenemos un plan empresarial para multi-sucursal con account manager dedicado. Escribinos a estetikkapp@gmail.com y armamos un plan a medida.',
     },
   ];
 
@@ -448,7 +448,7 @@ function FinalCta() {
         </ProbarGratisCTA>
         <p className="mt-4 text-sm text-stone-500">
           ¿Dudas?{' '}
-          <a href="mailto:hola@estetikkapp.com" className="text-brand-600 underline">
+          <a href="mailto:estetikkapp@gmail.com" className="text-brand-600 underline">
             Escribinos
           </a>{' '}
           o entrá a{' '}
