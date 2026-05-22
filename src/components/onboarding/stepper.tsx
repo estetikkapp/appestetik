@@ -3,10 +3,10 @@ import { cn } from '@/lib/utils/cn';
 
 const STEPS = [
   { n: 1, label: 'Tu plan', path: '/onboarding/plan' },
-  { n: 2, label: 'Datos fiscales', path: '/onboarding' },
-  { n: 3, label: 'Horarios', path: '/onboarding/horarios' },
-  { n: 4, label: 'Primer servicio', path: '/onboarding/servicio' },
-  { n: 5, label: 'Importar', path: '/onboarding/importar' },
+  { n: 2, label: 'Importar', path: '/onboarding/importar' },
+  { n: 3, label: 'Datos fiscales', path: '/onboarding' },
+  { n: 4, label: 'Horarios', path: '/onboarding/horarios' },
+  { n: 5, label: 'Primer servicio', path: '/onboarding/servicio' },
   { n: 6, label: 'Presencia', path: '/onboarding/presencia' },
 ];
 

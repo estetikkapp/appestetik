@@ -63,7 +63,21 @@ type State =
 // Main
 // ────────────────────────────────────────────────────────────────────────────
 
-export function ImporterUI() {
+interface Props {
+  /**
+   * URL a la que redirige el botón principal cuando termina exitosa la
+   * importación. Default `/clientas`. En el flow de onboarding queremos
+   * `/onboarding` para que siga al próximo paso (datos fiscales).
+   */
+  onCompleteHref?: string;
+  /** Label del botón principal en la pantalla done. */
+  onCompleteLabel?: string;
+}
+
+export function ImporterUI({
+  onCompleteHref = '/clientas',
+  onCompleteLabel = 'Ver clientas',
+}: Props = {}) {
   const router = useRouter();
   const [state, setState] = useState<State>({ kind: 'idle' });
   const [error, setError] = useState<string | null>(null);
@@ -254,7 +268,7 @@ export function ImporterUI() {
           )}
         </div>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
-          <Button onClick={() => router.push('/clientas')}>Ver clientas</Button>
+          <Button onClick={() => router.push(onCompleteHref)}>{onCompleteLabel}</Button>
           <Button variant="outline" onClick={() => setState({ kind: 'idle' })}>
             Importar otro archivo
           </Button>

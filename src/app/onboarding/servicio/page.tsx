@@ -29,7 +29,7 @@ const CATEGORY_LABELS: Record<(typeof CATEGORIES)[number], string> = {
 export default function OnboardingStep3({ searchParams }: { searchParams: { error?: string } }) {
   return (
     <div>
-      <OnboardingStepper current={4} />
+      <OnboardingStepper current={5} />
 
       <div className="rounded-2xl bg-white p-8 shadow-sm">
         <div className="mb-6">

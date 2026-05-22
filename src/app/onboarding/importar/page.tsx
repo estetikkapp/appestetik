@@ -8,7 +8,7 @@ export const metadata = { title: 'Onboarding — importar clientas' };
 export default function OnboardingImportarPage() {
   return (
     <div>
-      <OnboardingStepper current={5} />
+      <OnboardingStepper current={2} />
 
       <div className="rounded-2xl bg-white p-8 shadow-sm">
         <div className="mb-6 flex items-start justify-between gap-4">
@@ -24,7 +24,7 @@ export default function OnboardingImportarPage() {
             </p>
           </div>
           <Link
-            href="/onboarding/presencia"
+            href="/onboarding"
             className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-stone-300 px-4 py-2 text-sm text-stone-700 hover:bg-stone-50"
           >
             Saltar
@@ -32,17 +32,20 @@ export default function OnboardingImportarPage() {
           </Link>
         </div>
 
-        <ImporterUI />
+        <ImporterUI
+          onCompleteHref="/onboarding"
+          onCompleteLabel="Continuar con el onboarding"
+        />
 
         <div className="mt-6 flex items-center justify-between border-t border-stone-100 pt-4">
           <Link
-            href="/onboarding/servicio"
+            href="/onboarding/plan"
             className="text-sm text-stone-500 hover:text-stone-700"
           >
-            ← Volver
+            ← Volver a plan
           </Link>
           <Link
-            href="/onboarding/presencia"
+            href="/onboarding"
             className="inline-flex items-center gap-2 text-sm text-brand-600 hover:underline"
           >
             Continuar (saltear)

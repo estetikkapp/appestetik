@@ -131,9 +131,11 @@ export async function selectInitialPlanAction(formData: FormData): Promise<void>
     },
   });
 
-  // Siguiente paso del onboarding (datos fiscales). El stepper guía después
-  // al user por horarios → servicio → importar (opcional) → presencia.
-  redirect(`/onboarding?${trialQs}`);
+  // Siguiente paso del onboarding: IMPORTAR (opcional). Es lo primero que
+  // ve la dueña apenas arranca el trial para que considere subir su base
+  // de clientas si ya la tiene en algún lado. Si la skipea, sigue con
+  // fiscal → horarios → servicio → presencia.
+  redirect(`/onboarding/importar?${trialQs}`);
 }
 
 // ────────────────────────────────────────────────────────────────────────────

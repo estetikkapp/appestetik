@@ -49,7 +49,7 @@ export default async function OnboardingStep1({
 
   return (
     <div>
-      <OnboardingStepper current={2} />
+      <OnboardingStepper current={3} />
 
       <div className="rounded-2xl bg-white p-8 shadow-sm">
         <div className="mb-6">
