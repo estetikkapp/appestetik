@@ -37,6 +37,8 @@ interface ExtractedClient {
   email: string | null;
   dni: string | null;
   birthdate: string | null;
+  fitzpatrick: 'I' | 'II' | 'III' | 'IV' | 'V' | 'VI' | null;
+  contraindications: string | null;
   notes: string | null;
   issues: string[];
 }
@@ -439,6 +441,16 @@ function ReviewView({
                     />
                   </td>
                   <td className="px-3 py-2 max-w-xs">
+                    {c.contraindications && (
+                      <div className="mb-1 rounded-md bg-red-50 px-2 py-1 text-[11px] font-semibold text-red-800 ring-1 ring-red-200">
+                        ⚠ {c.contraindications.split('\n').join(' · ')}
+                      </div>
+                    )}
+                    {c.fitzpatrick && (
+                      <div className="mb-1 inline-block rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-900">
+                        Fitzpatrick {c.fitzpatrick}
+                      </div>
+                    )}
                     <input
                       defaultValue={c.notes ?? ''}
                       onBlur={(e) => onEdit(i, 'notes', e.target.value)}

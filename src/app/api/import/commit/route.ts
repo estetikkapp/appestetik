@@ -40,7 +40,42 @@ interface CommitClient {
   email?: string | null;
   dni?: string | null;
   birthdate?: string | null;
+  /** Fitzpatrick I-VI normalizado por la IA. Lo combinamos en notes con prefijo. */
+  fitzpatrick?: string | null;
+  /** Contraindicaciones clínicas. Las prefijamos al notes con marcador en mayúscula. */
+  contraindications?: string | null;
   notes?: string | null;
+}
+
+/**
+ * Combina fitzpatrick + contraindications + notes en un único campo de
+ * notas estructuradas que se inserta en clients.notes.
+ *
+ * Convención del formato:
+ *   ⚠ CONTRAINDICACIONES:
+ *   EMBARAZADA — NO LÁSER
+ *   ALERGIA A LIDOCAÍNA
+ *
+ *   Fitzpatrick: III
+ *
+ *   <notas libres>
+ *
+ * Esto es MVP — más adelante migramos a la tabla client_medical_info que
+ * tiene campos dedicados. Por ahora preservamos toda la info en notes
+ * para no perderla.
+ */
+function buildNotesField(c: CommitClient): string | null {
+  const parts: string[] = [];
+  if (c.contraindications?.trim()) {
+    parts.push(`⚠ CONTRAINDICACIONES:\n${c.contraindications.trim()}`);
+  }
+  if (c.fitzpatrick?.trim()) {
+    parts.push(`Fitzpatrick: ${c.fitzpatrick.trim()}`);
+  }
+  if (c.notes?.trim()) {
+    parts.push(c.notes.trim());
+  }
+  return parts.length > 0 ? parts.join('\n\n') : null;
 }
 
 export async function POST(req: NextRequest) {
@@ -140,7 +175,7 @@ export async function POST(req: NextRequest) {
       email: c.email ?? null,
       dni: c.dni ?? null,
       birthdate: c.birthdate ?? null,
-      notes: c.notes ?? null,
+      notes: buildNotesField(c),
     }));
 
     const { error: insErr } = await admin.from('clients').insert(rows);
