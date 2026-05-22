@@ -110,14 +110,21 @@ function MetaPixelEventBus() {
       const valueRaw = newParams.get('fbq_value');
       const value = valueRaw ? Number(valueRaw) : undefined;
       const plan = newParams.get('fbq_plan') ?? undefined;
-      trackStartTrial({
-        value: Number.isFinite(value) ? value : undefined,
-        currency: 'ARS',
-        content_name: plan ? `trial_${plan}` : 'trial_started',
-      });
+      // event_id para dedup con CAPI server-side (el server action ya
+      // disparó el mismo evento con este ID — Meta merge)
+      const eventId = newParams.get('fbq_event_id') ?? undefined;
+      trackStartTrial(
+        {
+          value: Number.isFinite(value) ? value : undefined,
+          currency: 'ARS',
+          content_name: plan ? `trial_${plan}` : 'trial_started',
+        },
+        eventId
+      );
       newParams.delete('fbq_started_trial');
       newParams.delete('fbq_value');
       newParams.delete('fbq_plan');
+      newParams.delete('fbq_event_id');
       dirty = true;
     }
 

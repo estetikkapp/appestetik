@@ -29,7 +29,12 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-type FbqFunction = (event: string, action: string, params?: Record<string, unknown>) => void;
+type FbqFunction = (
+  event: string,
+  action: string,
+  params?: Record<string, unknown>,
+  options?: { eventID?: string }
+) => void;
 
 declare global {
   interface Window {
@@ -59,13 +64,18 @@ export function trackCompleteRegistration(params?: { value?: number; content_nam
   fbq()?.('track', 'CompleteRegistration', params);
 }
 
-export function trackStartTrial(params?: {
-  value?: number;
-  currency?: string;
-  predicted_ltv?: number;
-  content_name?: string;
-}): void {
-  fbq()?.('track', 'StartTrial', params);
+export function trackStartTrial(
+  params?: {
+    value?: number;
+    currency?: string;
+    predicted_ltv?: number;
+    content_name?: string;
+  },
+  /** event_id para dedup con CAPI server-side. Si el server-side ya disparó
+   *  con este mismo ID, Meta los cuenta como un solo evento. */
+  eventId?: string
+): void {
+  fbq()?.('track', 'StartTrial', params, eventId ? { eventID: eventId } : undefined);
 }
 
 export function trackSubscribe(params?: {

@@ -28,6 +28,7 @@ import { notifyAdminTrialStarted } from '@/lib/notifications/admin';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { cancelPreapproval } from '@/lib/integrations/mp-saas/preapproval';
 import { isMpConfigured } from '@/lib/integrations/mp-saas/client';
+import { sendCapiEvent } from '@/lib/integrations/meta-capi';
 
 // ────────────────────────────────────────────────────────────────────────────
 // selectInitialPlan — del paso 1 del onboarding (decisión 1C)
@@ -77,7 +78,9 @@ export async function selectInitialPlanAction(formData: FormData): Promise<void>
   });
 
   // Notificar al admin (fire-and-forget). Cargamos el nombre de la org y el
-  // email del owner para que la notificación sea informativa.
+  // email del owner para que la notificación sea informativa + para
+  // identificar al usuario en Meta CAPI.
+  let ownerEmail: string | null = null;
   try {
     const admin = createAdminClient();
     const { data: org } = await admin
@@ -86,9 +89,10 @@ export async function selectInitialPlanAction(formData: FormData): Promise<void>
       .eq('id', orgId)
       .maybeSingle();
     const { data: user } = await admin.auth.admin.getUserById(userId);
+    ownerEmail = user?.user?.email ?? null;
     await notifyAdminTrialStarted({
       organizationName: org?.name ?? 'Centro sin nombre',
-      email: user?.user?.email ?? null,
+      email: ownerEmail,
       planId,
       billingCycle,
     });
@@ -102,7 +106,30 @@ export async function selectInitialPlanAction(formData: FormData): Promise<void>
   // y el plan elegido.
   const planDef = PLANS[planId];
   const value = planDef?.price_monthly_ars ?? 0;
-  const trialQs = `fbq_started_trial=1&fbq_value=${value}&fbq_plan=${encodeURIComponent(planId)}`;
+  // event_id determinístico para dedup con el evento client-side (mismo
+  // event_id en ambos → Meta los cuenta como uno solo)
+  const eventId = `starttrial_${orgId}`;
+  const trialQs =
+    `fbq_started_trial=1&fbq_value=${value}` +
+    `&fbq_plan=${encodeURIComponent(planId)}` +
+    `&fbq_event_id=${encodeURIComponent(eventId)}`;
+
+  // Meta CAPI server-side — garantiza que Meta vea el evento aunque el user
+  // tenga adblocker / iOS ITP / haya cambiado de browser por la confirmación
+  // de email. El client-side pixel ALSO fires con el mismo event_id; Meta
+  // deduplica.
+  await sendCapiEvent({
+    event_name: 'StartTrial',
+    event_id: eventId,
+    email: ownerEmail,
+    event_source_url: `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://estetikkapp.com'}/onboarding/plan`,
+    custom_data: {
+      value,
+      currency: 'ARS',
+      content_name: `trial_${planId}`,
+      predicted_ltv: value * 6, // estimación: 6 meses promedio
+    },
+  });
 
   // Siguiente paso del onboarding (presencia online: slug, horarios, etc.)
   redirect(`/onboarding/presencia?${trialQs}`);

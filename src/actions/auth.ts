@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { normalizeEmail } from '@/lib/validators/email';
 import { notifyAdminNewSignup } from '@/lib/notifications/admin';
+import { sendCapiEvent } from '@/lib/integrations/meta-capi';
 
 export async function login(formData: FormData): Promise<void> {
   const email = normalizeEmail(String(formData.get('email') ?? ''));
@@ -77,6 +78,19 @@ export async function signup(formData: FormData): Promise<void> {
     email,
     fullName: fullName || null,
     organizationName: organizationName || 'Mi centro',
+  });
+
+  // Meta Conversions API: server-side CompleteRegistration. Garantiza que
+  // Meta vea el evento aunque el user tenga adblocker, iOS ITP o cambie de
+  // browser entre signup y confirmación de email. El client-side pixel
+  // también dispara (via ?fbq_completed_registration=1) — Meta deduplica.
+  await sendCapiEvent({
+    event_name: 'CompleteRegistration',
+    email,
+    event_source_url: `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://estetikkapp.com'}/auth/signup`,
+    custom_data: {
+      content_name: 'signup_form',
+    },
   });
 
   // ?fbq_completed_registration=1 lo levanta MetaPixelEventBus en el cliente
