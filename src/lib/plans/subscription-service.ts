@@ -25,6 +25,8 @@ import {
   isUpgrade,
   isDowngrade,
 } from './billing-calculations';
+import { createPreapproval } from '@/lib/integrations/mp-saas/preapproval';
+import { createCheckoutPreference } from '@/lib/integrations/mp-saas/checkout-pro';
 
 /** Snapshot serializable de una subscription. */
 function rowToSubscription(row: Record<string, unknown>): PlanSubscription {
@@ -474,6 +476,118 @@ export async function markPaymentSucceeded(
       current_period_ends_at: newPeriodEnd.toISOString(),
     })
     .eq('id', subscriptionId);
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Activación del pago (trial → pago real)
+// ────────────────────────────────────────────────────────────────────────────
+
+export interface ActivatePaymentResult {
+  /** URL de MP a la que redirigir a la clienta para autorizar el pago. */
+  initPoint: string;
+  /** 'preapproval' (débito mensual recurrente) o 'checkout' (pago anual único). */
+  kind: 'preapproval' | 'checkout';
+}
+
+/**
+ * Arranca el cobro real de una suscripción que está en trial (o trial_expired).
+ *
+ *   billing_cycle 'monthly' → MP Preapproval (débito automático mensual).
+ *     Guardamos mp_preapproval_id. El webhook pasa la sub a 'active' cuando
+ *     la clienta autoriza el débito en MP. Después MP debita cada mes solo.
+ *
+ *   billing_cycle 'yearly' → Checkout Pro one-time por el precio anual.
+ *     Creamos una saas_invoice. El webhook (handleInvoicePayment) la marca
+ *     paid y extiende el período 1 año via markPaymentSucceeded.
+ *
+ * Devuelve el init_point para que el caller redirija. NO cambia el status
+ * local todavía — eso lo hace el webhook cuando MP confirma. Así evitamos
+ * marcar 'active' una sub que la clienta abandonó en el checkout.
+ */
+export async function activateRecurringSubscription(params: {
+  orgId: string;
+  payerEmail: string;
+  appUrl: string;
+}): Promise<ActivatePaymentResult> {
+  const { orgId, payerEmail, appUrl } = params;
+  const admin = createAdminClient();
+  const sub = await getActiveSubscription(orgId);
+  if (!sub) throw new Error('No hay suscripción activa para activar el pago.');
+  if (sub.status === 'active') {
+    throw new Error('La suscripción ya está activa y pagando.');
+  }
+  if (sub.status === 'suspended' || sub.status === 'expired') {
+    throw new Error(`No se puede activar una sub en estado ${sub.status}.`);
+  }
+
+  const plan = PLANS[sub.plan_id];
+  if (!plan) throw new Error(`Plan ${sub.plan_id} desconocido.`);
+
+  const backUrl = `${appUrl}/configuracion?ok=plan-activado`;
+
+  if (sub.billing_cycle === 'monthly') {
+    const externalRef = `sub_${sub.id}_${Date.now()}`;
+    const preapproval = await createPreapproval({
+      payer_email: payerEmail,
+      reason: `Suscripción ${plan.name} — appestetika`,
+      transaction_amount: plan.price_monthly_ars,
+      external_reference: externalRef,
+      back_url: backUrl,
+    });
+
+    // Guardamos el preapproval_id para que el webhook matchee cuando MP
+    // confirme la autorización del débito.
+    await admin
+      .from('plan_subscriptions')
+      .update({
+        mp_preapproval_id: preapproval.id,
+        mp_external_reference: externalRef,
+      })
+      .eq('id', sub.id);
+
+    return { initPoint: preapproval.init_point, kind: 'preapproval' };
+  }
+
+  // Yearly: cobro único anual via Checkout Pro.
+  const externalRef = `sub_yearly_${sub.id}_${Date.now()}`;
+  const { data: invoice, error: invErr } = await admin
+    .from('saas_invoices')
+    .insert({
+      subscription_id: sub.id,
+      amount_ars: plan.price_yearly_ars,
+      billing_period_start: sub.current_period_started_at,
+      billing_period_end: sub.current_period_ends_at,
+      invoice_kind: 'subscription',
+      status: 'pending',
+      mp_external_reference: externalRef,
+    })
+    .select('id')
+    .single();
+  if (invErr) throw new Error(`crear invoice anual: ${invErr.message}`);
+
+  const preference = await createCheckoutPreference({
+    items: [
+      {
+        title: `Suscripción anual ${plan.name} — appestetika`,
+        description: `12 meses (2 bonificados)`,
+        quantity: 1,
+        unit_price: plan.price_yearly_ars,
+      },
+    ],
+    external_reference: externalRef,
+    success_url: backUrl,
+    failure_url: `${appUrl}/configuracion?error=pago-fallido`,
+    back_url: `${appUrl}/configuracion`,
+    payer_email: payerEmail,
+    metadata: { invoice_id: invoice.id, subscription_id: sub.id, kind: 'subscription_yearly' },
+  });
+
+  await admin
+    .from('plan_subscriptions')
+    .update({ mp_external_reference: externalRef })
+    .eq('id', sub.id);
+
+  return { initPoint: preference.init_point, kind: 'checkout' };
 }
 
 /**

@@ -10,6 +10,7 @@ import {
   cancelSubscriptionAction,
   reactivateSubscriptionAction,
 } from '@/actions/subscriptions';
+import { ActivatePlanButton } from '@/components/plans/activate-plan-button';
 
 /**
  * Sección "Mi plan" en /configuracion.
@@ -120,6 +121,25 @@ export async function PlanSection() {
           )}
         </div>
       </div>
+
+      {/* CTA de activación de pago: cuando está en trial o el trial venció,
+          la clienta puede activar el débito real desde acá. */}
+      {!isLegacy && (subscription.status === 'trialing' || subscription.status === 'trial_expired') && (
+        <div className="mt-6 rounded-lg border border-brand-200 bg-brand-50/50 p-4">
+          <p className="mb-3 text-sm text-stone-700">
+            {subscription.status === 'trialing'
+              ? 'Activá tu plan ahora para que no se corte el servicio cuando termine la prueba. El primer cobro es al finalizar el trial.'
+              : 'Tu prueba terminó. Activá tu plan para seguir usando appestetika.'}
+          </p>
+          <ActivatePlanButton
+            label={`Activar ${plan?.name ?? 'plan'} · ${
+              subscription.billing_cycle === 'yearly'
+                ? `${formatArs(plan?.price_yearly_ars ?? 0)}/año`
+                : `${formatArs(plan?.price_monthly_ars ?? 0)}/mes`
+            }`}
+          />
+        </div>
+      )}
 
       <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-stone-100 pt-4">
         {!isLegacy && subscription.status !== 'cancelled' && subscription.status !== 'expired' && (
