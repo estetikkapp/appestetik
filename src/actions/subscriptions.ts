@@ -131,8 +131,9 @@ export async function selectInitialPlanAction(formData: FormData): Promise<void>
     },
   });
 
-  // Siguiente paso del onboarding (presencia online: slug, horarios, etc.)
-  redirect(`/onboarding/presencia?${trialQs}`);
+  // Siguiente paso del onboarding (datos fiscales). El stepper guía después
+  // al user por horarios → servicio → importar (opcional) → presencia.
+  redirect(`/onboarding?${trialQs}`);
 }
 
 // ────────────────────────────────────────────────────────────────────────────

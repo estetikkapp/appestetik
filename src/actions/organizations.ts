@@ -131,7 +131,9 @@ export async function createFirstService(formData: FormData): Promise<void> {
 
   if (error) redirect(`/onboarding/servicio?error=${encodeURIComponent(error.message)}`);
 
-  redirect('/onboarding/presencia');
+  // Después del servicio, el nuevo step opcional /onboarding/importar permite
+  // subir base de clientas desde Excel/foto. Si la skipea, queda en presencia.
+  redirect('/onboarding/importar');
 }
 
 export async function finalizeOnboarding(formData: FormData): Promise<void> {

@@ -6,6 +6,7 @@ import { UserMenu } from '@/components/layout/user-menu';
 import { OrgSwitcher } from '@/components/layout/org-switcher';
 import { NotificationsBell } from '@/components/notifications/notifications-bell';
 import { WelcomeTour } from '@/components/onboarding/welcome-tour';
+import { HelpChatWidget } from '@/components/help-chat/help-chat-widget';
 import type { Role } from '@/lib/auth/require-membership';
 
 export default async function PanelLayout({ children }: { children: React.ReactNode }) {
@@ -58,6 +59,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
         <main className="flex-1 p-6">{children}</main>
       </div>
       <WelcomeTour enabled={showTour} />
+      <HelpChatWidget />
     </div>
   );
 }

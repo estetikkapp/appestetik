@@ -6,7 +6,8 @@ const STEPS = [
   { n: 2, label: 'Datos fiscales', path: '/onboarding' },
   { n: 3, label: 'Horarios', path: '/onboarding/horarios' },
   { n: 4, label: 'Primer servicio', path: '/onboarding/servicio' },
-  { n: 5, label: 'Presencia', path: '/onboarding/presencia' },
+  { n: 5, label: 'Importar', path: '/onboarding/importar' },
+  { n: 6, label: 'Presencia', path: '/onboarding/presencia' },
 ];
 
 export function OnboardingStepper({ current }: { current: number }) {

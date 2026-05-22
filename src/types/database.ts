@@ -982,6 +982,28 @@ export type Database = {
         Update: Partial<Database['public']['Tables']['plan_change_events']['Insert']>;
         Relationships: [];
       };
+      help_chat_messages: {
+        Row: {
+          id: string;
+          user_id: string;
+          organization_id: string;
+          role: 'user' | 'assistant';
+          content: string;
+          tokens_used: number | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          organization_id: string;
+          role: 'user' | 'assistant';
+          content: string;
+          tokens_used?: number | null;
+          created_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['help_chat_messages']['Insert']>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {

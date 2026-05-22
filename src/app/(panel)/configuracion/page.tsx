@@ -14,7 +14,8 @@ import { EmbedSnippet } from './embed-snippet';
 import { BridgeSection } from './bridge-section';
 import { PlanSection } from './plan-section';
 import { resetTourAction } from '@/actions/tour';
-import { Play } from 'lucide-react';
+import { Play, Sparkles, ArrowRight } from 'lucide-react';
+import Link from 'next/link';
 
 export const metadata = { title: 'Configuración — appestetika' };
 
@@ -180,6 +181,25 @@ export default async function ConfiguracionPage({
           <EmbedSnippet slug={org.slug} />
         </section>
       )}
+
+      <section className="rounded-xl border border-stone-200 bg-white p-6">
+        <h2 className="mb-2 flex items-center gap-2 text-lg font-semibold">
+          <Sparkles className="h-5 w-5 text-brand-500" />
+          Importar clientas con IA
+        </h2>
+        <p className="mb-4 text-sm text-stone-500">
+          ¿Tenés tu lista de clientas en Excel, en un cuaderno o en una captura
+          de WhatsApp? Subila y la IA carga todo automáticamente. Después
+          revisás y confirmás.
+        </p>
+        <Link
+          href="/configuracion/importar"
+          className="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600"
+        >
+          Empezar
+          <ArrowRight className="h-4 w-4" />
+        </Link>
+      </section>
 
       <section className="rounded-xl border border-stone-200 bg-white p-6">
         <h2 className="mb-2 text-lg font-semibold">Ayuda y tour</h2>
