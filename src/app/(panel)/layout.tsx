@@ -8,6 +8,8 @@ import { NotificationsBell } from '@/components/notifications/notifications-bell
 import { WelcomeTour } from '@/components/onboarding/welcome-tour';
 import { HelpChatWidget } from '@/components/help-chat/help-chat-widget';
 import type { Role } from '@/lib/auth/require-membership';
+import { getActiveSubscription } from '@/lib/plans/subscription-service';
+import { planHasFeature } from '@/lib/plans/feature-flags';
 
 export default async function PanelLayout({ children }: { children: React.ReactNode }) {
   const supabase = createClient();
@@ -42,6 +44,20 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   // completó. Decisión 1A del owner del producto.
   const showTour = activeRole === 'owner' && !activeMembership?.tour_completed_at;
 
+  // El step de "Empleadas" del tour solo aplica si el plan de la org tiene
+  // la feature multi_usuario (Gabinete no la tiene → no mostramos ese step).
+  // Solo consultamos la sub si vamos a mostrar el tour, para no agregar
+  // queries en cada render del panel.
+  let tourHasEmpleados = false;
+  if (showTour && activeOrgId) {
+    try {
+      const sub = await getActiveSubscription(activeOrgId);
+      tourHasEmpleados = sub ? planHasFeature(sub.plan_id, 'multi_usuario') : false;
+    } catch {
+      tourHasEmpleados = false;
+    }
+  }
+
   return (
     <div className="flex min-h-screen bg-brand-50/30">
       <Sidebar role={activeRole} />
@@ -58,7 +74,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
         </header>
         <main className="flex-1 p-6">{children}</main>
       </div>
-      <WelcomeTour enabled={showTour} />
+      <WelcomeTour enabled={showTour} hasEmpleados={tourHasEmpleados} />
       <HelpChatWidget />
     </div>
   );

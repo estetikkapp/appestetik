@@ -14,7 +14,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import {
   Joyride,
   STATUS,
@@ -29,67 +29,105 @@ import { markTourCompletedAction } from '@/actions/tour';
 interface Props {
   /** Server pasa true si owner activo + nunca completó el tour. */
   enabled: boolean;
+  /** Si el plan de la org tiene la feature de empleadas (multi_usuario).
+   *  Gabinete = false → ocultamos el step de Empleadas. */
+  hasEmpleados: boolean;
 }
 
+// Flag de localStorage para no re-disparar el tour en cada navegación a `/`.
+// El `enabled` viene del server y queda "stale" en el cliente tras completar
+// el tour (el layout no se re-renderiza en navegación client-side), así que
+// sin este flag el tour reaparecía en cada click a Inicio.
+const SEEN_KEY = 'appestetika_tour_seen';
+
 // Los selectores apuntan a [data-tour="<id>"] que están seteados en Sidebar.
-// Si en el futuro queremos agregar un stop sobre un botón específico (ej.
-// "Compartir link"), basta con agregar el data-tour ahí + un step nuevo acá.
-const STEPS: Step[] = [
-  {
-    target: 'body',
-    placement: 'center',
-    title: 'Bienvenida a appestetika',
-    content:
-      '¡Hola! En 1 minuto te muestro las 5 cosas que tenés que conocer para arrancar. Si querés saltearlo, dale a "Salir del tour" — siempre podés volver a verlo desde Configuración.',
-    skipBeacon: true,
-    buttons: ['skip', 'primary'],
-  },
-  {
-    target: '[data-tour="agenda"]',
-    title: 'Tu agenda',
-    content:
-      'Acá vas a ver todos tus turnos: por día, por semana o por mes. Desde adentro también podés copiar tu link público para que tus clientas reserven solas.',
-    placement: 'right',
-    skipBeacon: true,
-    buttons: ['skip', 'back', 'primary'],
-  },
-  {
-    target: '[data-tour="clientas"]',
-    title: 'Tus clientas',
-    content:
-      'Tu base de pacientes con ficha clínica, historial, fotos antes/después y consentimientos firmados. Cada turno suma datos a la ficha.',
-    placement: 'right',
-    skipBeacon: true,
-    buttons: ['skip', 'back', 'primary'],
-  },
-  {
-    target: '[data-tour="servicios"]',
-    title: 'Catálogo de servicios',
-    content:
-      'Acá cargás los tratamientos que ofrecés con precio, duración y buffer. Esto define qué pueden reservar tus clientas online.',
-    placement: 'right',
-    skipBeacon: true,
-    buttons: ['skip', 'back', 'primary'],
-  },
-  {
-    target: '[data-tour="configuracion"]',
-    title: 'Conectá WhatsApp',
-    content:
-      'En Configuración → "Agente local" generás un código y descargás un programa para tu PC. Una vez conectado, los recordatorios salen automáticos desde tu WhatsApp. Sin Meta Business, sin trucos.',
-    placement: 'right',
-    skipBeacon: true,
-    buttons: ['skip', 'back', 'primary'],
-  },
-  {
-    target: '[data-tour="ayuda"]',
-    title: 'Listo',
-    content:
-      '¡Eso es todo! Si tenés dudas, en "Ayuda" hay tutoriales paso a paso de cada feature. Cualquier consulta, escribinos a hola@estetikkapp.com. Buena suerte.',
-    placement: 'right',
-    skipBeacon: true,
-    buttons: ['back', 'primary'],
-  },
-];
+// Construye los steps según las features de la org (ej. Empleadas solo si el
+// plan la incluye).
+function buildSteps(hasEmpleados: boolean): Step[] {
+  const steps: Step[] = [
+    {
+      target: 'body',
+      placement: 'center',
+      title: 'Bienvenida a appestetika',
+      content:
+        '¡Hola! En 1 minuto te muestro lo clave para arrancar. Si querés saltearlo, dale a "Salir del tour" — siempre podés volver a verlo desde Configuración.',
+      skipBeacon: true,
+      buttons: ['skip', 'primary'],
+    },
+    {
+      target: '[data-tour="agenda"]',
+      title: 'Tu agenda',
+      content:
+        'Acá vas a ver todos tus turnos: por día, por semana o por mes. Desde adentro también podés copiar tu link público para que tus clientas reserven solas.',
+      placement: 'right',
+      skipBeacon: true,
+      buttons: ['skip', 'back', 'primary'],
+    },
+    {
+      target: '[data-tour="clientas"]',
+      title: 'Tus clientas',
+      content:
+        'Tu base de pacientes con ficha clínica, historial, fotos antes/después y consentimientos firmados. Cada turno suma datos a la ficha.',
+      placement: 'right',
+      skipBeacon: true,
+      buttons: ['skip', 'back', 'primary'],
+    },
+    {
+      target: '[data-tour="servicios"]',
+      title: 'Catálogo de servicios',
+      content:
+        'Acá cargás los tratamientos que ofrecés con precio, duración y buffer. Esto define qué pueden reservar tus clientas online.',
+      placement: 'right',
+      skipBeacon: true,
+      buttons: ['skip', 'back', 'primary'],
+    },
+    {
+      target: '[data-tour="horarios"]',
+      title: 'Tus horarios',
+      content:
+        'Definís qué días y en qué franjas atendés, y la "granularidad" de los turnos. 👉 Te recomendamos 15 minutos: aunque tus servicios duren 30, 45 o 60, una granularidad de 15 deja que la app encaje turnos de distinta duración sin huecos muertos en la agenda. Con 30 min, un servicio de 45 te "pisa" el slot siguiente y perdés lugares.',
+      placement: 'right',
+      skipBeacon: true,
+      buttons: ['skip', 'back', 'primary'],
+    },
+  ];
+
+  // Step de Empleadas solo si el plan lo incluye (Gabinete no).
+  if (hasEmpleados) {
+    steps.push({
+      target: '[data-tour="empleadas"]',
+      title: 'Tu equipo',
+      content:
+        'Sumá a las profesionales de tu centro: cada una con su agenda, sus servicios y sus horarios. Las clientas pueden elegir con quién atenderse al reservar online.',
+      placement: 'right',
+      skipBeacon: true,
+      buttons: ['skip', 'back', 'primary'],
+    });
+  }
+
+  steps.push(
+    {
+      target: '[data-tour="configuracion"]',
+      title: 'Conectá WhatsApp',
+      content:
+        'En Configuración → "Agente local" generás un código y descargás un programa para tu PC. Una vez conectado, los recordatorios salen automáticos desde tu WhatsApp. Sin Meta Business, sin trucos.',
+      placement: 'right',
+      skipBeacon: true,
+      buttons: ['skip', 'back', 'primary'],
+    },
+    {
+      target: '[data-tour="ayuda"]',
+      title: 'Listo',
+      content:
+        '¡Eso es todo! Si tenés dudas, en "Ayuda" hay tutoriales paso a paso de cada feature. Cualquier consulta, escribinos a hola@estetikkapp.com. Buena suerte.',
+      placement: 'right',
+      skipBeacon: true,
+      buttons: ['back', 'primary'],
+    }
+  );
+
+  return steps;
+}
 
 // Defaults globales (paleta brand)
 const TOUR_OPTIONS: Partial<Options> = {
@@ -140,9 +178,11 @@ const TOUR_STYLES: Partial<Styles> = {
   },
 };
 
-export function WelcomeTour({ enabled }: Props) {
+export function WelcomeTour({ enabled, hasEmpleados }: Props) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [run, setRun] = useState(false);
+  const isRestart = searchParams.get('tour') === 'restart';
 
   // Joyride necesita que esté montado en cliente y los targets en el DOM.
   // Damos un pequeño delay para asegurar la hidratación.
@@ -150,9 +190,22 @@ export function WelcomeTour({ enabled }: Props) {
     if (!enabled) return;
     // Solo arranca en el dashboard. Si la primera vista no fue `/`, esperamos.
     if (pathname !== '/') return;
+
+    // Guard anti re-disparo: si ya lo vimos en esta sesión/dispositivo, no
+    // volver a abrirlo en cada navegación a `/`. La excepción es cuando se
+    // pidió explícitamente "Ver tour de nuevo" (?tour=restart), que limpia
+    // el flag y fuerza el re-run.
+    if (typeof window !== 'undefined') {
+      if (isRestart) {
+        localStorage.removeItem(SEEN_KEY);
+      } else if (localStorage.getItem(SEEN_KEY)) {
+        return;
+      }
+    }
+
     const t = setTimeout(() => setRun(true), 600);
     return () => clearTimeout(t);
-  }, [enabled, pathname]);
+  }, [enabled, pathname, isRestart]);
 
   function handleEvent(data: EventData) {
     const { status, action } = data;
@@ -162,7 +215,13 @@ export function WelcomeTour({ enabled }: Props) {
 
     if (finished || closed) {
       setRun(false);
-      // Fire-and-forget. No bloquea UX si falla.
+      // Marca instantánea en el cliente para no re-disparar aunque el
+      // `enabled` del server siga stale en esta sesión.
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(SEEN_KEY, '1');
+      }
+      // Fire-and-forget. No bloquea UX si falla. Persiste en DB para que
+      // tampoco aparezca en otros dispositivos / sesiones futuras.
       void markTourCompletedAction().catch((err) => {
         console.warn('[tour] markTourCompleted failed:', err);
       });
@@ -173,7 +232,7 @@ export function WelcomeTour({ enabled }: Props) {
 
   return (
     <Joyride
-      steps={STEPS}
+      steps={buildSteps(hasEmpleados)}
       run={run}
       continuous
       scrollToFirstStep
