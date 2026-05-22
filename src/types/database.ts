@@ -74,6 +74,7 @@ export type Database = {
           invited_by: string | null;
           invitation_accepted_at: string | null;
           schedule_template_id: string | null;
+          tour_completed_at: string | null;
           created_at: string;
         };
         Insert: {
@@ -87,6 +88,7 @@ export type Database = {
           invited_by?: string | null;
           invitation_accepted_at?: string | null;
           schedule_template_id?: string | null;
+          tour_completed_at?: string | null;
           created_at?: string;
         };
         Update: Partial<Database['public']['Tables']['memberships']['Insert']>;

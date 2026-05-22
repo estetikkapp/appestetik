@@ -28,14 +28,16 @@ interface NavItem {
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   disabled?: boolean;
+  /** Selector para el welcome tour de Joyride (data-tour="<id>"). */
+  tourId?: string;
 }
 
 const NAV: NavItem[] = [
-  { href: '/', label: 'Inicio', icon: LayoutDashboard },
-  { href: '/agenda', label: 'Agenda', icon: Calendar },
+  { href: '/', label: 'Inicio', icon: LayoutDashboard, tourId: 'inicio' },
+  { href: '/agenda', label: 'Agenda', icon: Calendar, tourId: 'agenda' },
   { href: '/espera', label: 'Lista de espera', icon: ListChecks },
-  { href: '/clientas', label: 'Clientas', icon: Users },
-  { href: '/servicios', label: 'Servicios', icon: Scissors },
+  { href: '/clientas', label: 'Clientas', icon: Users, tourId: 'clientas' },
+  { href: '/servicios', label: 'Servicios', icon: Scissors, tourId: 'servicios' },
   { href: '/paquetes', label: 'Paquetes', icon: Gift },
   { href: '/cobros', label: 'Cobros', icon: CreditCard },
   { href: '/reportes', label: 'Reportes', icon: BarChart3 },
@@ -43,10 +45,10 @@ const NAV: NavItem[] = [
   { href: '/empleadas', label: 'Empleadas', icon: UserCog },
   { href: '/horarios', label: 'Horarios', icon: Clock },
   { href: '/cierres', label: 'Cierres', icon: CalendarOff },
-  { href: '/ia', label: 'IA', icon: Sparkles },
+  { href: '/ia', label: 'IA', icon: Sparkles, tourId: 'ia' },
   { href: '/audit-log', label: 'Audit log', icon: History },
-  { href: '/configuracion', label: 'Configuración', icon: Settings },
-  { href: '/ayuda', label: 'Ayuda', icon: HelpCircle },
+  { href: '/configuracion', label: 'Configuración', icon: Settings, tourId: 'configuracion' },
+  { href: '/ayuda', label: 'Ayuda', icon: HelpCircle, tourId: 'ayuda' },
 ];
 
 interface Props {
@@ -86,6 +88,7 @@ export function Sidebar({ role }: Props) {
             <Link
               key={item.href}
               href={item.href}
+              data-tour={item.tourId}
               className={cn(
                 'flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors',
                 isActive

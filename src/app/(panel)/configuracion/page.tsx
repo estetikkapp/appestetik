@@ -13,6 +13,8 @@ import { saveMpConfig } from '@/actions/mp-config';
 import { EmbedSnippet } from './embed-snippet';
 import { BridgeSection } from './bridge-section';
 import { PlanSection } from './plan-section';
+import { resetTourAction } from '@/actions/tour';
+import { Play } from 'lucide-react';
 
 export const metadata = { title: 'Configuración — appestetika' };
 
@@ -178,6 +180,20 @@ export default async function ConfiguracionPage({
           <EmbedSnippet slug={org.slug} />
         </section>
       )}
+
+      <section className="rounded-xl border border-stone-200 bg-white p-6">
+        <h2 className="mb-2 text-lg font-semibold">Ayuda y tour</h2>
+        <p className="mb-4 text-sm text-stone-500">
+          ¿Querés volver a ver el tour de bienvenida? Te muestra las features
+          principales en 6 pasos rápidos.
+        </p>
+        <form action={resetTourAction}>
+          <SubmitButton variant="outline" pendingText="Cargando...">
+            <Play className="mr-2 h-4 w-4" />
+            Ver tour de nuevo
+          </SubmitButton>
+        </form>
+      </section>
     </div>
   );
 }

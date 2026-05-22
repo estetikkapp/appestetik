@@ -5,6 +5,7 @@ import { Sidebar } from '@/components/layout/sidebar';
 import { UserMenu } from '@/components/layout/user-menu';
 import { OrgSwitcher } from '@/components/layout/org-switcher';
 import { NotificationsBell } from '@/components/notifications/notifications-bell';
+import { WelcomeTour } from '@/components/onboarding/welcome-tour';
 import type { Role } from '@/lib/auth/require-membership';
 
 export default async function PanelLayout({ children }: { children: React.ReactNode }) {
@@ -14,10 +15,11 @@ export default async function PanelLayout({ children }: { children: React.ReactN
 
   const activeOrgId = cookies().get('active_org')?.value;
 
-  // Cargar memberships + display_name del user actual
+  // Cargar memberships + display_name del user actual + tour_completed_at
+  // (este último lo usamos para decidir si arranca el welcome tour)
   const { data: memberships } = await supabase
     .from('memberships')
-    .select('organization_id, role, display_name, organizations(id, name)')
+    .select('organization_id, role, display_name, tour_completed_at, organizations(id, name)')
     .eq('user_id', user.id)
     .eq('active', true)
     .order('created_at', { ascending: false });
@@ -35,6 +37,10 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   // tools. El middleware ya valida sesión + membership antes de llegar acá.
   const activeRole = (activeMembership?.role ?? 'professional') as Role;
 
+  // Welcome tour: solo lo mostramos a la dueña (owner) que todavía no lo
+  // completó. Decisión 1A del owner del producto.
+  const showTour = activeRole === 'owner' && !activeMembership?.tour_completed_at;
+
   return (
     <div className="flex min-h-screen bg-brand-50/30">
       <Sidebar role={activeRole} />
@@ -51,6 +57,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
         </header>
         <main className="flex-1 p-6">{children}</main>
       </div>
+      <WelcomeTour enabled={showTour} />
     </div>
   );
 }
