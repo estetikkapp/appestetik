@@ -1004,6 +1004,28 @@ export type Database = {
         Update: Partial<Database['public']['Tables']['help_chat_messages']['Insert']>;
         Relationships: [];
       };
+      onboarding_recovery_emails: {
+        Row: {
+          id: string;
+          user_id: string;
+          email_kind: 'recovery_1' | 'recovery_2' | 'recovery_3';
+          email_to: string;
+          sent_at: string;
+          resend_message_id: string | null;
+          failed_reason: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          email_kind: 'recovery_1' | 'recovery_2' | 'recovery_3';
+          email_to: string;
+          sent_at?: string;
+          resend_message_id?: string | null;
+          failed_reason?: string | null;
+        };
+        Update: Partial<Database['public']['Tables']['onboarding_recovery_emails']['Insert']>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
