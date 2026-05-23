@@ -128,3 +128,49 @@ export function canAccessRoute(
   return true;
 }
 
+/**
+ * Estado de acceso de una ruta, usado por el Sidebar para decidir cómo
+ * renderizar cada item:
+ *   - 'accessible'     → mostrar normal, link directo
+ *   - 'locked_by_plan' → mostrar en gris + pill "Equipo" + link a /precios
+ *   - 'hidden_by_role' → no mostrar (rol insuficiente)
+ *
+ * Para CALLAR la ruta server-side (no UI), seguir usando `canAccessRoute`
+ * o `requireFeature` que tira redirect.
+ */
+export type RouteAccessState = 'accessible' | 'locked_by_plan' | 'hidden_by_role';
+
+export interface RouteAccess {
+  state: RouteAccessState;
+  /** Si state='locked_by_plan', el feature que falta. */
+  lockedFeature?: FeatureFlag;
+}
+
+export function getRouteAccessState(
+  role: Role,
+  pathname: string,
+  planContext?: PlanContext
+): RouteAccess {
+  // 1) Check de rol — si no cumple, lo ocultamos (recepcionista no ve /configuracion)
+  for (const [route, minRole] of Object.entries(ROUTE_MIN_ROLE)) {
+    if (pathname === route || pathname.startsWith(route + '/')) {
+      if (ROLE_RANK[role] < ROLE_RANK[minRole]) {
+        return { state: 'hidden_by_role' };
+      }
+      break;
+    }
+  }
+
+  // 2) Check de feature — si falta, lo MARCAMOS como bloqueado (no oculto)
+  if (planContext) {
+    const feature = routeRequiredFeature(pathname);
+    if (feature && !planContext.isGrandfathered) {
+      if (!planHasFeature(planContext.planId, feature)) {
+        return { state: 'locked_by_plan', lockedFeature: feature };
+      }
+    }
+  }
+
+  return { state: 'accessible' };
+}
+

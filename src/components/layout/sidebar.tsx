@@ -19,9 +19,10 @@ import {
   ListChecks,
   BarChart3,
   HelpCircle,
+  Lock,
 } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
-import { canAccessRoute, type Role, type PlanContext } from '@/lib/auth/rbac';
+import { getRouteAccessState, type Role, type PlanContext } from '@/lib/auth/rbac';
 
 interface NavItem {
   href: string;
@@ -62,10 +63,16 @@ interface Props {
 
 export function Sidebar({ role, planContext }: Props) {
   const pathname = usePathname();
-  // RBAC: filtramos por rol + plan. La capa server-side (requireMembership +
-  // requireFeature) lo bloquea aunque ponga la URL a mano — esto es solo UX
-  // para que no vea links a features que no incluye su plan.
-  const visibleNav = NAV.filter((item) => canAccessRoute(role, item.href, planContext));
+
+  // Computamos el estado de cada item según rol + plan.
+  // Items hidden_by_role los filtramos (recepcionista no ve /configuracion).
+  // Items locked_by_plan los mostramos GRISES con candado + pill "Equipo" +
+  // link directo a /precios?from=<feature> para que la dueña entienda qué
+  // se desbloquea y considere upgradear.
+  const navWithAccess = NAV.map((item) => ({
+    ...item,
+    access: getRouteAccessState(role, item.href, planContext),
+  })).filter((item) => item.access.state !== 'hidden_by_role');
 
   return (
     <aside className="flex w-60 flex-col border-r border-stone-200 bg-white">
@@ -73,9 +80,10 @@ export function Sidebar({ role, planContext }: Props) {
         <h1 className="text-lg font-bold text-brand-700">appestetika</h1>
       </div>
       <nav className="flex-1 space-y-1 p-3">
-        {visibleNav.map((item) => {
+        {navWithAccess.map((item) => {
           const isActive = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
           const Icon = item.icon;
+
           if (item.disabled) {
             return (
               <div
@@ -89,6 +97,33 @@ export function Sidebar({ role, planContext }: Props) {
               </div>
             );
           }
+
+          // Locked by plan: muestro el item gris + Lock icon + pill "Equipo",
+          // y el click va a /precios con el feature como contexto para que
+          // el banner de la página de precios explique qué se desbloquea.
+          if (item.access.state === 'locked_by_plan') {
+            const feature = item.access.lockedFeature;
+            return (
+              <Link
+                key={item.href}
+                href={`/precios?from=${encodeURIComponent(feature ?? '')}`}
+                data-tour={item.tourId}
+                title={`Disponible en el plan Equipo`}
+                className="group flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-stone-400 transition-colors hover:bg-stone-50 hover:text-stone-600"
+              >
+                <Icon className="h-4 w-4" />
+                <span>{item.label}</span>
+                <span className="ml-auto flex items-center gap-1">
+                  <Lock className="h-3 w-3" />
+                  <span className="rounded-full bg-brand-100/60 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-brand-700">
+                    Equipo
+                  </span>
+                </span>
+              </Link>
+            );
+          }
+
+          // Accesible normal
           return (
             <Link
               key={item.href}
