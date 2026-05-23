@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { finalizeOnboarding } from '@/actions/organizations';
+import { finalizeOnboarding, finalizeOnboardingSkip } from '@/actions/organizations';
 import { OnboardingStepper } from '@/components/onboarding/stepper';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,7 +17,8 @@ export default function OnboardingStep4({ searchParams }: { searchParams: { erro
         <div className="mb-6">
           <h2 className="text-2xl font-bold text-stone-900">Tu presencia online</h2>
           <p className="mt-1 text-sm text-stone-500">
-            Elegí la URL pública para que tus clientas puedan reservar turnos.
+            Elegí la URL pública para que tus clientas puedan reservar turnos. Si no querés
+            reservas online por ahora, podés saltarlo y configurarlo después.
           </p>
         </div>
 
@@ -29,7 +30,7 @@ export default function OnboardingStep4({ searchParams }: { searchParams: { erro
 
         <form action={finalizeOnboarding} className="space-y-5">
           <div className="space-y-1.5">
-            <Label htmlFor="slug">URL pública *</Label>
+            <Label htmlFor="slug">URL pública</Label>
             <div className="flex rounded-lg border border-stone-300 focus-within:ring-2 focus-within:ring-brand-500">
               <span className="flex items-center border-r border-stone-300 bg-stone-50 px-3 text-sm text-stone-500">
                 appestetika.com.ar/c/
@@ -37,7 +38,6 @@ export default function OnboardingStep4({ searchParams }: { searchParams: { erro
               <Input
                 id="slug"
                 name="slug"
-                required
                 minLength={3}
                 maxLength={40}
                 pattern="[a-z0-9](?:[a-z0-9-]{1,38}[a-z0-9])?"
@@ -46,8 +46,8 @@ export default function OnboardingStep4({ searchParams }: { searchParams: { erro
               />
             </div>
             <p className="text-xs text-stone-500">
-              3-40 caracteres. Solo minúsculas, números y guiones. No se puede cambiar fácilmente
-              después.
+              3-40 caracteres. Solo minúsculas, números y guiones. Podés cambiarlo después
+              desde Configuración (los links publicados con el anterior dejan de funcionar).
             </p>
           </div>
 
@@ -64,13 +64,33 @@ export default function OnboardingStep4({ searchParams }: { searchParams: { erro
             </a>
           </div>
 
-          <div className="flex items-center justify-between pt-4">
+          <div className="flex flex-col gap-3 pt-4 sm:flex-row sm:items-center sm:justify-between">
             <Button variant="ghost" asChild>
               <Link href="/onboarding/servicio">← Atrás</Link>
             </Button>
-            <SubmitButton variant="premium" pendingText="Finalizando...">
-              Terminar onboarding
-            </SubmitButton>
+
+            {/*
+              Dos botones de submit. El primero usa formAction=skip que llama
+              a finalizeOnboardingSkip — solo setea onboarded_at sin tocar slug.
+              formNoValidate skipea el "minLength" + "pattern" del input para
+              que el browser no lo bloquee si está vacío.
+
+              El segundo es el submit principal, que sí valida slug.
+            */}
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <SubmitButton
+                variant="ghost"
+                formAction={finalizeOnboardingSkip}
+                formNoValidate
+                pendingText="Saltando..."
+                className="text-stone-600 hover:text-stone-900"
+              >
+                Saltar — defino mi URL después
+              </SubmitButton>
+              <SubmitButton variant="premium" pendingText="Finalizando...">
+                Terminar onboarding
+              </SubmitButton>
+            </div>
           </div>
         </form>
       </div>

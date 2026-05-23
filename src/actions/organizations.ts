@@ -171,6 +171,72 @@ export async function finalizeOnboarding(formData: FormData): Promise<void> {
   redirect('/');
 }
 
+/**
+ * Variante de finalize sin definir slug. La URL pública queda null hasta
+ * que la dueña la configure desde /configuracion. Necesario porque el
+ * slug solo sirve para reservas online — la dueña que atiende por WhatsApp
+ * no necesita link público para usar la app.
+ *
+ * `onboarded_at` igual se setea (la dueña terminó el wizard explícitamente
+ * apretando "Saltar"). El middleware ya la deja pasar al panel.
+ */
+export async function finalizeOnboardingSkip(): Promise<void> {
+  const check = await requireActiveOrgAsOwner();
+  if (!check.ok) redirect(`/auth/login?error=${encodeURIComponent(check.error)}`);
+
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('organizations')
+    .update({ onboarded_at: new Date().toISOString() })
+    .eq('id', check.orgId);
+
+  if (error) redirect(`/onboarding/presencia?error=${encodeURIComponent(error.message)}`);
+
+  revalidatePath('/', 'layout');
+  redirect('/?ok=onboarding-skip');
+}
+
+/**
+ * Setea o actualiza el slug post-onboarding desde /configuracion.
+ *
+ * A diferencia de finalizeOnboarding, no toca onboarded_at (asumimos que
+ * ya está seteado para llegar al panel). Si la dueña cambia el slug, los
+ * links viejos publicados dejan de funcionar — lo aclaramos en la UI.
+ */
+export async function setOrganizationSlug(formData: FormData): Promise<void> {
+  const check = await requireActiveOrgAsOwner();
+  if (!check.ok) redirect(`/auth/login?error=${encodeURIComponent(check.error)}`);
+
+  const slug = String(formData.get('slug') ?? '').trim();
+
+  if (!isValidSlug(slug)) {
+    redirect('/configuracion?error=URL+p%C3%BAblica+inv%C3%A1lida');
+  }
+
+  const supabase = createClient();
+
+  const { data: existing } = await supabase
+    .from('organizations')
+    .select('id')
+    .eq('slug', slug)
+    .neq('id', check.orgId)
+    .maybeSingle();
+
+  if (existing) {
+    redirect('/configuracion?error=Esa+URL+ya+est%C3%A1+en+uso');
+  }
+
+  const { error } = await supabase
+    .from('organizations')
+    .update({ slug })
+    .eq('id', check.orgId);
+
+  if (error) redirect(`/configuracion?error=${encodeURIComponent(error.message)}`);
+
+  revalidatePath('/configuracion');
+  redirect('/configuracion?ok=slug-actualizado');
+}
+
 export async function checkSlugAvailable(slug: string): Promise<{ available: boolean; reason?: string }> {
   if (!isValidSlug(slug)) {
     return { available: false, reason: 'Formato inválido' };

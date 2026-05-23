@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { SubmitButton } from '@/components/ui/submit-button';
 import { updateOrganizationSettings } from '@/actions/organization-settings';
+import { setOrganizationSlug } from '@/actions/organizations';
 import { uploadOrganizationLogo } from '@/actions/storage';
 import { saveAfipConfig } from '@/actions/afip-config';
 import { saveMpConfig } from '@/actions/mp-config';
@@ -64,6 +65,7 @@ export default async function ConfiguracionPage({
           {searchParams.ok === 'suscripcion-cancelada' && 'Suscripción cancelada — sigue activa hasta el fin del período.'}
           {searchParams.ok === 'suscripcion-reactivada' && 'Suscripción reactivada.'}
           {searchParams.ok === 'upgrade-pagado' && 'Plan actualizado y pago confirmado.'}
+          {searchParams.ok === 'slug-actualizado' && 'URL pública actualizada.'}
         </div>
       )}
 
@@ -142,11 +144,13 @@ export default async function ConfiguracionPage({
               </select>
             </div>
           </div>
+          {/*
+            El slug público lo manejamos en su propia sección abajo
+            ("Link de reservas online" / "Activar reservas online") para que
+            sea editable. Acá dejamos solo timezone que es info read-only.
+          */}
           <div className="grid gap-3 rounded-lg bg-stone-50 p-3 text-xs text-stone-500 sm:grid-cols-2">
-            <Row label="Slug público" value={org?.slug ? `/c/${org.slug}` : '—'} />
             <Row label="Timezone" value={org?.timezone ?? '—'} />
-            {/* Suscripción: se muestra ahora en su propia sección desde plan_subscriptions
-                — TODO capa 4 (UI). Sacado de acá porque subscription_tier ya no existe. */}
           </div>
           <div className="flex justify-end">
             <SubmitButton pendingText="Guardando...">Guardar cambios</SubmitButton>
@@ -172,15 +176,49 @@ export default async function ConfiguracionPage({
         config={(org?.mp_config as Record<string, string | null> | null) ?? null}
       />
 
-      {org?.slug && (
-        <section className="rounded-xl border border-stone-200 bg-white p-6">
-          <h2 className="mb-2 text-lg font-semibold">Link de reservas online</h2>
-          <p className="mb-4 text-sm text-stone-500">
-            Compartí este link en tu bio de Instagram, WhatsApp o donde quieras.
-          </p>
-          <EmbedSnippet slug={org.slug} />
-        </section>
-      )}
+      {/*
+        Sección de URL pública. Siempre se muestra (no solo cuando ya hay slug)
+        para que una dueña que skipeó el paso de presencia en el onboarding
+        pueda activarlo desde acá. Si ya hay slug, además mostramos el embed
+        snippet para que pueda copiar el link.
+      */}
+      <section className="rounded-xl border border-stone-200 bg-white p-6">
+        <h2 className="mb-2 text-lg font-semibold">
+          {org?.slug ? 'Link de reservas online' : 'Activar reservas online'}
+        </h2>
+        <p className="mb-4 text-sm text-stone-500">
+          {org?.slug
+            ? 'Compartí este link en tu bio de Instagram, WhatsApp o donde quieras. Si cambiás la URL, los links viejos publicados dejan de funcionar.'
+            : 'Elegí una URL pública para que tus clientas puedan reservar online. Después podés compartirla en Instagram, WhatsApp, etc.'}
+        </p>
+        <form action={setOrganizationSlug} className="mb-4 space-y-2">
+          <div className="flex rounded-lg border border-stone-300 focus-within:ring-2 focus-within:ring-brand-500">
+            <span className="flex items-center border-r border-stone-300 bg-stone-50 px-3 text-sm text-stone-500">
+              appestetika.com.ar/c/
+            </span>
+            <Input
+              id="slug"
+              name="slug"
+              required
+              minLength={3}
+              maxLength={40}
+              pattern="[a-z0-9](?:[a-z0-9-]{1,38}[a-z0-9])?"
+              placeholder="mi-centro"
+              defaultValue={org?.slug ?? ''}
+              className="rounded-l-none border-0 focus-visible:ring-0"
+            />
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs text-stone-500">
+              3-40 caracteres. Solo minúsculas, números y guiones.
+            </p>
+            <SubmitButton pendingText="Guardando..." variant={org?.slug ? 'outline' : 'premium'}>
+              {org?.slug ? 'Cambiar URL' : 'Activar'}
+            </SubmitButton>
+          </div>
+        </form>
+        {org?.slug && <EmbedSnippet slug={org.slug} />}
+      </section>
 
       <section className="rounded-xl border border-stone-200 bg-white p-6">
         <h2 className="mb-2 flex items-center gap-2 text-lg font-semibold">
