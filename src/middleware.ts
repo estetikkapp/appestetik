@@ -45,6 +45,13 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
+  // /admin: panel de plataforma (back office). Solo requiere user logueado;
+  // el layout valida que sea super-admin (notFound si no). No aplicamos la
+  // lógica de orgs/onboarding acá — los founders pueden no tener org propia.
+  if (pathname.startsWith('/admin')) {
+    return response;
+  }
+
   // Con user en rutas de auth: resolver destino según onboarding
   // Pero primero necesitamos saber la org activa del user
   type MembershipRow = {
