@@ -2,7 +2,6 @@ import {
   Building2,
   CheckCircle2,
   Activity,
-  Moon,
   Clock,
   CreditCard,
   TrendingUp,
