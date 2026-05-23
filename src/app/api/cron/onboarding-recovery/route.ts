@@ -104,6 +104,22 @@ export async function GET(req: NextRequest) {
     const orgIds = (orgs ?? []).map((o) => o.id);
     if (orgIds.length === 0) continue;
 
+    // 1b) Detectar actividad real por org — clientas, servicios, turnos. Si
+    //     hay aunque sea 1 row de cualquiera, marcamos hasActivity para que
+    //     el copy del mail no diga "no la usaste" cuando sí cargaron cosas.
+    //     Caso típico: la dueña pasa por el importador IA en el paso 2 (carga
+    //     200 clientas), después se traba en el paso final (slug) y abandona.
+    //     A esa persona hay que decirle "te falta poco", no "abandonaste".
+    const activeOrgIds = new Set<string>();
+    const [clientsAct, servicesAct, apptsAct] = await Promise.all([
+      admin.from('clients').select('organization_id').in('organization_id', orgIds),
+      admin.from('services').select('organization_id').in('organization_id', orgIds),
+      admin.from('appointments').select('organization_id').in('organization_id', orgIds),
+    ]);
+    for (const row of clientsAct.data ?? []) activeOrgIds.add(row.organization_id);
+    for (const row of servicesAct.data ?? []) activeOrgIds.add(row.organization_id);
+    for (const row of apptsAct.data ?? []) activeOrgIds.add(row.organization_id);
+
     // 2) Para esas orgs, sacar el owner activo.
     const { data: owners, error: ownersErr } = await admin
       .from('memberships')
@@ -170,6 +186,7 @@ export async function GET(req: NextRequest) {
         to: email,
         displayName: owner.display_name ?? null,
         orgName: org?.name ?? null,
+        hasActivity: activeOrgIds.has(owner.organization_id),
       });
 
       // 6) Registrar dedup row (incluso si falló — no re-intentamos)
