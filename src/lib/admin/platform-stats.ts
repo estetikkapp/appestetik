@@ -14,8 +14,8 @@ import { createAdminClient } from '@/lib/supabase/admin';
  * Se usa solo para estimar MRR en el dashboard.
  */
 export const PLAN_PRICES_MONTHLY: Record<string, number> = {
-  gabinete: 0,
-  equipo: 0,
+  gabinete: 29990,
+  equipo: 54990,
 };
 
 export interface OrgStatRow {

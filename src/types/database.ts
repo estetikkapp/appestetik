@@ -1015,6 +1015,30 @@ export type Database = {
         Args: { org_id: string };
         Returns: boolean;
       };
+      platform_org_stats: {
+        Args: Record<string, never>;
+        Returns: {
+          org_id: string;
+          name: string;
+          slug: string | null;
+          created_at: string;
+          onboarded_at: string | null;
+          plan_id: string | null;
+          sub_status: string | null;
+          trial_ends_at: string | null;
+          whatsapp_status: string | null;
+          whatsapp_provider: string | null;
+          has_mp: boolean;
+          afip_provider: string | null;
+          services_count: number;
+          clients_count: number;
+          active_clients_count: number;
+          appointments_count: number;
+          appointments_last_30d: number;
+          staff_count: number;
+          last_activity_at: string | null;
+        }[];
+      };
     };
     Enums: Record<string, never>;
   };
