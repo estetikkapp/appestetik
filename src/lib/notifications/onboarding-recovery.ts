@@ -168,7 +168,7 @@ Saludos,
     return { subject, html, text };
   }
 
-  const subject = '¿Sabías que tenés 30 días gratis?';
+  const subject = '¿Sabías que tenés 14 días gratis?';
   const html = `<!DOCTYPE html>
 <html lang="es-AR"><body style="margin:0;padding:0;background:#fafaf9;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif;color:#1c1917;">
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#fafaf9;">
@@ -179,7 +179,7 @@ Saludos,
 </td></tr>
 <tr><td style="padding:0 32px 8px;">
 <p style="margin:0 0 12px;font-size:15px;color:#1c1917;line-height:1.6;">${greeting}</p>
-<p style="margin:0 0 12px;font-size:15px;color:#57534e;line-height:1.6;">Te escribo de appestetika. Hace unos días creaste tu cuenta y todavía no la usaste. Te recuerdo que tenés <strong>30 días de prueba gratis</strong>, sin tarjeta de crédito.</p>
+<p style="margin:0 0 12px;font-size:15px;color:#57534e;line-height:1.6;">Te escribo de appestetika. Hace unos días creaste tu cuenta y todavía no la usaste. Te recuerdo que tenés <strong>14 días de prueba gratis</strong>, sin tarjeta de crédito.</p>
 <p style="margin:16px 0 8px;font-size:15px;color:#57534e;line-height:1.6;">Te paso lo que hacen las dueñas que arrancan en appestetika:</p>
 <ol style="margin:0 0 16px;padding-left:20px;font-size:14px;color:#57534e;line-height:1.7;">
   <li>Eligen plan (Gabinete o Equipo)</li>
@@ -205,7 +205,7 @@ Saludos,
 
   const text = `${greeting}
 
-Te escribo de appestetika. Hace unos días creaste tu cuenta y todavía no la usaste. Te recuerdo que tenés 30 días de prueba gratis, sin tarjeta de crédito.
+Te escribo de appestetika. Hace unos días creaste tu cuenta y todavía no la usaste. Te recuerdo que tenés 14 días de prueba gratis, sin tarjeta de crédito.
 
 Te paso lo que hacen las dueñas que arrancan en appestetika:
 1. Eligen plan (Gabinete o Equipo)

@@ -87,7 +87,7 @@ function Hero() {
               contentName="hero_cta"
               className="group inline-flex items-center justify-center gap-2 rounded-lg bg-brand-500 px-6 py-3 text-base font-semibold text-white shadow-lg shadow-brand-500/20 transition-all hover:bg-brand-600 hover:shadow-xl hover:shadow-brand-500/30"
             >
-              Probar 30 días gratis
+              Probar 14 días gratis
               <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
             </ProbarGratisCTA>
             <Link
@@ -364,7 +364,7 @@ function Faq() {
   const items = [
     {
       q: '¿Necesito tarjeta de crédito para probar?',
-      a: 'No. El registro y los 30 días gratis no piden tarjeta. Al cumplirse el período, vas a poder seguir viendo lo que cargaste pero sin sumar más, hasta que decidas activar un plan.',
+      a: 'No. El registro y los 14 días gratis no piden tarjeta. Al cumplirse el período, vas a poder seguir viendo lo que cargaste pero sin sumar más, hasta que decidas activar un plan.',
     },
     {
       q: '¿Cómo conecto WhatsApp?',
@@ -434,7 +434,7 @@ function FinalCta() {
       />
       <FadeUp className="relative mx-auto max-w-3xl px-4 text-center">
         <h2 className="text-3xl font-bold tracking-tight text-stone-900 sm:text-4xl">
-          Probalo 30 días gratis y decidí
+          Probalo 14 días gratis y decidí
         </h2>
         <p className="mt-4 text-base text-stone-600">
           Sin tarjeta. Sin contrato. Si te gusta, pagás. Si no, te vas.

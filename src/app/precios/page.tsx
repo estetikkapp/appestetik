@@ -13,7 +13,7 @@ import { PricingToggle } from './pricing-toggle';
 
 export const metadata = {
   title: 'Precios — appestetika',
-  description: 'Planes para centros de estética. Prueba gratuita de 30 días, sin tarjeta.',
+  description: 'Planes para centros de estética. Prueba gratuita de 14 días, sin tarjeta.',
 };
 
 // Mapeo de feature_xyz → texto explicativo para el banner contextual.
@@ -62,7 +62,7 @@ export default function PreciosPage({
             Precios pensados para vos
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-base text-stone-600">
-            Sin tarjeta. Sin contrato. Pagás cuando te convence. Probás 30 días gratis,
+            Sin tarjeta. Sin contrato. Pagás cuando te convence. Probás 14 días gratis,
             después decidís.
           </p>
         </section>
@@ -180,7 +180,7 @@ function PlanCard({
             : 'border-2 border-stone-300 text-stone-800 hover:border-stone-400'
         }`}
       >
-        Probar 30 días gratis
+        Probar 14 días gratis
         <ArrowRight className="h-4 w-4" />
       </Link>
       <p className="mt-2 text-center text-xs text-stone-500">

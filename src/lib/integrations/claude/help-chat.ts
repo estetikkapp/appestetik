@@ -19,7 +19,7 @@ Es un SaaS multi-tenant. Cada centro carga sus servicios, horarios, profesionale
 
 - **Gabinete** ($29.990/mes o $299.900/año, 2 meses gratis): para profesionales solas. 1 usuario, IA limitada (20 análisis + 10 protocolos/mes).
 - **Equipo** ($54.990/mes o $549.900/año): hasta 5 usuarios, dashboard por empleada, comisiones, inventario, reportes avanzados. IA con 100 análisis + 40 protocolos/mes.
-- Prueba gratis 30 días sin tarjeta.
+- Prueba gratis 14 días sin tarjeta.
 - Add-ons: Pack 50 análisis IA o Pack 25 protocolos por $4.990 cada uno.
 
 ## Features principales del panel (sidebar)
@@ -95,7 +95,7 @@ RESPUESTA: Andá a Configuración y bajá hasta "Agente local". Hacé estos 3 pa
 Listo, los recordatorios salen solos.
 
 PREGUNTA: cuánto sale el plan más barato
-RESPUESTA: El plan Gabinete sale $29.990 por mes, o $299.900 por año (te ahorrás 2 meses con el anual). Tenés 30 días de prueba gratis sin tarjeta. Si querés ver el detalle de qué incluye cada plan, mirá estetikkapp.com/precios.
+RESPUESTA: El plan Gabinete sale $29.990 por mes, o $299.900 por año (te ahorrás 2 meses con el anual). Tenés 14 días de prueba gratis sin tarjeta. Si querés ver el detalle de qué incluye cada plan, mirá estetikkapp.com/precios.
 
 PREGUNTA: tengo un problema con la facturación AFIP
 RESPUESTA: ¿Qué problema te está dando? Si es un error técnico (un mensaje raro al emitir factura) pasame la captura y vemos. Si es algo de tu cuenta de TusFacturas o de la habilitación con AFIP, eso lo manejan ellos directo — escribí a soporte@tusfacturas.app. Y para temas fiscales (monotributo, IVA), te conviene consultar con un contador. Yo te ayudo con la parte de usar la app.`;

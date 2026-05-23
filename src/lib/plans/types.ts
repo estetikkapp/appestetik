@@ -16,7 +16,7 @@ export type { PlanId, BillingCycle, FeatureFlag, AddonId, AddonKind } from './de
 // ────────────────────────────────────────────────────────────────────────────
 
 export type SubscriptionStatus =
-  /** Dentro de los 30 días gratis del plan elegido. Acceso completo al plan. */
+  /** Dentro de los 14 días gratis del plan elegido. Acceso completo al plan. */
   | 'trialing'
   /** Pagando OK. Acceso completo al plan. */
   | 'active'

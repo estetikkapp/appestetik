@@ -152,7 +152,7 @@ export async function notifyAdminTrialStarted(params: {
   </table>
 
   <p style="margin-top:24px;font-size:13px;color:#78716c;">
-    Trial de 30 días arrancado. Si al día 30 cargan método de pago en MP, queda como cliente pagador. Sino pasa a <em>trial_expired</em>.
+    Trial de 14 días arrancado. Si al día 14 cargan método de pago en MP, queda como cliente pagador. Sino pasa a <em>trial_expired</em>.
   </p>
 </body></html>`;
 

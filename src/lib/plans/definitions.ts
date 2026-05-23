@@ -234,7 +234,7 @@ export const ADDONS: Record<AddonId, AddonDefinition> = {
 // ────────────────────────────────────────────────────────────────────────────
 
 /** Duración del trial gratis (días). Mismo para todos los planes. */
-export const TRIAL_DAYS = 30;
+export const TRIAL_DAYS = 14;
 
 /**
  * Días de gracia entre 'past_due' (cobro mensual fallido) y 'suspended'.

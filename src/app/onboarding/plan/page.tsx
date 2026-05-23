@@ -36,7 +36,7 @@ export default async function OnboardingPlanPicker({
           <h2 className="text-2xl font-bold text-stone-900">¿Cómo trabajás?</h2>
           <p className="mt-1 text-sm text-stone-500">
             Esto define qué te mostramos en la app. Después podés cambiar gratis durante
-            los 30 días de prueba.
+            los 14 días de prueba.
           </p>
         </div>
 
@@ -57,7 +57,7 @@ export default async function OnboardingPlanPicker({
         </div>
 
         <p className="mt-6 text-center text-xs text-stone-400">
-          30 días gratis. Sin tarjeta. Cuando termine el trial, te avisamos por mail
+          14 días gratis. Sin tarjeta. Cuando termine el trial, te avisamos por mail
           para que decidas si pagás o no.
         </p>
       </div>
@@ -118,7 +118,7 @@ function PlanForm({
         variant={isRecommended ? 'default' : 'outline'}
         pendingText="Activando..."
       >
-        Probar {plan.name} 30 días gratis
+        Probar {plan.name} 14 días gratis
       </SubmitButton>
     </form>
   );

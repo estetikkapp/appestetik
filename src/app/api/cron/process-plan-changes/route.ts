@@ -3,7 +3,7 @@
  *
  * Aplica cambios de plan diferidos (downgrades programados al fin del
  * período, cancelaciones que llegan a expirar) y expira trials que
- * llegaron a los 30 días sin método de pago.
+ * llegaron a los 14 días sin método de pago.
  *
  * Configurar en vercel.json:
  *   { "path": "/api/cron/process-plan-changes", "schedule": "0 7 * * *" }
