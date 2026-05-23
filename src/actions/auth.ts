@@ -19,6 +19,18 @@ export async function login(formData: FormData): Promise<void> {
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
+    // Caso especial: si dice "invalid login credentials", puede ser email
+    // mal escrito, password mal escrito, o email NO CONFIRMADO. Supabase
+    // tira el mismo error para los 3 casos por anti-enumeración. Pasamos
+    // el email en el redirect para que la UI pueda ofrecer reenviar
+    // el mail de confirmación (mostrando un callout específico).
+    if (error.message.toLowerCase().includes('invalid login credentials')) {
+      redirect(
+        `/auth/login?error=${encodeURIComponent(
+          'Email o contraseña inválidos. Si recién creaste la cuenta, confirmá tu email primero (revisá tu bandeja).'
+        )}&unconfirmed=${encodeURIComponent(email)}`
+      );
+    }
     redirect(`/auth/login?error=${encodeURIComponent(traducirErrorAuth(error.message))}`);
   }
 
@@ -235,6 +247,48 @@ export async function updatePassword(formData: FormData): Promise<void> {
   // sin que valide explícitamente la nueva).
   await supabase.auth.signOut();
   redirect('/auth/login?reset=ok');
+}
+
+/**
+ * Reenviar mail de confirmación de signup. Se usa cuando el user se creó
+ * cuenta pero el email no llegó (cayó en spam, lo borró, etc.) y trata
+ * de loguear sin confirmar. El callout en login le ofrece esto.
+ *
+ * Anti-enum: Supabase no devuelve error si el email no está registrado.
+ * Devolvemos un mensaje genérico igual.
+ */
+export async function resendConfirmation(formData: FormData): Promise<void> {
+  const email = normalizeEmail(String(formData.get('email') ?? ''));
+
+  if (!email) {
+    redirect('/auth/login?error=Email+inv%C3%A1lido');
+  }
+
+  const supabase = createClient();
+  const { error } = await supabase.auth.resend({
+    type: 'signup',
+    email,
+    options: {
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://estetikkapp.com'}/auth/callback`,
+    },
+  });
+
+  if (error) {
+    if (error.message.toLowerCase().includes('rate limit')) {
+      redirect(
+        '/auth/login?error=Demasiados+intentos.+Esper%C3%A1+unos+minutos+y+volv%C3%A9+a+probar.'
+      );
+    }
+    // Otros errores (ej. "already confirmed") los mostramos genéricos
+    if (error.message.toLowerCase().includes('already')) {
+      redirect(
+        '/auth/login?error=Esta+cuenta+ya+est%C3%A1+confirmada.+Si+no+pod%C3%A9s+entrar%2C+us%C3%A1+%22Olvid%C3%A9+mi+contrase%C3%B1a%22.'
+      );
+    }
+    console.error('[auth/resend] fail:', error.message);
+  }
+
+  redirect('/auth/login?confirmation_resent=1');
 }
 
 export async function signInWithGoogle(): Promise<void> {

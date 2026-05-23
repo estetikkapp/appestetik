@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import { Mail, AlertCircle } from 'lucide-react';
-import { login, signInWithGoogle } from '@/actions/auth';
+import { Mail, AlertCircle, MailCheck } from 'lucide-react';
+import { login, signInWithGoogle, resendConfirmation } from '@/actions/auth';
 import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/ui/password-input';
 import { Label } from '@/components/ui/label';
@@ -11,7 +11,19 @@ export const metadata = { title: 'Iniciar sesión — appestetika' };
 export default function LoginPage({
   searchParams,
 }: {
-  searchParams: { signup?: string; error?: string; reset?: string };
+  searchParams: {
+    signup?: string;
+    error?: string;
+    reset?: string;
+    /**
+     * Si el login falla con "Invalid login credentials", el server pasa
+     * el email acá para que la UI ofrezca reenviar el mail de confirmación
+     * (caso más común: la dueña no confirmó el email y por eso no puede
+     * loguear).
+     */
+    unconfirmed?: string;
+    confirmation_resent?: string;
+  };
 }) {
   return (
     <main className="flex min-h-screen items-center justify-center bg-brand-50 px-4">
@@ -45,21 +57,80 @@ export default function LoginPage({
             </div>
           </div>
         )}
+
+        {searchParams.confirmation_resent === '1' && (
+          <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
+            <div className="flex items-start gap-2">
+              <MailCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+              <p>
+                <strong>Mail de confirmación reenviado.</strong> Revisá tu bandeja
+                (incluyendo Spam y Promociones). El link vence en 1 hora.
+              </p>
+            </div>
+          </div>
+        )}
+
         {searchParams.reset === 'ok' && (
           <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
             <strong>Contraseña actualizada.</strong> Iniciá sesión con la nueva.
           </div>
         )}
+
         {searchParams.error && (
           <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
             {searchParams.error}
           </div>
         )}
 
+        {/*
+          Si el login falló con credenciales inválidas Y el server identificó
+          el email, mostramos un callout específico ofreciendo reenviar el
+          mail de confirmación. Esto resuelve el caso más común de "creé
+          cuenta y no puedo loguear" — el user no confirmó el email pero
+          Supabase devuelve "Invalid credentials" por anti-enumeración.
+        */}
+        {searchParams.unconfirmed && (
+          <div className="mb-4 rounded-xl border-2 border-amber-200 bg-amber-50 p-4">
+            <div className="flex items-start gap-3">
+              <Mail className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />
+              <div className="flex-1 text-sm">
+                <p className="font-semibold text-amber-900">
+                  ¿Recién creaste la cuenta?
+                </p>
+                <p className="mt-1 text-amber-800">
+                  Si no confirmaste tu email todavía, el login no anda hasta que abras
+                  el mail que te mandamos. ¿No te llega? Te lo reenviamos.
+                </p>
+                <form action={resendConfirmation} className="mt-3">
+                  <input
+                    type="hidden"
+                    name="email"
+                    value={searchParams.unconfirmed}
+                  />
+                  <SubmitButton
+                    variant="outline"
+                    className="border-amber-400 bg-white text-amber-900 hover:bg-amber-100"
+                    pendingText="Reenviando..."
+                  >
+                    Reenviar mail a {searchParams.unconfirmed}
+                  </SubmitButton>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+
         <form action={login} className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" name="email" type="email" required placeholder="tu@email.com" />
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              required
+              placeholder="tu@email.com"
+              defaultValue={searchParams.unconfirmed ?? ''}
+            />
           </div>
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
