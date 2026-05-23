@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Mail, AlertCircle } from 'lucide-react';
 import { login, signInWithGoogle } from '@/actions/auth';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/password-input';
 import { Label } from '@/components/ui/label';
 import { SubmitButton } from '@/components/ui/submit-button';
 
@@ -10,7 +11,7 @@ export const metadata = { title: 'Iniciar sesión — appestetika' };
 export default function LoginPage({
   searchParams,
 }: {
-  searchParams: { signup?: string; error?: string };
+  searchParams: { signup?: string; error?: string; reset?: string };
 }) {
   return (
     <main className="flex min-h-screen items-center justify-center bg-brand-50 px-4">
@@ -44,6 +45,11 @@ export default function LoginPage({
             </div>
           </div>
         )}
+        {searchParams.reset === 'ok' && (
+          <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
+            <strong>Contraseña actualizada.</strong> Iniciá sesión con la nueva.
+          </div>
+        )}
         {searchParams.error && (
           <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
             {searchParams.error}
@@ -56,8 +62,16 @@ export default function LoginPage({
             <Input id="email" name="email" type="email" required placeholder="tu@email.com" />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="password">Contraseña</Label>
-            <Input id="password" name="password" type="password" required minLength={8} />
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password">Contraseña</Label>
+              <Link
+                href="/auth/recuperar-password"
+                className="text-xs font-medium text-brand-600 hover:underline"
+              >
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </div>
+            <PasswordInput id="password" name="password" required minLength={8} />
           </div>
           <SubmitButton className="w-full" pendingText="Iniciando sesión...">
             Iniciar sesión

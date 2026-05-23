@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { signup, signInWithGoogle } from '@/actions/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/password-input';
 import { Label } from '@/components/ui/label';
 import { SubmitButton } from '@/components/ui/submit-button';
 
@@ -141,7 +142,7 @@ export default async function SignupPage({
 
           <div className="space-y-1.5">
             <Label htmlFor="password">Contraseña</Label>
-            <Input id="password" name="password" type="password" required minLength={8} />
+            <PasswordInput id="password" name="password" required minLength={8} />
             <p className="text-xs text-stone-500">Mínimo 8 caracteres</p>
           </div>
 

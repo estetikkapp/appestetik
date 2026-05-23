@@ -159,6 +159,84 @@ export async function logout(): Promise<void> {
   redirect('/auth/login');
 }
 
+/**
+ * Pedir reset de contraseña. Manda email con link a /auth/reset-password
+ * vía Supabase Auth (que usa nuestro SMTP de Resend custom).
+ *
+ * Anti-enumeración: aunque el email no exista, devolvemos el mismo
+ * "te mandamos el link" para no filtrar qué emails están registrados.
+ * Supabase ya lo hace internamente — no devuelve error si el user no existe.
+ */
+export async function requestPasswordReset(formData: FormData): Promise<void> {
+  const email = normalizeEmail(String(formData.get('email') ?? ''));
+
+  if (!email) {
+    redirect('/auth/recuperar-password?error=Email+inv%C3%A1lido');
+  }
+
+  const supabase = createClient();
+  const redirectTo = `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://estetikkapp.com'}/auth/reset-password`;
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo,
+  });
+
+  if (error) {
+    // Errores reales (rate limit, problema de SMTP) los mostramos. Pero NO
+    // expone "User not found" — Supabase no devuelve eso para anti-enum.
+    if (error.message.toLowerCase().includes('rate limit')) {
+      redirect('/auth/recuperar-password?error=Demasiados+intentos%2C+esper%C3%A1+unos+minutos');
+    }
+    console.error('[auth/recuperar-password] resetPasswordForEmail fail:', error.message);
+    // No mostramos detalle al user — mantenemos UX uniforme
+  }
+
+  redirect('/auth/recuperar-password?sent=1');
+}
+
+/**
+ * Actualizar password tras click en el link de recovery.
+ *
+ * Asume que la sesión ya está establecida (el callback hizo el exchange
+ * del code recovery por una sesión temporal — ver /auth/reset-password).
+ * Si no hay sesión, redirige a recuperar-password con error.
+ */
+export async function updatePassword(formData: FormData): Promise<void> {
+  const password = String(formData.get('password') ?? '');
+  const confirm = String(formData.get('confirm') ?? '');
+
+  if (!password || password.length < 8) {
+    redirect('/auth/reset-password?error=La+contrase%C3%B1a+debe+tener+al+menos+8+caracteres');
+  }
+  if (password !== confirm) {
+    redirect('/auth/reset-password?error=Las+contrase%C3%B1as+no+coinciden');
+  }
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect('/auth/recuperar-password?error=El+link+venc%C3%B3.+Ped%C3%AD+uno+nuevo');
+  }
+
+  const { error } = await supabase.auth.updateUser({ password });
+
+  if (error) {
+    if (error.message.toLowerCase().includes('same as the old')) {
+      redirect('/auth/reset-password?error=La+nueva+contrase%C3%B1a+es+igual+a+la+anterior');
+    }
+    redirect(`/auth/reset-password?error=${encodeURIComponent(traducirErrorAuth(error.message))}`);
+  }
+
+  // Después de cambiar, cerramos la sesión de recovery — el user debe
+  // loguear de nuevo con la nueva password (mejor UX que dejarlo logueado
+  // sin que valide explícitamente la nueva).
+  await supabase.auth.signOut();
+  redirect('/auth/login?reset=ok');
+}
+
 export async function signInWithGoogle(): Promise<void> {
   const supabase = createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({
