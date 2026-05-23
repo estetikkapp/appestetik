@@ -21,7 +21,7 @@ import {
   HelpCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
-import { canAccessRoute, type Role } from '@/lib/auth/rbac';
+import { canAccessRoute, type Role, type PlanContext } from '@/lib/auth/rbac';
 
 interface NavItem {
   href: string;
@@ -53,14 +53,19 @@ const NAV: NavItem[] = [
 
 interface Props {
   role: Role;
+  /**
+   * Plan + grandfathered status para filtrar items por feature, no solo por
+   * rol. Si no se pasa, solo se filtra por rol (compat con páginas viejas).
+   */
+  planContext?: PlanContext;
 }
 
-export function Sidebar({ role }: Props) {
+export function Sidebar({ role, planContext }: Props) {
   const pathname = usePathname();
-  // RBAC: filtramos los items que el rol del user no puede tocar. La capa
-  // server-side (requireMembership) lo bloquea aunque ponga la URL a mano —
-  // esto es solo UX para que no vea links que después le van a rebotar.
-  const visibleNav = NAV.filter((item) => canAccessRoute(role, item.href));
+  // RBAC: filtramos por rol + plan. La capa server-side (requireMembership +
+  // requireFeature) lo bloquea aunque ponga la URL a mano — esto es solo UX
+  // para que no vea links a features que no incluye su plan.
+  const visibleNav = NAV.filter((item) => canAccessRoute(role, item.href, planContext));
 
   return (
     <aside className="flex w-60 flex-col border-r border-stone-200 bg-white">

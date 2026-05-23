@@ -16,6 +16,8 @@
 
 import type { Role } from './roles';
 import { ROLE_RANK, hasMinRole } from './roles';
+import { planHasFeature } from '@/lib/plans/feature-flags';
+import type { FeatureFlag, PlanId } from '@/lib/plans/definitions';
 
 // Re-export para que los consumidores (Sidebar, etc.) no tengan que conocer
 // la doble fuente.
@@ -56,17 +58,73 @@ for (const r of PROFESSIONAL_PLUS) {
 }
 
 /**
- * ¿Este rol puede acceder a esta ruta?
+ * Mapa de rutas → feature que necesitan. Si la ruta no está acá, no requiere
+ * feature específica del plan (cualquier plan accede si rol cumple).
  *
- * Si la ruta no está restringida, todos los roles pasan.
- * Match exacto o prefijo (ej. /configuracion/sub también queda bloqueado).
+ * Criterio: solo gateamos features que están explícitamente en Equipo y NO en
+ * Gabinete (según `src/lib/plans/definitions.ts`).
+ *
+ * `paquetes` NO va acá porque está incluido en AMBOS planes según definitions
+ * (description_features_yes lo lista en ambos).
  */
-export function canAccessRoute(role: Role, pathname: string): boolean {
-  for (const [route, minRole] of Object.entries(ROUTE_MIN_ROLE)) {
+export const ROUTE_FEATURE: Partial<Record<string, FeatureFlag>> = {
+  '/empleadas': 'multi_usuario',
+  '/reportes': 'reportes_avanzados',
+  // Futuras: '/inventario': 'inventario'
+};
+
+/**
+ * Devuelve el feature que requiere una ruta, o null si no requiere ninguno.
+ */
+export function routeRequiredFeature(pathname: string): FeatureFlag | null {
+  for (const [route, feature] of Object.entries(ROUTE_FEATURE)) {
     if (pathname === route || pathname.startsWith(route + '/')) {
-      return ROLE_RANK[role] >= ROLE_RANK[minRole];
+      return feature ?? null;
     }
   }
+  return null;
+}
+
+export interface PlanContext {
+  planId: PlanId;
+  isGrandfathered: boolean;
+}
+
+/**
+ * ¿Este rol puede acceder a esta ruta?
+ *
+ * Chequeo en cascada:
+ *   1. Rol del usuario >= rol mínimo de la ruta
+ *   2. Si la ruta requiere feature y se pasa planContext, el plan la incluye
+ *      (o la org es legacy_grandfathered, override total).
+ *
+ * Si la ruta no está restringida en ningún mapa, todos pasan.
+ * Match exacto o prefijo (ej. /configuracion/sub también queda bloqueado).
+ *
+ * planContext es OPCIONAL — si no se pasa, solo se chequea rol. Esto mantiene
+ * compat con callers que no tienen sub a mano (ej. layouts simples).
+ */
+export function canAccessRoute(
+  role: Role,
+  pathname: string,
+  planContext?: PlanContext
+): boolean {
+  // 1) Check de rol
+  for (const [route, minRole] of Object.entries(ROUTE_MIN_ROLE)) {
+    if (pathname === route || pathname.startsWith(route + '/')) {
+      if (ROLE_RANK[role] < ROLE_RANK[minRole]) return false;
+      break;
+    }
+  }
+
+  // 2) Check de feature (solo si pasaron planContext)
+  if (planContext) {
+    const feature = routeRequiredFeature(pathname);
+    if (feature && !planContext.isGrandfathered) {
+      if (!planHasFeature(planContext.planId, feature)) return false;
+    }
+  }
+
   return true;
 }
 

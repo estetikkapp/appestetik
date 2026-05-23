@@ -8,7 +8,7 @@ import { NotificationsBell } from '@/components/notifications/notifications-bell
 import { WelcomeTour } from '@/components/onboarding/welcome-tour';
 import { HelpChatWidget } from '@/components/help-chat/help-chat-widget';
 import type { Role } from '@/lib/auth/require-membership';
-import { getActiveSubscription } from '@/lib/plans/subscription-service';
+import { getOrgFeatureContext } from '@/lib/plans/subscription-service';
 import { planHasFeature } from '@/lib/plans/feature-flags';
 
 export default async function PanelLayout({ children }: { children: React.ReactNode }) {
@@ -44,23 +44,29 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   // completó. Decisión 1A del owner del producto.
   const showTour = activeRole === 'owner' && !activeMembership?.tour_completed_at;
 
-  // El step de "Empleadas" del tour solo aplica si el plan de la org tiene
-  // la feature multi_usuario (Gabinete no la tiene → no mostramos ese step).
-  // Solo consultamos la sub si vamos a mostrar el tour, para no agregar
-  // queries en cada render del panel.
+  // Cargamos plan + grandfathered SIEMPRE (no solo para el tour) para
+  // pasárselo al Sidebar y que filtre links por feature, no solo por rol.
+  // Si falla, defaults seguros que no rompan UX (sin filtrado por plan).
+  let planContext: { planId: 'gabinete' | 'equipo' | 'centro'; isGrandfathered: boolean } | undefined;
   let tourHasEmpleados = false;
-  if (showTour && activeOrgId) {
+  if (activeOrgId) {
     try {
-      const sub = await getActiveSubscription(activeOrgId);
-      tourHasEmpleados = sub ? planHasFeature(sub.plan_id, 'multi_usuario') : false;
+      const { subscription, isGrandfathered } = await getOrgFeatureContext(activeOrgId);
+      if (subscription) {
+        planContext = {
+          planId: subscription.plan_id,
+          isGrandfathered,
+        };
+        tourHasEmpleados = planHasFeature(subscription.plan_id, 'multi_usuario') || isGrandfathered;
+      }
     } catch {
-      tourHasEmpleados = false;
+      // sin sub o error → no filtramos por plan (compatibility safe)
     }
   }
 
   return (
     <div className="flex min-h-screen bg-brand-50/30">
-      <Sidebar role={activeRole} />
+      <Sidebar role={activeRole} planContext={planContext} />
       <div className="flex flex-1 flex-col">
         <header className="flex items-center justify-between border-b border-stone-200 bg-white px-6 py-3">
           <OrgSwitcher orgs={orgs} activeOrgId={activeOrgId ?? ''} />

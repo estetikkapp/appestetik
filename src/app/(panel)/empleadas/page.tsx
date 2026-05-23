@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { requireMembership } from '@/lib/auth/require-membership';
+import { requireFeature } from '@/lib/plans/require-feature';
 import { Badge } from '@/components/ui/badge';
 import {
   Table,
@@ -79,6 +80,9 @@ export default async function EmpleadasPage({
   searchParams: { error?: string; ok?: string };
 }) {
   await requireMembership({ minRole: 'admin' });
+  // Gating por plan: sumar empleadas es feature de Equipo. Gabinete redirige
+  // a /precios con banner contextual.
+  await requireFeature('multi_usuario');
   const { memberships, invitations, templates, services, proServices } = await loadData();
   const proServicesByMembership = new Map<string, string[]>();
   for (const ps of proServices) {

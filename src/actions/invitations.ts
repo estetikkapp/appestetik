@@ -10,6 +10,10 @@ import { sendEmail } from '@/lib/integrations/email/resend';
 import { invitationEmail } from '@/lib/integrations/email/templates';
 import { requireMembership } from '@/lib/auth/require-membership';
 import { audit } from '@/lib/audit';
+import { getOrgFeatureContext } from '@/lib/plans/subscription-service';
+import { canAccessFeature } from '@/lib/plans/feature-flags';
+import { PLANS } from '@/lib/plans/definitions';
+import { createAdminClient } from '@/lib/supabase/admin';
 import type { InviteRole } from '@/types/app';
 
 /**
@@ -26,6 +30,44 @@ import type { InviteRole } from '@/types/app';
 export async function inviteEmployee(formData: FormData): Promise<void> {
   // requireMembership con minRole admin (solo owner/admin pueden invitar)
   const { orgId, userId } = await requireMembership({ minRole: 'admin' });
+
+  // Gating por plan: defensa en profundidad. Aunque la UI esconda el botón
+  // de invitar para Gabinete, validamos también acá por si alguien postea
+  // directo (cURL, scripts) o si las pages no aplican el guard.
+  const { subscription, isGrandfathered } = await getOrgFeatureContext(orgId);
+  if (subscription) {
+    const ctx = { planId: subscription.plan_id, isGrandfathered };
+    if (!canAccessFeature(ctx, 'multi_usuario')) {
+      redirect('/precios?from=multi_usuario');
+    }
+
+    // Enforcement del límite de usuarios del plan (ej. Gabinete = 1, Equipo = 5)
+    const limit = PLANS[subscription.plan_id]?.limits.users;
+    if (limit !== null && limit !== undefined && !isGrandfathered) {
+      const admin = createAdminClient();
+      const [{ count: activeCount }, { count: pendingCount }] = await Promise.all([
+        admin
+          .from('memberships')
+          .select('id', { count: 'exact', head: true })
+          .eq('organization_id', orgId)
+          .eq('active', true),
+        admin
+          .from('invitations')
+          .select('id', { count: 'exact', head: true })
+          .eq('organization_id', orgId)
+          .is('accepted_at', null)
+          .gte('expires_at', new Date().toISOString()),
+      ]);
+      const totalUsers = (activeCount ?? 0) + (pendingCount ?? 0);
+      if (totalUsers >= limit) {
+        redirect(
+          `/empleadas?error=${encodeURIComponent(
+            `Llegaste al límite de ${limit} usuario${limit === 1 ? '' : 's'} de tu plan. Subí a Equipo para sumar más.`
+          )}`
+        );
+      }
+    }
+  }
 
   const rawEmail = String(formData.get('email') ?? '').trim();
   const role = String(formData.get('role') ?? '') as InviteRole;

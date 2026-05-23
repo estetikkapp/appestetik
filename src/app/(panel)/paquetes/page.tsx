@@ -1,7 +1,6 @@
 import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { requireMembership } from '@/lib/auth/require-membership';
-import { requireFeature } from '@/lib/plans/require-feature';
 import { Badge } from '@/components/ui/badge';
 import {
   Table,
@@ -47,7 +46,8 @@ export default async function PaquetesPage({
   searchParams: { error?: string; ok?: string; archived?: string };
 }) {
   await requireMembership({ minRole: 'admin' });
-  await requireFeature('reportes_avanzados');
+  // Paquetes ESTÁN incluidos en Gabinete según definitions.ts — sin gate
+  // de plan. Solo rol admin/owner. (Antes había gate por error.)
   const showArchived = searchParams.archived === '1';
   const { packages, services } = await loadPackages(showArchived);
 
