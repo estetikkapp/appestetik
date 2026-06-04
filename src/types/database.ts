@@ -1061,6 +1061,25 @@ export type Database = {
           last_activity_at: string | null;
         }[];
       };
+      platform_users: {
+        Args: Record<string, never>;
+        Returns: {
+          user_id: string;
+          email: string;
+          created_at: string;
+          email_confirmed_at: string | null;
+          last_sign_in_at: string | null;
+          membership_id: string | null;
+          org_id: string | null;
+          org_name: string | null;
+          org_slug: string | null;
+          role: 'owner' | 'admin' | 'professional' | 'receptionist' | null;
+          display_name: string | null;
+          membership_active: boolean | null;
+          membership_created_at: string | null;
+          invitation_accepted_at: string | null;
+        }[];
+      };
     };
     Enums: Record<string, never>;
   };
