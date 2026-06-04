@@ -70,7 +70,7 @@ export async function loadPlatformUsers(): Promise<{
   let newThisWeek = 0;
   let newThisMonth = 0;
 
-  for (const u of uniqueUsers.values()) {
+  for (const u of Array.from(uniqueUsers.values())) {
     if (u.email_confirmed_at) confirmedUsers++;
     if (!u.org_id) usersWithoutOrg++;
     if (u.last_sign_in_at && new Date(u.last_sign_in_at).getTime() >= monthAgo) {
