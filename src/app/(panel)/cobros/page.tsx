@@ -132,7 +132,53 @@ export default async function CobrosPage({
         </div>
       )}
 
-      <div className="rounded-xl border border-stone-200 bg-white">
+      {/* Mobile: tarjetas apiladas */}
+      <div className="space-y-3 md:hidden">
+        {payments.length === 0 && (
+          <p className="rounded-xl border border-stone-200 bg-white p-4 text-center text-sm text-stone-400">
+            No hay pagos registrados.
+          </p>
+        )}
+        {payments.map((p) => {
+          const cli = Array.isArray(p.client) ? p.client[0] : p.client;
+          return (
+            <div
+              key={p.id}
+              className="rounded-xl border border-stone-200 bg-white p-4 space-y-2"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="font-medium text-stone-900">{cli?.full_name ?? '—'}</div>
+                <div className="text-right font-semibold tabular-nums text-stone-900">
+                  {formatArs(Number(p.amount_ars))}
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="secondary">{METHOD_LABELS[p.method] ?? p.method}</Badge>
+                <Badge variant={STATUS_VARIANTS[p.status]}>
+                  {STATUS_LABELS[p.status] ?? p.status}
+                </Badge>
+              </div>
+              <p className="text-xs text-stone-500">
+                {p.paid_at ? formatDateTimeAr(p.paid_at) : formatDateTimeAr(p.created_at)}
+              </p>
+              {p.mp_payment_link && (
+                <a
+                  href={p.mp_payment_link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-sm text-brand-600 hover:underline"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  Link MP
+                </a>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Desktop: tabla */}
+      <div className="hidden rounded-xl border border-stone-200 bg-white md:block">
         <Table>
           <TableHeader>
             <TableRow>

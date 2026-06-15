@@ -169,7 +169,7 @@ export default async function ClientDetailPage({
         </div>
       )}
 
-      <nav className="flex gap-2 border-b border-stone-200">
+      <nav className="flex gap-2 overflow-x-auto whitespace-nowrap border-b border-stone-200">
         {[
           { id: 'info', label: 'Datos médicos' },
           { id: 'sessions', label: `Sesiones (${sessions.length})` },
@@ -180,7 +180,7 @@ export default async function ClientDetailPage({
           <Link
             key={t.id}
             href={`/clientas/${client.id}?tab=${t.id}`}
-            className={`border-b-2 px-3 py-2 text-sm transition-colors ${
+            className={`shrink-0 border-b-2 px-3 py-2 text-sm transition-colors ${
               tab === t.id
                 ? 'border-brand-500 font-medium text-brand-700'
                 : 'border-transparent text-stone-500 hover:text-stone-700'
@@ -192,7 +192,7 @@ export default async function ClientDetailPage({
       </nav>
 
       {tab === 'info' && (
-        <section className="rounded-xl border border-stone-200 bg-white p-6">
+        <section className="rounded-xl border border-stone-200 bg-white p-4 sm:p-6">
           <h2 className="mb-4 text-lg font-semibold">Datos médicos</h2>
           <form action={upsertMedicalInfo} className="space-y-4">
             <input type="hidden" name="client_id" value={client.id} />
@@ -276,7 +276,7 @@ export default async function ClientDetailPage({
 
       {tab === 'sessions' && (
         <div className="space-y-4">
-          <section className="rounded-xl border border-stone-200 bg-white p-6">
+          <section className="rounded-xl border border-stone-200 bg-white p-4 sm:p-6">
             <h2 className="mb-4 text-lg font-semibold">Nueva sesión</h2>
             <TreatmentSessionForm clientId={client.id} services={services} />
           </section>
@@ -297,12 +297,12 @@ export default async function ClientDetailPage({
       {tab === 'packages' && (
         <div className="space-y-4">
           {availablePackages.length > 0 && (
-            <section className="rounded-xl border border-stone-200 bg-white p-6">
+            <section className="rounded-xl border border-stone-200 bg-white p-4 sm:p-6">
               <h2 className="mb-4 text-lg font-semibold">Asignar nuevo paquete</h2>
               <AssignPackageForm clientId={client.id} availablePackages={availablePackages} />
             </section>
           )}
-          <section className="rounded-xl border border-stone-200 bg-white p-6">
+          <section className="rounded-xl border border-stone-200 bg-white p-4 sm:p-6">
             <h2 className="mb-4 text-lg font-semibold">Paquetes activos</h2>
             {packages.length === 0 ? (
               <p className="text-sm text-stone-500">
@@ -339,7 +339,7 @@ export default async function ClientDetailPage({
       )}
 
       {tab === 'appointments' && (
-        <section className="rounded-xl border border-stone-200 bg-white p-6">
+        <section className="rounded-xl border border-stone-200 bg-white p-4 sm:p-6">
           <h2 className="mb-4 text-lg font-semibold">Historial de turnos</h2>
           {appointments.length === 0 ? (
             <p className="text-sm text-stone-500">Sin turnos registrados.</p>
@@ -368,7 +368,7 @@ export default async function ClientDetailPage({
       )}
 
       {tab === 'consent' && (
-        <section className="rounded-xl border border-stone-200 bg-white p-6">
+        <section className="rounded-xl border border-stone-200 bg-white p-4 sm:p-6">
           <h2 className="mb-2 text-lg font-semibold">Consentimiento informado</h2>
           <p className="mb-4 text-sm text-stone-500">
             La clienta debe firmar antes de la primera sesión de láser, peeling, dermapen o

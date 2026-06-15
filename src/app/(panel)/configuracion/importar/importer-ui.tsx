@@ -226,7 +226,7 @@ export function ImporterUI({
 
   if (state.kind === 'loading') {
     return (
-      <div className="rounded-2xl border border-stone-200 bg-white p-12 text-center">
+      <div className="rounded-2xl border border-stone-200 bg-white p-6 sm:p-12 text-center">
         <Loader2 className="mx-auto h-12 w-12 animate-spin text-brand-500" />
         <h3 className="mt-4 text-lg font-semibold text-stone-900">
           La IA está analizando tu archivo
@@ -240,7 +240,7 @@ export function ImporterUI({
 
   if (state.kind === 'committing') {
     return (
-      <div className="rounded-2xl border border-stone-200 bg-white p-12 text-center">
+      <div className="rounded-2xl border border-stone-200 bg-white p-6 sm:p-12 text-center">
         <Loader2 className="mx-auto h-12 w-12 animate-spin text-brand-500" />
         <h3 className="mt-4 text-lg font-semibold text-stone-900">
           Importando a tu base de clientas...
@@ -251,7 +251,7 @@ export function ImporterUI({
 
   if (state.kind === 'done') {
     return (
-      <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-8 text-center">
+      <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 sm:p-8 text-center">
         <CheckCircle2 className="mx-auto h-12 w-12 text-emerald-600" />
         <h3 className="mt-4 text-xl font-bold text-emerald-900">
           ¡Importación lista!
@@ -313,7 +313,7 @@ function FileDropzone({ onFile }: { onFile: (file: File) => void }) {
         const file = e.dataTransfer.files[0];
         if (file) onFile(file);
       }}
-      className={`block cursor-pointer rounded-2xl border-2 border-dashed bg-white p-12 text-center transition-colors ${
+      className={`block cursor-pointer rounded-2xl border-2 border-dashed bg-white p-6 sm:p-12 text-center transition-colors ${
         dragOver
           ? 'border-brand-500 bg-brand-50'
           : 'border-stone-300 hover:border-brand-400 hover:bg-stone-50'
@@ -389,7 +389,8 @@ function ReviewView({
           )}
         </div>
 
-        <div className="overflow-x-auto rounded-xl border border-stone-200 bg-white">
+        {/* Tabla (md+) */}
+        <div className="hidden overflow-x-auto rounded-xl border border-stone-200 bg-white md:block">
           <table className="w-full text-sm">
             <thead className="bg-stone-50 text-xs uppercase tracking-wide text-stone-500">
               <tr>
@@ -413,7 +414,7 @@ function ReviewView({
                     <input
                       defaultValue={c.full_name}
                       onBlur={(e) => onEdit(i, 'full_name', e.target.value)}
-                      className="w-full rounded border-0 bg-transparent px-1 py-0.5 focus:bg-white focus:ring-1 focus:ring-brand-500"
+                      className="w-full rounded border-0 bg-transparent px-1 py-2 text-base sm:text-sm focus:bg-white focus:ring-1 focus:ring-brand-500"
                     />
                   </td>
                   <td className="px-3 py-2">
@@ -421,7 +422,7 @@ function ReviewView({
                       defaultValue={c.phone_e164 ?? ''}
                       onBlur={(e) => onEdit(i, 'phone_e164', e.target.value)}
                       placeholder="—"
-                      className="w-full rounded border-0 bg-transparent px-1 py-0.5 focus:bg-white focus:ring-1 focus:ring-brand-500"
+                      className="w-full rounded border-0 bg-transparent px-1 py-2 text-base sm:text-sm focus:bg-white focus:ring-1 focus:ring-brand-500"
                     />
                   </td>
                   <td className="px-3 py-2">
@@ -429,7 +430,7 @@ function ReviewView({
                       defaultValue={c.email ?? ''}
                       onBlur={(e) => onEdit(i, 'email', e.target.value)}
                       placeholder="—"
-                      className="w-full rounded border-0 bg-transparent px-1 py-0.5 focus:bg-white focus:ring-1 focus:ring-brand-500"
+                      className="w-full rounded border-0 bg-transparent px-1 py-2 text-base sm:text-sm focus:bg-white focus:ring-1 focus:ring-brand-500"
                     />
                   </td>
                   <td className="px-3 py-2">
@@ -437,7 +438,7 @@ function ReviewView({
                       defaultValue={c.dni ?? ''}
                       onBlur={(e) => onEdit(i, 'dni', e.target.value)}
                       placeholder="—"
-                      className="w-full rounded border-0 bg-transparent px-1 py-0.5 focus:bg-white focus:ring-1 focus:ring-brand-500"
+                      className="w-full rounded border-0 bg-transparent px-1 py-2 text-base sm:text-sm focus:bg-white focus:ring-1 focus:ring-brand-500"
                     />
                   </td>
                   <td className="px-3 py-2 max-w-xs">
@@ -455,7 +456,7 @@ function ReviewView({
                       defaultValue={c.notes ?? ''}
                       onBlur={(e) => onEdit(i, 'notes', e.target.value)}
                       placeholder="—"
-                      className="w-full rounded border-0 bg-transparent px-1 py-0.5 text-xs focus:bg-white focus:ring-1 focus:ring-brand-500"
+                      className="w-full rounded border-0 bg-transparent px-1 py-2 text-base sm:text-xs focus:bg-white focus:ring-1 focus:ring-brand-500"
                     />
                     {c.issues.length > 0 && (
                       <div className="mt-1 flex flex-wrap gap-1">
@@ -492,6 +493,115 @@ function ReviewView({
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Cards (mobile) */}
+        <div className="space-y-3 md:hidden">
+          {result.clients.map((c, i) => (
+            <div
+              key={i}
+              className={`rounded-lg border border-stone-200 p-3 space-y-2 ${
+                c.issues.length > 0 ? 'bg-amber-50/60' : 'bg-white'
+              }`}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 space-y-1">
+                  <label className="block text-[10px] font-medium uppercase tracking-wide text-stone-500">
+                    Nombre
+                  </label>
+                  <input
+                    defaultValue={c.full_name}
+                    onBlur={(e) => onEdit(i, 'full_name', e.target.value)}
+                    className="w-full rounded border border-stone-200 bg-white px-2 py-2 text-base sm:text-sm focus:ring-1 focus:ring-brand-500"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onDelete(i)}
+                  className="mt-5 rounded p-1 text-stone-400 hover:bg-red-50 hover:text-red-600"
+                  title="Borrar esta fila"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-[10px] font-medium uppercase tracking-wide text-stone-500">
+                  Teléfono
+                </label>
+                <input
+                  defaultValue={c.phone_e164 ?? ''}
+                  onBlur={(e) => onEdit(i, 'phone_e164', e.target.value)}
+                  placeholder="—"
+                  className="w-full rounded border border-stone-200 bg-white px-2 py-2 text-base sm:text-sm focus:ring-1 focus:ring-brand-500"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-[10px] font-medium uppercase tracking-wide text-stone-500">
+                  Email
+                </label>
+                <input
+                  defaultValue={c.email ?? ''}
+                  onBlur={(e) => onEdit(i, 'email', e.target.value)}
+                  placeholder="—"
+                  className="w-full rounded border border-stone-200 bg-white px-2 py-2 text-base sm:text-sm focus:ring-1 focus:ring-brand-500"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-[10px] font-medium uppercase tracking-wide text-stone-500">
+                  DNI
+                </label>
+                <input
+                  defaultValue={c.dni ?? ''}
+                  onBlur={(e) => onEdit(i, 'dni', e.target.value)}
+                  placeholder="—"
+                  className="w-full rounded border border-stone-200 bg-white px-2 py-2 text-base sm:text-sm focus:ring-1 focus:ring-brand-500"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-[10px] font-medium uppercase tracking-wide text-stone-500">
+                  Notas
+                </label>
+                {c.contraindications && (
+                  <div className="rounded-md bg-red-50 px-2 py-1 text-[11px] font-semibold text-red-800 ring-1 ring-red-200">
+                    ⚠ {c.contraindications.split('\n').join(' · ')}
+                  </div>
+                )}
+                {c.fitzpatrick && (
+                  <div className="inline-block rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-900">
+                    Fitzpatrick {c.fitzpatrick}
+                  </div>
+                )}
+                <input
+                  defaultValue={c.notes ?? ''}
+                  onBlur={(e) => onEdit(i, 'notes', e.target.value)}
+                  placeholder="—"
+                  className="w-full rounded border border-stone-200 bg-white px-2 py-2 text-base sm:text-sm focus:ring-1 focus:ring-brand-500"
+                />
+                {c.issues.length > 0 && (
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {c.issues.map((iss, j) => (
+                      <span
+                        key={j}
+                        className="inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-800"
+                      >
+                        <AlertTriangle className="h-2.5 w-2.5" />
+                        {iss}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+          {result.clients.length === 0 && (
+            <div className="rounded-lg border border-stone-200 bg-white px-3 py-8 text-center text-sm text-stone-400">
+              Sin clientas para importar.
+            </div>
+          )}
         </div>
 
         <div className="flex flex-wrap items-center justify-end gap-3 border-t border-stone-100 pt-4">
@@ -539,7 +649,7 @@ function ChatPanel({
   }
 
   return (
-    <div className="flex h-[640px] flex-col rounded-xl border border-stone-200 bg-white">
+    <div className="flex h-[420px] lg:h-[640px] flex-col rounded-xl border border-stone-200 bg-white">
       <div className="border-b border-stone-100 p-3">
         <h3 className="text-sm font-semibold text-stone-900">Asistente IA</h3>
         <p className="text-xs text-stone-500">
@@ -582,7 +692,7 @@ function ChatPanel({
             placeholder='Ej: "Borrá las filas que están vacías" o "Agregale el código 11 a los teléfonos"'
             rows={2}
             disabled={loading}
-            className="flex-1 resize-none text-sm"
+            className="flex-1 resize-none text-base sm:text-sm"
           />
           <Button
             type="submit"

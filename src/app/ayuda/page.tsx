@@ -369,7 +369,7 @@ function Section({
             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-stone-100 text-xs font-semibold text-stone-600">
               {i + 1}
             </span>
-            <p className="leading-relaxed">{step}</p>
+            <p className="break-words leading-relaxed">{step}</p>
           </li>
         ))}
       </ol>

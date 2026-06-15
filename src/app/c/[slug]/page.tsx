@@ -100,7 +100,7 @@ export default async function PublicReservationPage({ params, searchParams }: Pa
         </div>
       </header>
 
-      <div className="mx-auto max-w-4xl space-y-6 px-4 py-8">
+      <div className="mx-auto max-w-4xl space-y-6 px-4 py-6 sm:py-8">
         {searchParams.error && (
           <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
             {searchParams.error}
@@ -171,7 +171,7 @@ export default async function PublicReservationPage({ params, searchParams }: Pa
             </section>
           </section>
         ) : (
-          <section className="rounded-2xl bg-white p-6 shadow-sm">
+          <section className="rounded-2xl bg-white p-4 sm:p-6 shadow-sm">
             <div className="mb-6 flex items-start justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-stone-900">{selectedService.name}</h2>

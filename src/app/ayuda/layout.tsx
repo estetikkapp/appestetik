@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
+import { MobileHelpNav } from './mobile-help-nav';
 
 export default function AyudaLayout({ children }: { children: ReactNode }) {
   return (
@@ -9,7 +10,7 @@ export default function AyudaLayout({ children }: { children: ReactNode }) {
           <Link href="/inicio" className="text-lg font-bold text-brand-700">
             appestetika
           </Link>
-          <nav className="flex items-center gap-6 text-sm">
+          <nav className="hidden items-center gap-6 text-sm md:flex">
             <Link href="/precios" className="text-stone-600 hover:text-stone-900">
               Precios
             </Link>
@@ -23,6 +24,7 @@ export default function AyudaLayout({ children }: { children: ReactNode }) {
               Probar gratis
             </Link>
           </nav>
+          <MobileHelpNav />
         </div>
       </header>
       <main className="mx-auto max-w-5xl px-4 py-12">{children}</main>

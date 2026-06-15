@@ -32,7 +32,7 @@ export function AppointmentRowActions({
   const canReschedule = ['pending', 'confirmed'].includes(status) && !!startsAt;
   const canRemind = ['pending', 'confirmed'].includes(status);
   return (
-    <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+    <div className="flex flex-wrap items-center gap-1.5 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
       {status === 'pending' && (
         <StatusButton id={id} toStatus="confirmed" title="Confirmar">
           <Check className="h-4 w-4" />

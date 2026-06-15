@@ -81,7 +81,7 @@ export default function PreciosPage({
           ))}
         </section>
 
-        <section className="mt-16 rounded-2xl border border-stone-200 bg-white p-8 text-center">
+        <section className="mt-16 rounded-2xl border border-stone-200 bg-white p-5 text-center sm:p-8">
           <h2 className="text-2xl font-bold text-stone-900">¿Y la IA?</h2>
           <p className="mx-auto mt-3 max-w-2xl text-sm text-stone-600">
             Cada plan trae cuota mensual de análisis de piel y generación de protocolos con
@@ -140,7 +140,7 @@ function PlanCard({
 
   return (
     <article
-      className={`rounded-2xl border-2 bg-white p-8 ${
+      className={`rounded-2xl border-2 bg-white p-5 sm:p-8 ${
         isEquipo ? 'border-brand-500 shadow-lg' : 'border-stone-200'
       }`}
     >
@@ -155,7 +155,7 @@ function PlanCard({
 
       <div className="mt-6">
         <div className="flex items-baseline gap-2">
-          <span className="text-4xl font-bold text-stone-900">{formatArs(price)}</span>
+          <span className="text-3xl font-bold text-stone-900 sm:text-4xl">{formatArs(price)}</span>
           <span className="text-sm text-stone-500">
             /{cycle === 'yearly' ? 'año' : 'mes'}
           </span>

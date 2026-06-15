@@ -141,7 +141,7 @@ function ValueProps() {
     },
   ];
   return (
-    <section className="border-t border-stone-100 py-20">
+    <section className="border-t border-stone-100 py-14 sm:py-20">
       <div className="mx-auto max-w-6xl px-4">
         <Stagger className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
           {props.map((p) => (
@@ -165,7 +165,7 @@ function ValueProps() {
 
 function HowItWorks() {
   return (
-    <section className="relative overflow-hidden bg-stone-50 py-20">
+    <section className="relative overflow-hidden bg-stone-50 py-14 sm:py-20">
       <div className="mx-auto max-w-6xl px-4">
         <FadeUp className="mx-auto max-w-2xl text-center">
           <h2 className="text-3xl font-bold tracking-tight text-stone-900 sm:text-4xl">
@@ -216,7 +216,7 @@ function Step({
   return (
     <StaggerItem>
       <HoverLift className="h-full">
-        <div className="h-full rounded-2xl bg-white p-6 shadow-sm ring-1 ring-stone-100 transition-shadow hover:shadow-md">
+        <div className="h-full rounded-2xl bg-white p-5 shadow-sm ring-1 ring-stone-100 transition-shadow hover:shadow-md sm:p-6">
           <div className="flex items-center gap-3">
             <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-600 text-sm font-bold text-white shadow-sm">
               {n}
@@ -252,7 +252,7 @@ function FeaturesGrid() {
   ];
 
   return (
-    <section className="py-20">
+    <section className="py-14 sm:py-20">
       <div className="mx-auto max-w-6xl px-4">
         <FadeUp className="mx-auto max-w-2xl text-center">
           <h2 className="text-3xl font-bold tracking-tight text-stone-900 sm:text-4xl">
@@ -268,7 +268,7 @@ function FeaturesGrid() {
           {features.map((f) => (
             <StaggerItem key={f.title}>
               <HoverLift className="h-full">
-                <div className="h-full rounded-2xl border border-stone-100 bg-white p-6 transition-all hover:border-brand-200 hover:shadow-md">
+                <div className="h-full rounded-2xl border border-stone-100 bg-white p-5 transition-all hover:border-brand-200 hover:shadow-md sm:p-6">
                   <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-brand-50 to-brand-100 text-brand-600">
                     <f.icon className="h-5 w-5" />
                   </div>
@@ -290,7 +290,7 @@ function FeaturesGrid() {
 
 function Trust() {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-brand-700 to-brand-600 py-20 text-white">
+    <section className="relative overflow-hidden bg-gradient-to-br from-brand-700 to-brand-600 py-14 text-white sm:py-20">
       <div
         aria-hidden
         className="pointer-events-none absolute -right-32 -top-32 h-96 w-96 rounded-full bg-brand-400/20 blur-3xl"
@@ -302,7 +302,7 @@ function Trust() {
       <div className="relative mx-auto max-w-6xl px-4">
         <Stagger className="grid gap-8 text-center md:grid-cols-3">
           <StaggerItem>
-            <p className="text-5xl font-bold tracking-tight">
+            <p className="text-4xl font-bold tracking-tight sm:text-5xl">
               <CountUp to={100} suffix="%" />
             </p>
             <p className="mt-3 text-sm text-brand-100">
@@ -310,15 +310,15 @@ function Trust() {
             </p>
           </StaggerItem>
           <StaggerItem>
-            <p className="text-5xl font-bold tracking-tight">
-              <CountUp to={30} suffix=" días" />
+            <p className="text-4xl font-bold tracking-tight sm:text-5xl">
+              <CountUp to={14} suffix=" días" />
             </p>
             <p className="mt-3 text-sm text-brand-100">
               De prueba gratis. Sin tarjeta. Sin compromisos.
             </p>
           </StaggerItem>
           <StaggerItem>
-            <p className="text-5xl font-bold tracking-tight">WhatsApp</p>
+            <p className="text-4xl font-bold tracking-tight sm:text-5xl">WhatsApp</p>
             <p className="mt-3 text-sm text-brand-100">
               Soporte por WhatsApp en horario AR. Hablás con personas, no con bots.
             </p>
@@ -335,7 +335,7 @@ function Trust() {
 
 function PricingTeaser() {
   return (
-    <section className="py-20">
+    <section className="py-14 sm:py-20">
       <FadeUp className="mx-auto max-w-4xl px-4 text-center">
         <h2 className="text-3xl font-bold tracking-tight text-stone-900 sm:text-4xl">
           Precios simples y claros
@@ -389,7 +389,7 @@ function Faq() {
   ];
 
   return (
-    <section className="border-t border-stone-100 bg-stone-50 py-20">
+    <section className="border-t border-stone-100 bg-stone-50 py-14 sm:py-20">
       <div className="mx-auto max-w-3xl px-4">
         <FadeUp>
           <h2 className="text-center text-3xl font-bold tracking-tight text-stone-900 sm:text-4xl">
@@ -427,7 +427,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 
 function FinalCta() {
   return (
-    <section className="relative overflow-hidden py-20">
+    <section className="relative overflow-hidden py-14 sm:py-20">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 bg-gradient-to-br from-brand-50/60 via-white to-amber-50/30"

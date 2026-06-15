@@ -103,16 +103,16 @@ export function MonthView({ monthStart, appointments }: MonthViewProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" size="sm" asChild>
             <Link href={`/agenda?view=month&date=${prevMonth}`}>
               <ChevronLeft className="h-4 w-4" />
             </Link>
           </Button>
-          <div className="flex min-w-[220px] items-center gap-2 rounded-lg border border-stone-200 bg-white px-3 py-1.5">
-            <Calendar className="h-4 w-4 text-stone-500" />
-            <span className="text-sm font-medium capitalize">{monthName}</span>
+          <div className="flex min-w-0 items-center gap-2 rounded-lg border border-stone-200 bg-white px-3 py-1.5 sm:min-w-[220px]">
+            <Calendar className="h-4 w-4 shrink-0 text-stone-500" />
+            <span className="truncate text-xs font-medium capitalize sm:text-sm">{monthName}</span>
           </div>
           <Button variant="outline" size="sm" asChild>
             <Link href={`/agenda?view=month&date=${nextMonth}`}>
@@ -137,7 +137,7 @@ export function MonthView({ monthStart, appointments }: MonthViewProps) {
         <div className="grid grid-cols-7 gap-1">
           {cells.map((cell, idx) => {
             if (!cell.date) {
-              return <div key={idx} className="min-h-[80px]" />;
+              return <div key={idx} className="min-h-[56px] sm:min-h-[80px]" />;
             }
             const items = byDay.get(cell.dateStr) ?? [];
             const isToday = cell.dateStr === todayStr;
@@ -145,7 +145,7 @@ export function MonthView({ monthStart, appointments }: MonthViewProps) {
               <Link
                 key={idx}
                 href={`/agenda?date=${cell.dateStr}`}
-                className={`flex min-h-[80px] flex-col rounded-lg border p-1.5 transition-colors hover:border-brand-300 hover:bg-brand-50/40 ${
+                className={`flex min-h-[56px] flex-col rounded-lg border p-1.5 transition-colors hover:border-brand-300 hover:bg-brand-50/40 sm:min-h-[80px] ${
                   isToday ? 'border-brand-300 bg-brand-50/40' : 'border-stone-100 bg-white'
                 }`}
               >
@@ -156,7 +156,25 @@ export function MonthView({ monthStart, appointments }: MonthViewProps) {
                 >
                   {cell.date.getUTCDate()}
                 </div>
-                <div className="mt-1 flex flex-1 flex-col gap-0.5 overflow-hidden">
+
+                {/* Mobile: resumen compacto con puntos de estado + contador */}
+                <div className="mt-1 flex flex-wrap items-center gap-1 overflow-hidden sm:hidden">
+                  {items.slice(0, 3).map((a) => (
+                    <span
+                      key={a.id}
+                      className={`h-1.5 w-1.5 shrink-0 rounded-full ${STATUS_DOT[a.status]}`}
+                      title={`${formatTime(a.starts_at)} ${a.client?.full_name ?? ''} - ${APPOINTMENT_STATUS_LABELS[a.status]}`}
+                    />
+                  ))}
+                  {items.length > 3 && (
+                    <span className="text-[10px] leading-none text-stone-500">
+                      +{items.length - 3}
+                    </span>
+                  )}
+                </div>
+
+                {/* Desktop: chips con horario + nombre */}
+                <div className="mt-1 hidden flex-1 flex-col gap-0.5 overflow-hidden sm:flex">
                   {items.slice(0, 3).map((a) => (
                     <div
                       key={a.id}

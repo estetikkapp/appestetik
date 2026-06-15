@@ -14,7 +14,7 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
           </form>
         </div>
       </header>
-      <main className="mx-auto max-w-3xl px-4 py-10">{children}</main>
+      <main className="mx-auto max-w-3xl px-4 py-6 sm:py-10">{children}</main>
     </div>
   );
 }

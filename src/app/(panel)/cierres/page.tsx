@@ -98,7 +98,7 @@ export default async function CierresPage({
       )}
 
       {!isPreview ? (
-        <section className="rounded-2xl border border-stone-200 bg-white p-6">
+        <section className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-6">
           <h2 className="mb-4 text-lg font-semibold">Crear cierre</h2>
           <form action={dryRunClosure} className="space-y-4">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -117,7 +117,7 @@ export default async function CierresPage({
                 id="professional_id"
                 name="professional_id"
                 defaultValue=""
-                className="flex h-10 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                className="flex h-10 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 sm:text-sm"
               >
                 <option value="">Todo el centro</option>
                 {professionals.map((p) => (
@@ -153,7 +153,7 @@ export default async function CierresPage({
           </form>
         </section>
       ) : (
-        <section className="rounded-2xl border border-amber-300 bg-amber-50 p-6">
+        <section className="rounded-2xl border border-amber-300 bg-amber-50 p-4 sm:p-6">
           <div className="mb-4 flex items-start gap-3">
             <AlertTriangle className="mt-1 h-6 w-6 text-amber-600" />
             <div>
@@ -217,7 +217,57 @@ export default async function CierresPage({
 
       <section>
         <h2 className="mb-3 text-sm font-medium text-stone-700">Cierres existentes</h2>
-        <div className="rounded-xl border border-stone-200 bg-white">
+
+        {/* Mobile: tarjetas */}
+        <div className="space-y-3 md:hidden">
+          {blocks.length === 0 && (
+            <div className="rounded-xl border border-stone-200 bg-white p-4 text-center text-sm text-stone-400">
+              No hay cierres registrados.
+            </div>
+          )}
+          {blocks.map((b) => {
+            const ended = new Date(b.ends_at).getTime() < Date.now();
+            const profMatch = professionals.find((p) => p.user_id === b.professional_id);
+            return (
+              <div
+                key={b.id}
+                className="rounded-xl border border-stone-200 bg-white p-4 space-y-2"
+              >
+                <div className="text-xs tabular-nums text-stone-700">
+                  {formatDateTimeAr(b.starts_at)}
+                  <br />
+                  <span className="text-stone-400">→</span> {formatDateTimeAr(b.ends_at)}
+                </div>
+                <div className="text-sm break-words">{b.reason}</div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm text-stone-600">
+                    {b.professional_id
+                      ? profMatch?.display_name ?? 'Específica'
+                      : 'Todo el centro'}
+                  </span>
+                  {ended ? (
+                    <Badge variant="secondary">Pasado</Badge>
+                  ) : new Date(b.starts_at).getTime() > Date.now() ? (
+                    <Badge variant="outline">Futuro</Badge>
+                  ) : (
+                    <Badge variant="destructive">En curso</Badge>
+                  )}
+                </div>
+                <div className="flex flex-wrap items-center gap-1 pt-1">
+                  <DeleteConfirmButton
+                    action={deleteClosure}
+                    id={b.id}
+                    itemLabel="este cierre"
+                    description="Eliminar el cierre NO restaura los turnos cancelados — eso queda manual."
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Desktop: tabla */}
+        <div className="hidden rounded-xl border border-stone-200 bg-white md:block">
           <Table>
             <TableHeader>
               <TableRow>

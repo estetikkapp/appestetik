@@ -28,7 +28,7 @@ export function ClientForm({ action, client, submitLabel = 'Guardar' }: ClientFo
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label htmlFor="phone_e164">Teléfono</Label>
           <Input

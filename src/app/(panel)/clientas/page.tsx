@@ -119,7 +119,7 @@ export default async function ClientasPage({
           defaultValue={search}
           aria-label="Buscar clienta"
           placeholder="Buscar por nombre, teléfono o DNI..."
-          className="flex h-10 w-full max-w-md rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+          className="flex h-10 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 sm:max-w-md"
         />
         {filter !== 'all' && <input type="hidden" name="filter" value={filter} />}
         <SubmitButton size="default" pendingText="Buscando...">
@@ -164,7 +164,75 @@ export default async function ClientasPage({
         <span className="ml-auto text-xs text-stone-400">{clients.length} resultados</span>
       </div>
 
-      <div className="rounded-xl border border-stone-200 bg-white">
+      {/* Mobile: tarjetas apiladas */}
+      <div className="space-y-3 md:hidden">
+        {clients.length === 0 ? (
+          <div className="rounded-xl border border-stone-200 bg-white p-4 text-center text-sm text-stone-500">
+            {search ? (
+              <>
+                No hay clientas que coincidan con la búsqueda.{' '}
+                <a href="/clientas" className="text-brand-600 underline">
+                  Limpiar
+                </a>
+              </>
+            ) : filter !== 'all' ? (
+              <>
+                No hay clientas en este filtro.{' '}
+                <a href="/clientas" className="text-brand-600 underline">
+                  Ver todas
+                </a>
+              </>
+            ) : (
+              <div className="space-y-2">
+                <p>No hay clientas cargadas todavía.</p>
+                <p className="text-xs text-stone-400">
+                  Empezá creando una <strong>nueva clienta</strong> arriba, o{' '}
+                  <Link href="/clientas/importar" className="text-brand-600 underline">
+                    importá un CSV
+                  </Link>{' '}
+                  si ya tenés base.
+                </p>
+              </div>
+            )}
+          </div>
+        ) : (
+          clients.map((c) => (
+            <div key={c.id} className="rounded-xl border border-stone-200 bg-white p-4 space-y-2">
+              <div className="flex items-start justify-between gap-3">
+                <a
+                  href={`/clientas/${c.id}`}
+                  className="font-medium text-stone-900 hover:text-brand-700 hover:underline"
+                >
+                  {c.full_name}
+                </a>
+                <ClientsPageClient mode="edit" client={c} />
+              </div>
+              {c.email && <div className="text-xs text-stone-500 break-all">{c.email}</div>}
+              <dl className="space-y-1 text-sm">
+                <div className="flex gap-2">
+                  <dt className="text-stone-400">Teléfono:</dt>
+                  <dd className="text-stone-600">
+                    {c.phone_e164 ? formatPhoneDisplay(c.phone_e164) : '—'}
+                  </dd>
+                </div>
+                <div className="flex gap-2">
+                  <dt className="text-stone-400">DNI:</dt>
+                  <dd className="text-stone-600">{c.dni ?? '—'}</dd>
+                </div>
+                <div className="flex gap-2">
+                  <dt className="text-stone-400">Última visita:</dt>
+                  <dd className="text-stone-600">
+                    {c.last_visit_at ? formatDateAr(c.last_visit_at) : '—'}
+                  </dd>
+                </div>
+              </dl>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Desktop: tabla */}
+      <div className="hidden rounded-xl border border-stone-200 bg-white md:block">
         <Table>
           <TableHeader>
             <TableRow>

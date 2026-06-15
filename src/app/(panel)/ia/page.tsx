@@ -86,7 +86,7 @@ export default async function IaPage({ searchParams }: { searchParams: { error?:
       )}
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <section className="rounded-2xl border border-stone-200 bg-white p-6">
+        <section className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-6">
           <h2 className="mb-1 flex items-center gap-2 text-lg font-semibold">
             <Camera className="h-5 w-5 text-brand-500" />
             Diagnóstico de piel
@@ -103,7 +103,7 @@ export default async function IaPage({ searchParams }: { searchParams: { error?:
                 name="client_id"
                 required
                 defaultValue=""
-                className="flex h-10 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                className="flex h-10 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 sm:text-sm"
               >
                 <option value="">Seleccionar</option>
                 {clients.map((c) => (
@@ -113,7 +113,7 @@ export default async function IaPage({ searchParams }: { searchParams: { error?:
                 ))}
               </select>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="sa_age">Edad</Label>
                 <Input id="sa_age" name="client_age" type="number" min={1} max={120} />
@@ -131,7 +131,7 @@ export default async function IaPage({ searchParams }: { searchParams: { error?:
                 type="file"
                 accept="image/png,image/jpeg,image/webp"
                 required
-                className="flex h-10 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm file:mr-3 file:rounded file:border-0 file:bg-brand-100 file:px-2 file:py-1 file:text-xs file:font-medium file:text-brand-700"
+                className="flex h-10 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-base file:mr-3 file:rounded file:border-0 file:bg-brand-100 file:px-2 file:py-1 file:text-xs file:font-medium file:text-brand-700 sm:text-sm"
               />
             </div>
             <div className="flex justify-end pt-2">
@@ -143,7 +143,7 @@ export default async function IaPage({ searchParams }: { searchParams: { error?:
           </form>
         </section>
 
-        <section className="rounded-2xl border border-stone-200 bg-white p-6">
+        <section className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-6">
           <h2 className="mb-1 flex items-center gap-2 text-lg font-semibold">
             <Workflow className="h-5 w-5 text-brand-500" />
             Generador de protocolos
@@ -160,7 +160,7 @@ export default async function IaPage({ searchParams }: { searchParams: { error?:
                 name="client_id"
                 required
                 defaultValue=""
-                className="flex h-10 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                className="flex h-10 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 sm:text-sm"
               >
                 <option value="">Seleccionar</option>
                 {clients.map((c) => (
@@ -177,7 +177,7 @@ export default async function IaPage({ searchParams }: { searchParams: { error?:
                 name="main_objective"
                 required
                 defaultValue=""
-                className="flex h-10 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                className="flex h-10 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 sm:text-sm"
               >
                 <option value="">Seleccionar</option>
                 <option value="anti-age">Anti-age / rejuvenecimiento</option>
@@ -189,14 +189,14 @@ export default async function IaPage({ searchParams }: { searchParams: { error?:
                 <option value="firmeza">Firmeza / lifting no quirúrgico</option>
               </select>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="pg_budget">Presupuesto</Label>
                 <select
                   id="pg_budget"
                   name="budget_range"
                   defaultValue=""
-                  className="flex h-10 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                  className="flex h-10 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 sm:text-sm"
                 >
                   <option value="">No declarado</option>
                   <option value="bajo">Bajo (&lt; $80.000)</option>
@@ -210,7 +210,7 @@ export default async function IaPage({ searchParams }: { searchParams: { error?:
                   id="pg_avail"
                   name="availability"
                   defaultValue="biweekly"
-                  className="flex h-10 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                  className="flex h-10 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 sm:text-sm"
                 >
                   <option value="weekly">Semanal</option>
                   <option value="biweekly">Cada 15 días</option>
@@ -232,7 +232,7 @@ export default async function IaPage({ searchParams }: { searchParams: { error?:
         </section>
       </div>
 
-      <section className="rounded-2xl border border-stone-200 bg-white p-6">
+      <section className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-6">
         <h2 className="mb-4 text-lg font-semibold">Análisis recientes</h2>
         {analyses.length === 0 ? (
           <p className="text-sm text-stone-400">Aún no se realizaron análisis.</p>
@@ -243,13 +243,13 @@ export default async function IaPage({ searchParams }: { searchParams: { error?:
               return (
                 <li
                   key={a.id}
-                  className="flex items-center justify-between rounded-lg border border-stone-100 p-3 text-sm"
+                  className="flex items-center justify-between gap-2 rounded-lg border border-stone-100 p-3 text-sm"
                 >
-                  <div>
+                  <div className="min-w-0 truncate">
                     <span className="font-medium">{cli?.full_name ?? '—'}</span>
                     <span className="ml-2 text-xs text-stone-500">{formatDateTimeAr(a.created_at)}</span>
                   </div>
-                  <Badge variant="premium">Análisis IA</Badge>
+                  <Badge variant="premium" className="shrink-0">Análisis IA</Badge>
                 </li>
               );
             })}
@@ -257,7 +257,7 @@ export default async function IaPage({ searchParams }: { searchParams: { error?:
         )}
       </section>
 
-      <section className="rounded-2xl border border-stone-200 bg-white p-6">
+      <section className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-6">
         <h2 className="mb-4 text-lg font-semibold">Protocolos generados</h2>
         {protocols.length === 0 ? (
           <p className="text-sm text-stone-400">Aún no se generaron protocolos.</p>
@@ -268,15 +268,15 @@ export default async function IaPage({ searchParams }: { searchParams: { error?:
               return (
                 <li
                   key={p.id}
-                  className="flex items-center justify-between rounded-lg border border-stone-100 p-3 text-sm"
+                  className="flex items-center justify-between gap-2 rounded-lg border border-stone-100 p-3 text-sm"
                 >
-                  <div>
-                    <div className="font-medium">{cli?.full_name ?? '—'}</div>
-                    <div className="text-xs text-stone-500">
+                  <div className="min-w-0">
+                    <div className="truncate font-medium">{cli?.full_name ?? '—'}</div>
+                    <div className="truncate text-xs text-stone-500">
                       {p.objective} · {p.total_sessions} sesiones · ${p.total_price_ars?.toLocaleString('es-AR')}
                     </div>
                   </div>
-                  <Badge>{p.status}</Badge>
+                  <Badge className="shrink-0">{p.status}</Badge>
                 </li>
               );
             })}

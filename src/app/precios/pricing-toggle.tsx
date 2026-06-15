@@ -25,7 +25,7 @@ export function PricingToggle({ defaultCycle }: { defaultCycle: 'monthly' | 'yea
       <button
         type="button"
         onClick={() => setCycle('monthly')}
-        className={`rounded-full px-5 py-2 text-sm font-medium transition-colors ${
+        className={`rounded-full px-4 py-2 text-sm font-medium transition-colors sm:px-5 ${
           defaultCycle === 'monthly'
             ? 'bg-brand-500 text-white'
             : 'text-stone-600 hover:text-stone-900'
@@ -36,7 +36,7 @@ export function PricingToggle({ defaultCycle }: { defaultCycle: 'monthly' | 'yea
       <button
         type="button"
         onClick={() => setCycle('yearly')}
-        className={`relative rounded-full px-5 py-2 text-sm font-medium transition-colors ${
+        className={`relative rounded-full px-4 py-2 text-sm font-medium transition-colors sm:px-5 ${
           defaultCycle === 'yearly'
             ? 'bg-brand-500 text-white'
             : 'text-stone-600 hover:text-stone-900'

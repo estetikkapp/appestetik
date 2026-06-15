@@ -43,7 +43,7 @@ export function OnboardingStepper({ current }: { current: number }) {
               {step.n < STEPS.length && (
                 <div
                   className={cn(
-                    'mx-2 h-[2px] flex-1 -translate-y-3 rounded',
+                    'mx-2 h-[2px] flex-1 rounded sm:-translate-y-3',
                     done ? 'bg-brand-500' : 'bg-stone-200'
                   )}
                 />
@@ -52,6 +52,9 @@ export function OnboardingStepper({ current }: { current: number }) {
           );
         })}
       </ol>
+      <p className="mt-2 text-center text-sm font-medium text-brand-700 sm:hidden">
+        Paso {current} de {STEPS.length}: {STEPS[current - 1]?.label}
+      </p>
     </nav>
   );
 }

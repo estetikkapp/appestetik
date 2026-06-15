@@ -94,7 +94,7 @@ export default async function EmpleadasPage({
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-stone-900">Empleadas</h1>
           <p className="mt-1 text-sm text-stone-500">
@@ -122,7 +122,63 @@ export default async function EmpleadasPage({
 
       <section>
         <h2 className="mb-3 text-sm font-medium text-stone-700">Activas</h2>
-        <div className="rounded-xl border border-stone-200 bg-white">
+
+        {/* Mobile: tarjetas */}
+        <div className="space-y-3 sm:hidden">
+          {memberships.length === 0 && (
+            <div className="rounded-xl border border-stone-200 bg-white p-4 text-center text-sm text-stone-400">
+              No hay empleadas cargadas.
+            </div>
+          )}
+          {memberships.map((m) => {
+            const list = proServicesByMembership.get(m.id) ?? [];
+            return (
+              <div
+                key={m.id}
+                className="rounded-xl border border-stone-200 bg-white p-4 space-y-2"
+              >
+                <div className="font-medium text-stone-900">
+                  {m.display_name ?? <span className="text-stone-400">Sin nombre</span>}
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant={m.role === 'owner' ? 'premium' : 'default'}>
+                    {ROLE_LABELS[m.role] ?? m.role}
+                  </Badge>
+                  {m.active ? (
+                    <Badge variant="success">Activa</Badge>
+                  ) : (
+                    <Badge variant="secondary">Inactiva</Badge>
+                  )}
+                </div>
+                <div className="text-sm text-stone-600">
+                  <span className="text-stone-400">Plantilla: </span>
+                  {m.schedule_template_id
+                    ? templateById.get(m.schedule_template_id) ?? '—'
+                    : 'Sin plantilla'}
+                </div>
+                <div className="text-sm text-stone-600">
+                  <span className="text-stone-400">Servicios: </span>
+                  {list.length === 0 ? 'Todos' : `${list.length} asignados`}
+                </div>
+                <div className="flex flex-wrap items-center gap-1 pt-1">
+                  <EmpleadasClient
+                    mode="config"
+                    membership={m}
+                    templates={templates}
+                    services={services}
+                    assignedServiceIds={proServicesByMembership.get(m.id) ?? []}
+                  />
+                  {m.role !== 'owner' && (
+                    <EmpleadasClient mode="toggle" membership={m} />
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Desktop: tabla */}
+        <div className="hidden rounded-xl border border-stone-200 bg-white sm:block">
           <Table>
             <TableHeader>
               <TableRow>
@@ -195,7 +251,32 @@ export default async function EmpleadasPage({
       {invitations.length > 0 && (
         <section>
           <h2 className="mb-3 text-sm font-medium text-stone-700">Invitaciones pendientes</h2>
-          <div className="rounded-xl border border-stone-200 bg-white">
+
+          {/* Mobile: tarjetas */}
+          <div className="space-y-3 sm:hidden">
+            {invitations.map((inv) => (
+              <div
+                key={inv.id}
+                className="rounded-xl border border-stone-200 bg-white p-4 space-y-2"
+              >
+                <div className="font-medium text-stone-900 break-all">{inv.email}</div>
+                <div className="text-sm text-stone-600">
+                  <span className="text-stone-400">Rol: </span>
+                  {ROLE_LABELS[inv.role] ?? inv.role}
+                </div>
+                <div className="text-sm text-stone-600">
+                  <span className="text-stone-400">Expira: </span>
+                  {formatDateAr(inv.expires_at)}
+                </div>
+                <div className="flex flex-wrap items-center gap-1 pt-1">
+                  <EmpleadasClient mode="revoke" invitation={inv} />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop: tabla */}
+          <div className="hidden rounded-xl border border-stone-200 bg-white sm:block">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -208,7 +289,7 @@ export default async function EmpleadasPage({
               <TableBody>
                 {invitations.map((inv) => (
                   <TableRow key={inv.id}>
-                    <TableCell>{inv.email}</TableCell>
+                    <TableCell className="break-all">{inv.email}</TableCell>
                     <TableCell>{ROLE_LABELS[inv.role] ?? inv.role}</TableCell>
                     <TableCell className="text-sm text-stone-600">
                       {formatDateAr(inv.expires_at)}

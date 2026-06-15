@@ -194,7 +194,7 @@ export default async function ReportesPage({
         </p>
       </div>
 
-      <form method="GET" className="flex flex-wrap items-end gap-3 rounded-2xl border border-stone-200 bg-white p-4">
+      <form method="GET" className="flex flex-col gap-3 rounded-2xl border border-stone-200 bg-white p-4 sm:flex-row sm:flex-wrap sm:items-end">
         <div className="space-y-1.5">
           <Label htmlFor="from">Desde</Label>
           <Input id="from" name="from" type="date" defaultValue={from} required />
@@ -204,7 +204,7 @@ export default async function ReportesPage({
           <Input id="to" name="to" type="date" defaultValue={to} required />
         </div>
         <SubmitButton pendingText="Cargando...">Aplicar</SubmitButton>
-        <div className="ml-auto flex flex-wrap gap-2">
+        <div className="flex w-full flex-wrap gap-2 sm:ml-auto sm:w-auto">
           <Button asChild variant="outline" size="sm">
             <a href={exportUrl('appointments')}>
               <Download className="mr-1 h-3 w-3" /> Turnos CSV
@@ -277,7 +277,7 @@ export default async function ReportesPage({
             revenue: c.revenue,
           }))}
         />
-        <section className="rounded-2xl border border-stone-200 bg-white p-6">
+        <section className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-6">
           <h2 className="mb-3 text-lg font-semibold">Métodos de cobro</h2>
           {Object.keys(data.methodStats).length === 0 ? (
             <p className="text-sm text-stone-400">Sin pagos aprobados en el rango.</p>
@@ -356,7 +356,7 @@ function RankingTable({
   rows: Array<{ label: string; count: number; revenue: number }>;
 }) {
   return (
-    <section className="rounded-2xl border border-stone-200 bg-white p-6">
+    <section className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-6">
       <h2 className="mb-3 text-lg font-semibold">{title}</h2>
       {rows.length === 0 ? (
         <p className="text-sm text-stone-400">Sin datos en el rango seleccionado.</p>

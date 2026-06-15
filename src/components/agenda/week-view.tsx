@@ -100,16 +100,16 @@ export function WeekView({ weekStart, appointments }: WeekViewProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" size="sm" asChild>
             <Link href={`/agenda?view=week&date=${prevWeek}`}>
               <ChevronLeft className="h-4 w-4" />
             </Link>
           </Button>
-          <div className="flex min-w-[220px] items-center gap-2 rounded-lg border border-stone-200 bg-white px-3 py-1.5">
-            <CalendarRange className="h-4 w-4 text-stone-500" />
-            <span className="text-sm font-medium capitalize">
+          <div className="flex min-w-0 items-center gap-2 rounded-lg border border-stone-200 bg-white px-3 py-1.5 sm:min-w-[220px]">
+            <CalendarRange className="h-4 w-4 shrink-0 text-stone-500" />
+            <span className="truncate text-xs font-medium capitalize sm:text-sm">
               Semana del {startTxt} al {sundayTxt}
             </span>
           </div>

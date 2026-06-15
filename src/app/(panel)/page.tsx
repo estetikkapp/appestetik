@@ -213,7 +213,7 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <section className="rounded-2xl border border-stone-200 bg-white p-6">
+        <section className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-6">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold">Turnos de hoy</h2>
             <Link href="/agenda" className="text-sm text-brand-600 hover:underline">
@@ -258,7 +258,7 @@ export default async function DashboardPage() {
           )}
         </section>
 
-        <section className="rounded-2xl border border-stone-200 bg-white p-6">
+        <section className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-6">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold">Top servicios del mes</h2>
             <Scissors className="h-4 w-4 text-stone-400" />
@@ -284,7 +284,7 @@ export default async function DashboardPage() {
         </section>
       </div>
 
-      <section className="rounded-2xl border border-stone-200 bg-white p-6">
+      <section className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-6">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold">Clientas nuevas del mes</h2>
           <Link href="/clientas" className="text-sm text-brand-600 hover:underline">
@@ -329,7 +329,7 @@ function StatCard({ icon: Icon, label, value, hint, variant = 'default' }: StatC
       ? 'text-red-600'
       : 'text-stone-900';
   return (
-    <div className="rounded-xl border border-stone-200 bg-white p-4">
+    <div className="rounded-xl border border-stone-200 bg-white p-4 sm:p-6">
       <div className="flex items-center gap-2 text-stone-500">
         <Icon className="h-4 w-4" />
         <span className="text-xs font-medium uppercase tracking-wide">{label}</span>

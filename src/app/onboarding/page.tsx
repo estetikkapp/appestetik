@@ -51,7 +51,7 @@ export default async function OnboardingStep1({
     <div>
       <OnboardingStepper current={3} />
 
-      <div className="rounded-2xl bg-white p-8 shadow-sm">
+      <div className="rounded-2xl bg-white p-4 shadow-sm sm:p-8">
         <div className="mb-6">
           <h2 className="text-2xl font-bold text-stone-900">Datos fiscales de tu centro</h2>
           <p className="mt-1 text-sm text-stone-500">

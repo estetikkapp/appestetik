@@ -73,7 +73,7 @@ export default async function ConfiguracionPage({
 
       <section className="rounded-xl border border-stone-200 bg-white p-6">
         <h2 className="mb-4 text-lg font-semibold">Logo del centro</h2>
-        <div className="flex items-center gap-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
           {org?.logo_url ? (
             <Image
               src={org.logo_url}
@@ -90,14 +90,14 @@ export default async function ConfiguracionPage({
           )}
           <form action={uploadOrganizationLogo} className="flex-1 space-y-2">
             <Label htmlFor="logo">Subir archivo (PNG, JPG, WEBP, SVG — máx 5MB)</Label>
-            <div className="flex gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row">
               <input
                 id="logo"
                 name="logo"
                 type="file"
                 accept="image/png,image/jpeg,image/webp,image/svg+xml"
                 required
-                className="flex h-10 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm file:mr-3 file:rounded file:border-0 file:bg-brand-100 file:px-2 file:py-1 file:text-xs file:font-medium file:text-brand-700"
+                className="flex h-10 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-base file:mr-3 file:rounded file:border-0 file:bg-brand-100 file:px-2 file:py-1 file:text-xs file:font-medium file:text-brand-700 sm:text-sm"
               />
               <SubmitButton variant="outline" pendingText="Subiendo...">
                 Subir
@@ -135,7 +135,7 @@ export default async function ConfiguracionPage({
                 id="tax_condition"
                 name="tax_condition"
                 defaultValue={org?.tax_condition ?? ''}
-                className="flex h-10 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                className="flex h-10 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 sm:text-sm"
               >
                 <option value="">Seleccionar</option>
                 <option value="monotributo">Monotributo</option>
@@ -193,7 +193,7 @@ export default async function ConfiguracionPage({
         </p>
         <form action={setOrganizationSlug} className="mb-4 space-y-2">
           <div className="flex rounded-lg border border-stone-300 focus-within:ring-2 focus-within:ring-brand-500">
-            <span className="flex items-center border-r border-stone-300 bg-stone-50 px-3 text-sm text-stone-500">
+            <span className="flex shrink-0 items-center border-r border-stone-300 bg-stone-50 px-3 text-xs text-stone-500 sm:text-sm">
               appestetika.com.ar/c/
             </span>
             <Input
@@ -205,7 +205,7 @@ export default async function ConfiguracionPage({
               pattern="[a-z0-9](?:[a-z0-9-]{1,38}[a-z0-9])?"
               placeholder="mi-centro"
               defaultValue={org?.slug ?? ''}
-              className="rounded-l-none border-0 focus-visible:ring-0"
+              className="min-w-0 rounded-l-none border-0 focus-visible:ring-0"
             />
           </div>
           <div className="flex items-center justify-between gap-2">
@@ -292,7 +292,7 @@ function AfipConfigSection({
             id="provider"
             name="provider"
             defaultValue={provider}
-            className="flex h-10 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+            className="flex h-10 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 sm:text-sm"
           >
             <option value="manual">Manual (comprobantes internos no fiscales)</option>
             <option value="tusfacturas">TusFacturas API (facturación AFIP real)</option>

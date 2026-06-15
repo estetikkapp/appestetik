@@ -141,7 +141,7 @@ export function CreateAppointmentSheet({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="professional_id">Profesional</Label>
                 <SelectNative
@@ -329,7 +329,7 @@ function SelectNative({
       value={controlled ? value : undefined}
       defaultValue={controlled ? undefined : ''}
       onChange={controlled ? (e) => onChange?.(e.target.value) : undefined}
-      className="flex h-10 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+      className="flex h-10 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 sm:text-sm"
     >
       <option value="">{emptyLabel}</option>
       {options.map((opt) => (

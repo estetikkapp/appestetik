@@ -82,7 +82,46 @@ export default async function ServiciosPage({
         </a>
       </div>
 
-      <div className="rounded-xl border border-stone-200 bg-white">
+      {/* Mobile: tarjetas apiladas */}
+      <div className="space-y-3 md:hidden">
+        {services.length === 0 && (
+          <p className="rounded-xl border border-stone-200 bg-white p-4 text-center text-sm text-stone-400">
+            No hay servicios {showArchived ? '' : 'activos'}. Creá el primero con el botón arriba.
+          </p>
+        )}
+        {services.map((s) => (
+          <div key={s.id} className="rounded-xl border border-stone-200 bg-white p-4 space-y-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="space-y-1">
+                <div className="font-medium text-stone-900">{s.name}</div>
+                {s.requires_consent && (
+                  <Badge variant="secondary" className="text-[10px]">
+                    Requiere consentimiento
+                  </Badge>
+                )}
+              </div>
+              <div className="text-right font-semibold tabular-nums text-stone-900">
+                {formatArs(Number(s.price_ars))}
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {s.category && <Badge variant="secondary">{s.category}</Badge>}
+              <Badge variant="secondary">{s.duration_minutes} min</Badge>
+              {s.active ? (
+                <Badge variant="success">Activo</Badge>
+              ) : (
+                <Badge variant="secondary">Archivado</Badge>
+              )}
+            </div>
+            <div className="border-t border-stone-100 pt-2">
+              <ServicesPageClient mode="edit" service={s} />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop: tabla */}
+      <div className="hidden rounded-xl border border-stone-200 bg-white md:block">
         <Table>
           <TableHeader>
             <TableRow>

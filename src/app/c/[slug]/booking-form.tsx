@@ -146,7 +146,7 @@ export function BookingForm({
             id="professional_id"
             value={professionalId}
             onChange={(e) => setProfessionalId(e.target.value)}
-            className="flex h-10 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+            className="flex h-10 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-base sm:text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
           >
             <option value="">Cualquiera disponible</option>
             {professionals.map((p) => (
@@ -200,7 +200,7 @@ export function BookingForm({
                 key={iso}
                 type="button"
                 onClick={() => chooseSlot(iso)}
-                className={`rounded-lg border p-2 text-sm tabular-nums transition-colors ${
+                className={`min-h-[40px] rounded-lg border py-2.5 px-2 text-sm tabular-nums transition-colors ${
                   selectedSlot === iso
                     ? 'border-brand-500 bg-brand-500 text-white font-medium'
                     : 'border-stone-200 bg-white text-stone-700 hover:border-brand-300 hover:bg-brand-50'
@@ -218,8 +218,14 @@ export function BookingForm({
           <p className="text-sm font-medium text-emerald-800">
             Turno seleccionado: <strong>{formatTimeAr(selectedSlot)}</strong> del{' '}
             <strong>{date}</strong>
-            {professionalId &&
-              ` con ${professionals.find((p) => p.id === professionalId)?.display_name ?? ''}`}
+            {professionalId && (
+              <>
+                {' con '}
+                <span className="break-words">
+                  {professionals.find((p) => p.id === professionalId)?.display_name ?? ''}
+                </span>
+              </>
+            )}
           </p>
 
           <div className="space-y-1.5">
@@ -227,7 +233,7 @@ export function BookingForm({
             <Input id="full_name" name="full_name" required placeholder="Nombre y apellido" />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label htmlFor="phone">WhatsApp *</Label>
               <Input
@@ -299,7 +305,7 @@ export function BookingForm({
           <Input id="wl_full_name" name="full_name" required placeholder="Nombre y apellido" />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label htmlFor="wl_phone">WhatsApp *</Label>
             <Input id="wl_phone" name="phone" type="tel" required placeholder="+549..." />

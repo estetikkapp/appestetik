@@ -53,7 +53,7 @@ export default async function OnboardingStep2({
     <div>
       <OnboardingStepper current={4} />
 
-      <div className="rounded-2xl bg-white p-8 shadow-sm">
+      <div className="rounded-2xl bg-white p-4 shadow-sm sm:p-8">
         <div className="mb-6">
           <h2 className="text-2xl font-bold text-stone-900">Horarios de atención</h2>
           <p className="mt-1 text-sm text-stone-500">
@@ -78,9 +78,9 @@ export default async function OnboardingStep2({
             return (
               <div
                 key={idx}
-                className="flex items-center gap-4 rounded-lg border border-stone-200 p-3"
+                className="flex flex-col gap-2 rounded-lg border border-stone-200 p-3 sm:flex-row sm:items-center sm:gap-4"
               >
-                <label className="flex w-32 cursor-pointer items-center gap-2">
+                <label className="flex w-full cursor-pointer items-center gap-2 sm:w-32">
                   <input
                     type="checkbox"
                     name={`active_${idx}`}

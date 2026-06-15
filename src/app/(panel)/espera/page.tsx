@@ -152,7 +152,7 @@ export default async function EsperaPage({
             <a
               key={s}
               href={`/espera?status=${s}`}
-              className={`rounded-lg px-3 py-1 text-sm transition-colors ${
+              className={`inline-flex min-h-[40px] items-center rounded-lg px-3 py-2 text-sm transition-colors ${
                 isActive
                   ? 'bg-brand-100 text-brand-800 font-medium'
                   : 'text-stone-600 hover:bg-stone-100'
@@ -169,7 +169,69 @@ export default async function EsperaPage({
         })}
       </div>
 
-      <div className="rounded-xl border border-stone-200 bg-white">
+      {/* Mobile: tarjetas */}
+      <div className="space-y-3 md:hidden">
+        {entries.length === 0 && (
+          <div className="rounded-xl border border-stone-200 bg-white p-4 text-center text-sm text-stone-400">
+            No hay entradas para este filtro.
+          </div>
+        )}
+        {entries.map((e) => {
+          const cli = Array.isArray(e.client) ? e.client[0] : e.client;
+          const svc = Array.isArray(e.service) ? e.service[0] : e.service;
+          return (
+            <div
+              key={e.id}
+              className="rounded-xl border border-stone-200 bg-white p-4 space-y-2"
+            >
+              <div>
+                <div className="font-medium text-stone-900">{cli?.full_name ?? '—'}</div>
+                <div className="text-xs text-stone-500">
+                  {cli?.phone_e164 ?? 'sin teléfono'}
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-sm text-stone-600">{svc?.name ?? '—'}</span>
+                <Badge variant={STATUS_VARIANTS[e.status]}>
+                  {STATUS_LABELS[e.status] ?? e.status}
+                </Badge>
+              </div>
+              <div className="text-sm text-stone-600">
+                <span className="text-stone-400">Fecha preferida: </span>
+                {e.preferred_date ? (
+                  <span className="inline-flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
+                    {formatDateAr(e.preferred_date)}
+                  </span>
+                ) : (
+                  <span className="text-stone-400">cualquiera</span>
+                )}
+              </div>
+              <div className="text-xs text-stone-500">
+                <span className="text-stone-400">Antigüedad: </span>
+                {formatDateTimeAr(e.created_at)}
+                {e.notified_at && (
+                  <span className="ml-2 text-stone-400">
+                    · avisada {formatDateTimeAr(e.notified_at)}
+                  </span>
+                )}
+              </div>
+              <div className="pt-1">
+                <WaitlistRowActions
+                  id={e.id}
+                  status={e.status}
+                  clientName={cli?.full_name ?? ''}
+                  serviceName={svc?.name ?? ''}
+                  hasPhone={!!cli?.phone_e164}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Desktop: tabla */}
+      <div className="hidden rounded-xl border border-stone-200 bg-white md:block">
         <Table>
           <TableHeader>
             <TableRow>

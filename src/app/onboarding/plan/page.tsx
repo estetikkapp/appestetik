@@ -31,7 +31,7 @@ export default async function OnboardingPlanPicker({
     <div>
       <OnboardingStepper current={1} />
 
-      <div className="rounded-2xl bg-white p-8 shadow-sm">
+      <div className="rounded-2xl bg-white p-4 shadow-sm sm:p-8">
         <div className="mb-6">
           <h2 className="text-2xl font-bold text-stone-900">¿Cómo trabajás?</h2>
           <p className="mt-1 text-sm text-stone-500">
@@ -76,7 +76,7 @@ function PlanForm({
   return (
     <form
       action={selectInitialPlanAction}
-      className={`flex flex-col rounded-2xl border-2 bg-white p-6 transition-colors ${
+      className={`flex flex-col rounded-2xl border-2 bg-white p-4 transition-colors sm:p-6 ${
         isRecommended ? 'border-brand-500' : 'border-stone-200 hover:border-stone-300'
       }`}
     >

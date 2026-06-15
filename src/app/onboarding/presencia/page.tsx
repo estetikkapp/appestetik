@@ -13,7 +13,7 @@ export default function OnboardingStep4({ searchParams }: { searchParams: { erro
     <div>
       <OnboardingStepper current={6} />
 
-      <div className="rounded-2xl bg-white p-8 shadow-sm">
+      <div className="rounded-2xl bg-white p-4 shadow-sm sm:p-8">
         <div className="mb-6">
           <h2 className="text-2xl font-bold text-stone-900">Tu presencia online</h2>
           <p className="mt-1 text-sm text-stone-500">
@@ -32,7 +32,7 @@ export default function OnboardingStep4({ searchParams }: { searchParams: { erro
           <div className="space-y-1.5">
             <Label htmlFor="slug">URL pública</Label>
             <div className="flex rounded-lg border border-stone-300 focus-within:ring-2 focus-within:ring-brand-500">
-              <span className="flex items-center border-r border-stone-300 bg-stone-50 px-3 text-sm text-stone-500">
+              <span className="flex items-center border-r border-stone-300 bg-stone-50 px-3 text-xs text-stone-500 sm:text-sm">
                 appestetika.com.ar/c/
               </span>
               <Input
@@ -42,7 +42,7 @@ export default function OnboardingStep4({ searchParams }: { searchParams: { erro
                 maxLength={40}
                 pattern="[a-z0-9](?:[a-z0-9-]{1,38}[a-z0-9])?"
                 placeholder="mi-centro"
-                className="rounded-l-none border-0 focus-visible:ring-0"
+                className="min-w-0 rounded-l-none border-0 focus-visible:ring-0"
               />
             </div>
             <p className="text-xs text-stone-500">

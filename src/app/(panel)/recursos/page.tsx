@@ -66,19 +66,48 @@ export default async function RecursosPage({
       <div className="flex items-center gap-2">
         <a
           href="/recursos"
-          className={`rounded-lg px-3 py-1 text-sm ${!showArchived ? 'bg-brand-100 text-brand-800' : 'text-stone-600'}`}
+          className={`inline-flex min-h-[40px] items-center rounded-lg px-3 py-2 text-sm ${!showArchived ? 'bg-brand-100 text-brand-800' : 'text-stone-600'}`}
         >
           Activos
         </a>
         <a
           href="/recursos?archived=1"
-          className={`rounded-lg px-3 py-1 text-sm ${showArchived ? 'bg-brand-100 text-brand-800' : 'text-stone-600'}`}
+          className={`inline-flex min-h-[40px] items-center rounded-lg px-3 py-2 text-sm ${showArchived ? 'bg-brand-100 text-brand-800' : 'text-stone-600'}`}
         >
           Todos
         </a>
       </div>
 
-      <div className="rounded-xl border border-stone-200 bg-white">
+      {/* Mobile: tarjetas */}
+      <div className="space-y-3 sm:hidden">
+        {resources.length === 0 && (
+          <div className="rounded-xl border border-stone-200 bg-white p-4 text-center text-sm text-stone-400">
+            No hay recursos cargados.
+          </div>
+        )}
+        {resources.map((r) => (
+          <div
+            key={r.id}
+            className="rounded-xl border border-stone-200 bg-white p-4 space-y-2"
+          >
+            <div className="font-medium text-stone-900">{r.name}</div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm text-stone-600">{r.type}</span>
+              {r.active ? (
+                <Badge variant="success">Activo</Badge>
+              ) : (
+                <Badge variant="secondary">Archivado</Badge>
+              )}
+            </div>
+            <div className="flex flex-wrap items-center gap-1 pt-1">
+              <ResourcesClient mode="edit" resource={r} />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop: tabla */}
+      <div className="hidden rounded-xl border border-stone-200 bg-white sm:block">
         <Table>
           <TableHeader>
             <TableRow>

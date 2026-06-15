@@ -27,7 +27,7 @@ export default function LoginPage({
 }) {
   return (
     <main className="flex min-h-screen items-center justify-center bg-brand-50 px-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-sm">
+      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-sm sm:p-8">
         <div className="mb-6 text-center">
           <h1 className="text-2xl font-bold text-brand-700">appestetika</h1>
           <p className="mt-1 text-sm text-stone-500">Iniciá sesión en tu cuenta</p>
@@ -109,7 +109,7 @@ export default function LoginPage({
                   />
                   <SubmitButton
                     variant="outline"
-                    className="border-amber-400 bg-white text-amber-900 hover:bg-amber-100"
+                    className="h-auto whitespace-normal break-all border-amber-400 bg-white text-amber-900 hover:bg-amber-100"
                     pendingText="Reenviando..."
                   >
                     Reenviar mail a {searchParams.unconfirmed}
@@ -137,7 +137,7 @@ export default function LoginPage({
               <Label htmlFor="password">Contraseña</Label>
               <Link
                 href="/auth/recuperar-password"
-                className="text-xs font-medium text-brand-600 hover:underline"
+                className="py-1 text-sm font-medium text-brand-600 hover:underline"
               >
                 ¿Olvidaste tu contraseña?
               </Link>

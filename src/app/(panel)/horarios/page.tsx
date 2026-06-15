@@ -89,7 +89,43 @@ export default async function HorariosPage({
         </div>
       )}
 
-      <div className="rounded-xl border border-stone-200 bg-white">
+      {/* Mobile: tarjetas */}
+      <div className="space-y-3 md:hidden">
+        {templates.length === 0 && (
+          <div className="rounded-xl border border-stone-200 bg-white p-4 text-center text-sm text-stone-400">
+            Aún no hay plantillas. Crea la primera con el botón de arriba.
+          </div>
+        )}
+        {templates.map((t) => (
+          <div
+            key={t.id}
+            className="rounded-xl border border-stone-200 bg-white p-4 space-y-2"
+          >
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="font-medium text-stone-900">{t.name}</span>
+              {t.is_default && <Badge variant="premium">Default</Badge>}
+              {t.active ? (
+                <Badge variant="success">Activa</Badge>
+              ) : (
+                <Badge variant="secondary">Archivada</Badge>
+              )}
+            </div>
+            <div className="text-xs text-stone-600 break-words">
+              {summarizeWindows(t.attention_windows as unknown as AttentionWindow[])}
+            </div>
+            <div className="text-sm text-stone-600 tabular-nums">
+              <span className="text-stone-400">Granularidad: </span>
+              cada {t.slot_minutes} min
+            </div>
+            <div className="flex flex-wrap items-center gap-1 pt-1">
+              <TemplatesClient mode="edit" template={t} />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop: tabla */}
+      <div className="hidden rounded-xl border border-stone-200 bg-white md:block">
         <Table>
           <TableHeader>
             <TableRow>

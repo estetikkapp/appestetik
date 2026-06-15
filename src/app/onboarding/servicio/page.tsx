@@ -31,7 +31,7 @@ export default function OnboardingStep3({ searchParams }: { searchParams: { erro
     <div>
       <OnboardingStepper current={5} />
 
-      <div className="rounded-2xl bg-white p-8 shadow-sm">
+      <div className="rounded-2xl bg-white p-4 shadow-sm sm:p-8">
         <div className="mb-6">
           <h2 className="text-2xl font-bold text-stone-900">Tu primer servicio</h2>
           <p className="mt-1 text-sm text-stone-500">
@@ -56,7 +56,7 @@ export default function OnboardingStep3({ searchParams }: { searchParams: { erro
             <select
               id="category"
               name="category"
-              className="flex h-10 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+              className="flex h-10 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 sm:text-sm"
               defaultValue=""
             >
               <option value="">Seleccioná una categoría</option>
@@ -68,7 +68,7 @@ export default function OnboardingStep3({ searchParams }: { searchParams: { erro
             </select>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label htmlFor="duration_minutes">Duración (minutos) *</Label>
               <Input

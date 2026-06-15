@@ -77,19 +77,79 @@ export default async function PaquetesPage({
       <div className="flex items-center gap-2">
         <a
           href="/paquetes"
-          className={`rounded-lg px-3 py-1 text-sm ${!showArchived ? 'bg-brand-100 text-brand-800' : 'text-stone-600'}`}
+          className={`inline-flex min-h-[40px] items-center rounded-lg px-3 py-2 text-sm ${!showArchived ? 'bg-brand-100 text-brand-800' : 'text-stone-600'}`}
         >
           Activos
         </a>
         <a
           href="/paquetes?archived=1"
-          className={`rounded-lg px-3 py-1 text-sm ${showArchived ? 'bg-brand-100 text-brand-800' : 'text-stone-600'}`}
+          className={`inline-flex min-h-[40px] items-center rounded-lg px-3 py-2 text-sm ${showArchived ? 'bg-brand-100 text-brand-800' : 'text-stone-600'}`}
         >
           Todos
         </a>
       </div>
 
-      <div className="rounded-xl border border-stone-200 bg-white">
+      {/* Mobile: tarjetas */}
+      <div className="space-y-3 sm:hidden">
+        {packages.length === 0 && (
+          <div className="rounded-xl border border-stone-200 bg-white p-4 text-center text-sm text-stone-400">
+            No hay paquetes cargados todavía.
+          </div>
+        )}
+        {packages.map((p) => {
+          const svc = Array.isArray(p.service) ? p.service[0] : p.service;
+          return (
+            <div
+              key={p.id}
+              className="rounded-xl border border-stone-200 bg-white p-4 space-y-2"
+            >
+              <div>
+                <div className="font-medium text-stone-900">{p.name}</div>
+                {p.description && (
+                  <div className="text-xs text-stone-500">{p.description}</div>
+                )}
+              </div>
+              <div className="text-sm text-stone-600">
+                <span className="text-stone-400">Servicio: </span>
+                {svc?.name ?? '—'}
+              </div>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                <div>
+                  <span className="text-stone-400">Sesiones</span>
+                  <div className="font-medium text-stone-900">{p.sessions_total}</div>
+                </div>
+                <div>
+                  <span className="text-stone-400">Validez</span>
+                  <div className="font-medium text-stone-900">{p.validity_days}d</div>
+                </div>
+                <div>
+                  <span className="text-stone-400">Precio</span>
+                  <div className="font-medium text-stone-900">
+                    {formatArs(Number(p.price_ars))}
+                  </div>
+                </div>
+                <div>
+                  <span className="text-stone-400">Descuento</span>
+                  <div className="font-medium text-stone-900">
+                    {p.discount_percentage && Number(p.discount_percentage) > 0 ? (
+                      <Badge variant="premium">{p.discount_percentage}%</Badge>
+                    ) : (
+                      '—'
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-1 pt-1">
+                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                <PackagesPageClient mode="edit" pkg={p as any} services={services} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Desktop: tabla */}
+      <div className="hidden rounded-xl border border-stone-200 bg-white sm:block">
         <Table>
           <TableHeader>
             <TableRow>
