@@ -29,7 +29,8 @@ const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
           ref={ref}
           type={visible ? 'text' : 'password'}
           className={cn(
-            'flex h-10 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 pr-10 text-sm ring-offset-white placeholder:text-stone-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+            // text-base en mobile evita el auto-zoom de iOS al enfocar.
+            'flex h-10 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 pr-10 text-base ring-offset-white placeholder:text-stone-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm',
             className
           )}
           {...props}

@@ -191,6 +191,14 @@ export function WelcomeTour({ enabled, hasEmpleados }: Props) {
     // Solo arranca en el dashboard. Si la primera vista no fue `/`, esperamos.
     if (pathname !== '/') return;
 
+    // El tour ancla sus pasos al sidebar de escritorio, que en mobile está
+    // oculto detrás del drawer hamburguesa. En pantallas chicas no corre (y
+    // NO lo marcamos como visto), así que sigue apareciendo cuando la dueña
+    // entre desde una compu. Mientras, /ayuda + el chat cubren el mobile.
+    if (typeof window !== 'undefined' && !window.matchMedia('(min-width: 768px)').matches) {
+      return;
+    }
+
     // Guard anti re-disparo: si ya lo vimos en esta sesión/dispositivo, no
     // volver a abrirlo en cada navegación a `/`. La excepción es cuando se
     // pidió explícitamente "Ver tour de nuevo" (?tour=restart), que limpia

@@ -136,7 +136,7 @@ export function HelpChatWidget() {
           type="button"
           onClick={() => setOpen(true)}
           aria-label="Abrir chat de ayuda"
-          className="group fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-brand-500 text-white shadow-lg shadow-brand-500/30 transition-all hover:bg-brand-600 hover:shadow-xl"
+          className="group fixed bottom-4 right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-brand-500 text-white shadow-lg shadow-brand-500/30 transition-all hover:bg-brand-600 hover:shadow-xl sm:bottom-6 sm:right-6"
         >
           <MessageCircle className="h-6 w-6" />
           <span className="absolute right-full mr-3 hidden whitespace-nowrap rounded-md bg-stone-900 px-2 py-1 text-xs text-white group-hover:block">
@@ -147,7 +147,7 @@ export function HelpChatWidget() {
 
       {/* Panel */}
       {open && (
-        <div className="fixed bottom-6 right-6 z-50 flex h-[600px] w-[380px] max-w-[calc(100vw-3rem)] flex-col rounded-2xl border border-stone-200 bg-white shadow-2xl">
+        <div className="fixed inset-x-3 bottom-3 z-50 flex h-[75vh] max-h-[600px] flex-col rounded-2xl border border-stone-200 bg-white shadow-2xl sm:inset-x-auto sm:bottom-6 sm:right-6 sm:h-[600px] sm:w-[380px]">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-stone-100 bg-gradient-to-r from-brand-50 to-amber-50/40 px-4 py-3">
             <div className="flex items-center gap-2">
@@ -226,7 +226,7 @@ export function HelpChatWidget() {
                 placeholder="Escribí tu duda..."
                 rows={1}
                 disabled={sending}
-                className="max-h-32 min-h-[40px] flex-1 resize-none text-sm"
+                className="max-h-32 min-h-[40px] flex-1 resize-none text-base sm:text-sm"
               />
               <Button
                 type="button"

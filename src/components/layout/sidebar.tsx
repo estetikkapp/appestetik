@@ -52,16 +52,26 @@ const NAV: NavItem[] = [
   { href: '/ayuda', label: 'Ayuda', icon: HelpCircle, tourId: 'ayuda' },
 ];
 
-interface Props {
+interface SidebarNavProps {
   role: Role;
   /**
    * Plan + grandfathered status para filtrar items por feature, no solo por
    * rol. Si no se pasa, solo se filtra por rol (compat con páginas viejas).
    */
   planContext?: PlanContext;
+  /**
+   * Callback opcional al hacer click en un item. Lo usa el drawer mobile para
+   * cerrarse al navegar (en desktop no se pasa).
+   */
+  onNavigate?: () => void;
 }
 
-export function Sidebar({ role, planContext }: Props) {
+/**
+ * Lista de navegación reutilizable. La renderiza tanto el `Sidebar` de
+ * escritorio (aside fijo) como el `MobileNav` (dentro de un Sheet drawer),
+ * para que ambos compartan exactamente los mismos items, gating y estilos.
+ */
+export function SidebarNav({ role, planContext, onNavigate }: SidebarNavProps) {
   const pathname = usePathname();
 
   // Computamos el estado de cada item según rol + plan.
@@ -75,73 +85,90 @@ export function Sidebar({ role, planContext }: Props) {
   })).filter((item) => item.access.state !== 'hidden_by_role');
 
   return (
-    <aside className="flex w-60 flex-col border-r border-stone-200 bg-white">
-      <div className="border-b border-stone-200 p-4">
-        <h1 className="text-lg font-bold text-brand-700">appestetika</h1>
-      </div>
-      <nav className="flex-1 space-y-1 p-3">
-        {navWithAccess.map((item) => {
-          const isActive = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
-          const Icon = item.icon;
+    <nav className="flex-1 space-y-1 overflow-y-auto p-3">
+      {navWithAccess.map((item) => {
+        const isActive = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
+        const Icon = item.icon;
 
-          if (item.disabled) {
-            return (
-              <div
-                key={item.href}
-                className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-stone-300"
-                title="Disponible en próximos sprints"
-              >
-                <Icon className="h-4 w-4" />
-                <span>{item.label}</span>
-                <span className="ml-auto text-[10px]">próximamente</span>
-              </div>
-            );
-          }
-
-          // Locked by plan: muestro el item gris + Lock icon + pill "Equipo",
-          // y el click va a /precios con el feature como contexto para que
-          // el banner de la página de precios explique qué se desbloquea.
-          if (item.access.state === 'locked_by_plan') {
-            const feature = item.access.lockedFeature;
-            return (
-              <Link
-                key={item.href}
-                href={`/precios?from=${encodeURIComponent(feature ?? '')}`}
-                data-tour={item.tourId}
-                title={`Disponible en el plan Equipo`}
-                className="group flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-stone-400 transition-colors hover:bg-stone-50 hover:text-stone-600"
-              >
-                <Icon className="h-4 w-4" />
-                <span>{item.label}</span>
-                <span className="ml-auto flex items-center gap-1">
-                  <Lock className="h-3 w-3" />
-                  <span className="rounded-full bg-brand-100/60 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-brand-700">
-                    Equipo
-                  </span>
-                </span>
-              </Link>
-            );
-          }
-
-          // Accesible normal
+        if (item.disabled) {
           return (
-            <Link
+            <div
               key={item.href}
-              href={item.href}
-              data-tour={item.tourId}
-              className={cn(
-                'flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors',
-                isActive
-                  ? 'bg-brand-100 text-brand-800 font-medium'
-                  : 'text-stone-700 hover:bg-stone-100'
-              )}
+              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-stone-300"
+              title="Disponible en próximos sprints"
             >
               <Icon className="h-4 w-4" />
               <span>{item.label}</span>
+              <span className="ml-auto text-[10px]">próximamente</span>
+            </div>
+          );
+        }
+
+        // Locked by plan: muestro el item gris + Lock icon + pill "Equipo",
+        // y el click va a /precios con el feature como contexto para que
+        // el banner de la página de precios explique qué se desbloquea.
+        if (item.access.state === 'locked_by_plan') {
+          const feature = item.access.lockedFeature;
+          return (
+            <Link
+              key={item.href}
+              href={`/precios?from=${encodeURIComponent(feature ?? '')}`}
+              data-tour={item.tourId}
+              onClick={onNavigate}
+              title={`Disponible en el plan Equipo`}
+              className="group flex min-w-0 items-center gap-2 rounded-lg px-3 py-2 text-sm text-stone-400 transition-colors hover:bg-stone-50 hover:text-stone-600"
+            >
+              <Icon className="h-4 w-4 shrink-0" />
+              <span className="truncate">{item.label}</span>
+              <span className="ml-auto flex shrink-0 items-center gap-1">
+                <Lock className="h-3 w-3" />
+                <span className="rounded-full bg-brand-100/60 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand-700">
+                  Equipo
+                </span>
+              </span>
             </Link>
           );
-        })}
-      </nav>
+        }
+
+        // Accesible normal
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            data-tour={item.tourId}
+            onClick={onNavigate}
+            className={cn(
+              'flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors',
+              isActive
+                ? 'bg-brand-100 text-brand-800 font-medium'
+                : 'text-stone-700 hover:bg-stone-100'
+            )}
+          >
+            <Icon className="h-4 w-4 shrink-0" />
+            <span className="truncate">{item.label}</span>
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
+interface Props {
+  role: Role;
+  planContext?: PlanContext;
+}
+
+/**
+ * Sidebar de escritorio. Oculto por debajo de `md` (en mobile la navegación
+ * vive en el drawer `MobileNav` que se abre desde el hamburger del header).
+ */
+export function Sidebar({ role, planContext }: Props) {
+  return (
+    <aside className="hidden w-60 flex-col border-r border-stone-200 bg-white md:flex">
+      <div className="border-b border-stone-200 p-4">
+        <h1 className="text-lg font-bold text-brand-700">appestetika</h1>
+      </div>
+      <SidebarNav role={role} planContext={planContext} />
       <div className="border-t border-stone-200 p-3 text-[10px] text-stone-400">
         v0.1.0 · Sprint 1 en desarrollo
       </div>

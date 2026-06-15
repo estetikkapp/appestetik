@@ -2,6 +2,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { Sidebar } from '@/components/layout/sidebar';
+import { MobileNav } from '@/components/layout/mobile-nav';
 import { UserMenu } from '@/components/layout/user-menu';
 import { OrgSwitcher } from '@/components/layout/org-switcher';
 import { NotificationsBell } from '@/components/notifications/notifications-bell';
@@ -67,10 +68,13 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   return (
     <div className="flex min-h-screen bg-brand-50/30">
       <Sidebar role={activeRole} planContext={planContext} />
-      <div className="flex flex-1 flex-col">
-        <header className="flex items-center justify-between border-b border-stone-200 bg-white px-6 py-3">
-          <OrgSwitcher orgs={orgs} activeOrgId={activeOrgId ?? ''} />
-          <div className="flex items-center gap-2">
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="flex items-center justify-between gap-2 border-b border-stone-200 bg-white px-3 py-3 sm:px-6">
+          <div className="flex min-w-0 items-center gap-1">
+            <MobileNav role={activeRole} planContext={planContext} />
+            <OrgSwitcher orgs={orgs} activeOrgId={activeOrgId ?? ''} />
+          </div>
+          <div className="flex shrink-0 items-center gap-1 sm:gap-2">
             <NotificationsBell userId={user.id} />
             <UserMenu
               email={user.email ?? ''}
@@ -78,7 +82,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
             />
           </div>
         </header>
-        <main className="flex-1 p-6">{children}</main>
+        <main className="flex-1 p-4 sm:p-6">{children}</main>
       </div>
       <WelcomeTour enabled={showTour} hasEmpleados={tourHasEmpleados} />
       <HelpChatWidget />
